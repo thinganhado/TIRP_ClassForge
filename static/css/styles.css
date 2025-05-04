@@ -1,0 +1,310 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar container */
+.sidebar {
+    width: 250px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid #ccc;
+    padding-top: 20px;
+}
+
+.sidebar h2 {
+    text-align: center;
+    color: #152259;
+    margin-bottom: 20px;
+}
+
+/* Sidebar menu sections */
+.menu-section.spaced {
+    margin-bottom: 5px;
+    padding: 15px;
+}
+
+/* Sections without spacing (Grouped Menus) */
+.menu-section {
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    padding: 5px;
+}
+
+/* Menu items */
+.menu-item {
+    padding: 12px;
+    color: white;
+    background-color: #152259;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 0px;
+    margin-bottom: 8px;
+}
+
+.menu-item.primary {
+    background-color: #4880FF;
+}
+
+.menu-item.section-label {
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+
+.submenu-group {
+    padding: 10px;
+    background-color: #152259;
+    border-radius: 10px;
+}
+
+.submenu-item {
+    color: white;
+    padding: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.menu-item i {
+    font-size: 0.85rem;
+    margin-right: 8px;
+}
+
+.submenu-item i {
+    font-size: 0.5rem;
+    margin-right: 8px;
+}
+
+.menu-item:hover,
+.submenu-item:hover {
+    opacity: 0.3;
+}
+
+/* Main content */
+.content {
+    flex: 1;
+    padding: 40px;
+    margin-top: 60px;
+    background-color: #f0f0f0;
+    overflow-y: auto;
+}
+
+h1 {
+    color: #152259;
+    margin: 40px 0;
+    text-align: center;
+}
+
+h3 {
+    color: black;
+    margin: 20px 0;
+    text-align: center;
+}
+
+/* Main box on homepage */
+.main-content-box {
+    background-color: white;
+    border-radius: 10px;
+    padding: 25px 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.main-content-box h2 {
+    color: #152259;
+    margin-top: 20px;
+}
+
+.main-content-box p {
+    margin-top: 8px;
+    padding-left: 30px;
+}
+
+/* Support button */
+.support-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #4880FF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+.support-button:hover {
+    background-color: #3366cc;
+}
+
+/* Student page table */
+
+.table-container {
+    background-color: white;
+    border-radius: 10px;
+    padding: 5px;
+    width: 1300px;
+    margin-left: -50px;
+    margin-right: 55px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+}
+
+.students-table {
+    width: 800px;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 12px;
+}
+
+
+.students-table th:first-child,
+.students-table td:first-child {
+    width: 40px;
+    text-align: center;
+}
+
+.students-table input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.students-table th {
+    background-color: #f0f0f0;
+    color: black;
+}
+
+.students-table th strong {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.students-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Table actions (buttons) */
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 auto 10px auto;
+    max-width: 350px;
+    gap: 10px;
+}
+
+.action-button {
+    background-color: #152259;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.action-button i {
+    margin-right: 6px;
+}
+
+.action-button:hover {
+    background-color: #1e3266;
+}
+
+/* Table filters and summary */
+.table-filters {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 350px;
+    margin: 10px auto;
+    gap: 10px;
+}
+
+.table-filters input,
+.table-filters select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    outline: none;
+}
+
+.table-summary {
+    display: flex;
+    justify-content: space-between;
+    max-width: 600px;
+    margin-left: 150px;
+    font-size: 12px;
+    color: #333;
+}
+
+/* Two-column table row layout */
+.table-row {
+    display: flex;
+    gap: 10px;
+    width: 1000px;
+    margin: 10px auto;
+}
+
+.student-table {
+    width: 800px;
+}
+
+.details-table.vertical {
+    width: 450px;
+}
+
+@media screen {
+    .student-table,
+    .details-table.vertical {
+        width: 1300px;
+    }
+}
+
+/*Student details table */
+
+.details-table.vertical {
+    width: 250px;
+    border-collapse: collapse;
+}
+
+.details-table.vertical td {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
+    color: black;
+    font-size: 12px;
+    line-height: 10px;
+}
+
+.details-table.vertical td strong {
+    display: block;
+    color: #0b0b0b;
+    font-size: 14px;
+    margin-bottom: 1px;
+}
