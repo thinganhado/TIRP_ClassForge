@@ -1,5 +1,6 @@
 <!-- templates/components/menu.html -->
-<div class="sidebar">
+<div class="sidebar-container">
+    <div class="sidebar" id="sidebar">
     <h2>Classforge</h2>
 
     <!-- Dashboard -->
@@ -18,11 +19,11 @@
         </div>
 
         <!-- Visualization -->
-        <div class="menu-item section-label"> <i class="fas fa-chart-bar"></i> Visualization</div>
-        <div class="submenu-group">
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Overall</a>
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Individual</a>
-        </div>
+<div class="menu-item section-label"><i class="fas fa-chart-bar"></i> Visualization</div>
+<div class="submenu-group">
+    <a class="submenu-item" href="{{ url_for('main.overall') }}"><i class="fas fa-angle-right"></i> Overall</a>
+    <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Individual</a>
+</div>
 
         <!-- Customization -->
         <div class="menu-item section-label"><i class="fas fa-cogs"></i> Customization</div>
@@ -33,9 +34,14 @@
             <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> History</a>
         </div>
     </div>
-
+</div>
     <!-- QnA -->
     <div class="menu-section spaced">
         <a class="menu-item primary" href="#"><i class="fas fa-question-circle"></i> QnA</a>
     </div>
+
+    <!-- Toggle Button -->
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
 </div>

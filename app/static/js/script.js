@@ -105,3 +105,10 @@ function filterTable() {
     document.getElementById("student-count").textContent = `Total Students: ${total}`;
     document.getElementById("student-range").textContent = `Showing 1–${visible} of ${total} students`;
 }
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+    }
+}

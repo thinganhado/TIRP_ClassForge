@@ -331,3 +331,35 @@ h3 {
     border-radius: 6px;
     padding: 6px 10px;
 }
+
+/* Sidebar toggle styles */
+.sidebar-container {
+    position: relative;
+}
+
+.toggle-btn {
+    position: absolute;
+    top: 10px;
+    right: -20px;
+    background-color: #152259;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    z-index: 1001;
+    font-size: 16px;
+    transition: right 0.3s;
+}
+
+.sidebar.collapsed {
+    width: 60px;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .menu-item,
+.sidebar.collapsed .submenu-item,
+.sidebar.collapsed .menu-item.section-label,
+.sidebar.collapsed h2 {
+    display: none;
+}

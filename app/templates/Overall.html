@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Overall Visualization{% endblock %}
+
+{% block content %}
+<h1>Overall Visualization</h1>
+
+<div class="main-content-box">
+    <p>This embedded dashboard shows an overview of class allocation insights.</p>
+
+    <!-- Power BI Embed -->
+    <div style="margin-top: 20px; text-align: center;">
+        <iframe title="Jan_dashboard"
+                width="1140"
+                height="541.25"
+                src="https://app.powerbi.com/reportEmbed?reportId=14c0b4fd-b9ea-4f66-a4ae-9271d99999ba&autoAuth=true&ctid=df7f7579-3e9c-4a7e-b844-420280f53859"
+                frameborder="0"
+                style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                allowfullscreen="true">
+        </iframe>
+    </div>
+</div>
+{% endblock %}

@@ -11,3 +11,8 @@ def dashboard():
 @main.route('/management/students')
 def students():
     return render_template('Students.html')
+
+# Overall visualization page
+@main.route('/visualization/overall')
+def overall():
+    return render_template('Overall.html')
