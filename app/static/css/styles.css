@@ -93,11 +93,6 @@ body {
     margin-right: 8px;
 }
 
-.menu-item:hover,
-.submenu-item:hover {
-    opacity: 0.3;
-}
-
 /* Main content */
 .content {
     flex: 1;
@@ -307,4 +302,32 @@ h3 {
     color: #0b0b0b;
     font-size: 14px;
     margin-bottom: 1px;
+}
+
+/* Fix for <a> tags in sidebar */
+.menu-item,
+.submenu-item {
+    display: block;
+    color: white;
+    text-decoration: none;
+}
+
+/* Override link styles */
+.menu-item:visited,
+.submenu-item:visited {
+    color: white;
+    text-decoration: none;
+}
+
+.menu-item:hover,
+.submenu-item:hover {
+    background-color: #5061f0;
+    opacity: 1; /* Prevent transparency on hover */
+}
+
+/* Optional: Add consistent spacing */
+.submenu-item {
+    margin-left: 10px;
+    border-radius: 6px;
+    padding: 6px 10px;
 }

@@ -1,0 +1,23 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}ClassForge{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+    {% include 'components/menu.html' %}
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <button class="support-button">
+        <i class="fas fa-headset"></i> Support
+    </button>
+
+</body>
+</html>

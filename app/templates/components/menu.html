@@ -1,0 +1,41 @@
+<!-- templates/components/menu.html -->
+<div class="sidebar">
+    <h2>Classforge</h2>
+
+    <!-- Dashboard -->
+    <div class="menu-section spaced">
+        <a class="menu-item primary" href="{{ url_for('main.dashboard') }}">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </div>
+
+    <!-- Management -->
+    <div class="menu-section">
+        <div class="menu-item section-label"><i class="fas fa-briefcase"></i> Management</div>
+        <div class="submenu-group">
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Classes</a>
+            <a class="submenu-item" href="{{ url_for('main.students') }}"><i class="fas fa-angle-right"></i> Students</a>
+        </div>
+
+        <!-- Visualization -->
+        <div class="menu-item section-label"> <i class="fas fa-chart-bar"></i> Visualization</div>
+        <div class="submenu-group">
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Overall</a>
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Individual</a>
+        </div>
+
+        <!-- Customization -->
+        <div class="menu-item section-label"><i class="fas fa-cogs"></i> Customization</div>
+        <div class="submenu-group">
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Set Priorities</a>
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Specifications</a>
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> AI Assistant</a>
+            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> History</a>
+        </div>
+    </div>
+
+    <!-- QnA -->
+    <div class="menu-section spaced">
+        <a class="menu-item primary" href="#"><i class="fas fa-question-circle"></i> QnA</a>
+    </div>
+</div>
