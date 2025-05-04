@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sidebar Navigation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Classforge</h2>
+
+        <!-- Dashboard (spaced section) -->
+        <div class="menu-section spaced">
+            <div class="menu-item primary" onclick="loadPage('Dashboard')">
+            <i class="fas fa-home"> </i> Dashboard
+        </div>
+
+        <!-- Grouped Menus (no spacing) -->
+        <div class="menu-section">
+            <!-- Management -->
+            <div class="menu-item section-label"><i class="fas fa-briefcase"></i> Management</div>
+            <div class="submenu-group">
+                <div class="submenu-item" onclick="loadPage('Classes')">
+                <i class="fas fa-angle-right"></i> Classes</div>
+                <div class="submenu-item" onclick="loadPage('Students')">
+                <i class="fas fa-angle-right"></i> Students</div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="menu-item section-label"> <i class="fas fa-chart-bar"></i> Visualization</div>
+            <div class="submenu-group">
+                <div class="submenu-item" onclick="loadPage('Overall')">
+                <i class="fas fa-angle-right"></i> Overall</div>
+                <div class="submenu-item" onclick="loadPage('Individual')">
+                <i class="fas fa-angle-right"></i> Individual</div>
+            </div>
+
+            <!-- Customization -->
+            <div class="menu-item section-label"><i class="fas fa-cogs"></i> Customization</div>
+            <div class="submenu-group">
+                <div class="submenu-item" onclick="loadPage('Set Priorities')">
+                <i class="fas fa-angle-right"></i> Set Priorities</div>
+                <div class="submenu-item" onclick="loadPage('Specifications')">
+                <i class="fas fa-angle-right"></i> Specifications</div>
+                <div class="submenu-item" onclick="loadPage('AI Assistant')">
+                <i class="fas fa-angle-right"></i> AI Assistant</div>
+                <div class="submenu-item" onclick="loadPage('History')">
+                <i class="fas fa-angle-right"></i> History</div>
+            </div>
+        </div>
+
+        <!-- QnA (spaced section) -->
+        <div class="menu-section spaced">
+            <div class="menu-item primary" onclick="loadPage('QnA')">
+            <i class="fas fa-question-circle"></i> QnA
+        </div>
+    </div>
+</div>
+</div>
+
+    <div class="content">
+        <h1 id="main-title">Welcome to ClassForge</h1>
+        <div class="main-content-box">
+            <h2><i class="fas fa-briefcase"></i> Management</h2>
+            <p>Add or remove students, and adjust the number of classes. You can change class sizes or the overall distribution of students, ensuring that the allocation meets your needs.</p>
+        
+            <h2><i class="fas fa-chart-bar"></i> Visualization</h2>
+            <p>See visual representations of the classroom allocation at both the global (whole school) and individual student level. This includes key factors such as social network analysis, student relationships, and how these impact the allocation.</p>
+        
+            <h2><i class="fas fa-cogs"></i> Customization</h2>
+            <p>Adjust factors like academic balance, social needs, and constraints to customize the system according to your requirements. Interact with the AI chatbot to provide inputs on changes and get real-time feedback on how these changes will affect the allocation.</p>
+        </div>
+    </div>
+
+    <button class="support-button">
+        <i class="fas fa-headset"></i> Support
+    </button>
+
+</div>
+
+        
+    <script src="script.js"></script>
+</body>
+</html>
