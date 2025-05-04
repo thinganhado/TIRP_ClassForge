@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sidebar Navigation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Classforge</h2>
+
+        <!-- Dashboard (spaced section) -->
+        <div class="menu-section spaced">
+            <div class="menu-item primary" onclick="loadPage('Dashboard')">
+            <i class="fas fa-home"> </i> Dashboard
+        </div>
+
+        <!-- Grouped Menus (no spacing) -->
+        <div class="menu-section">
+            <!-- Management -->
+            <div class="menu-item section-label"><i class="fas fa-briefcase"></i> Management</div>
+            <div class="submenu-group">
+                <div class="submenu-item" onclick="loadPage('Classes')">
+                <i class="fas fa-angle-right"></i> Classes</div>
+                <div class="submenu-item" onclick="loadPage('Students')">
+                <i class="fas fa-angle-right"></i> Students</div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="menu-item section-label"> <i class="fas fa-chart-bar"></i> Visualization</div>
+            <div class="submenu-group">
+                <div class="submenu-item" onclick="loadPage('Overall')">
+                <i class="fas fa-angle-right"></i> Overall</div>
+                <div class="submenu-item" onclick="loadPage('Individual')">
+                <i class="fas fa-angle-right"></i> Individual</div>
+            </div>
+
+            <!-- Customization -->
+            <div class="menu-item section-label"><i class="fas fa-cogs"></i> Customization</div>
+            <div class="submenu-group">
+                <div class="submenu-item" onclick="loadPage('Set Priorities')">
+                <i class="fas fa-angle-right"></i> Set Priorities</div>
+                <div class="submenu-item" onclick="loadPage('Specifications')">
+                <i class="fas fa-angle-right"></i> Specifications</div>
+                <div class="submenu-item" onclick="loadPage('AI Assistant')">
+                <i class="fas fa-angle-right"></i> AI Assistant</div>
+                <div class="submenu-item" onclick="loadPage('History')">
+                <i class="fas fa-angle-right"></i> History</div>
+            </div>
+        </div>
+
+        <!-- QnA (spaced section) -->
+        <div class="menu-section spaced">
+            <div class="menu-item primary" onclick="loadPage('QnA')">
+            <i class="fas fa-question-circle"></i> QnA
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="content">
+    <h1 class="page-title"></h1>
+
+
+    <div class="table-actions">
+        <button class="action-button" onclick="printTable()"><i class="fas fa-print"></i> Print</button>
+        <button class="action-button" onclick="exportTable()"><i class="fas fa-file-export"></i> Export</button>
+        <button class="action-button" onclick="createStudent()"><i class="fas fa-user-plus"></i> Create Student</button>
+    </div>
+
+    <div class="table-filters">
+        <input type="text" id="search-input" placeholder="Search by name..." onkeyup="filterTable()" />
+        <select id="class-filter" onchange="filterTable()">
+            <option value="">All Classes</option>
+            <option value="7A">7A</option>
+            <option value="7B">7B</option>
+        </select>
+    </div>
+
+    <div class="table-summary">
+        <span id="student-count">Total Students: 0</span>
+        <span id="student-range">Showing 0–0 of 0 students</span>
+    </div>
+
+    <div class="table-row">
+        <!-- Left Table: Students -->
+        <div class="table-container">
+            <h3></h3>
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th><strong>ID</th>
+                        <th><strong>First Name</th>
+                        <th><strong>Last Name</th>
+                        <th><strong>Gender</th>
+                        <th><strong>Class</th>
+                    </tr>
+                </thead>
+                <tbody id="students-table-body"></tbody>
+            </table>
+        </div>
+    
+        <!-- Right Table:  -->
+        <div class="table-container student-details">
+            <h3>Student Details</h3>
+            <table class="details-table vertical">
+                <tr>
+                    <td><strong>ID</strong><br>1</td>
+                </tr>
+                <tr>
+                    <td><strong>First Name</strong><br>Alice</td>
+                </tr>
+                <tr>
+                    <td><strong>Last Name</strong><br>Johnson</td>
+                </tr>
+                <tr>
+                    <td><strong>Gender</strong><br>Female</td>
+                </tr>
+                <tr>
+                    <td><strong>Email</strong><br>alice@example.com</td>
+                </tr>
+                <tr>
+                    <td><strong>Contact Number</strong><br>0412 345 678</td>
+                </tr>
+                <tr>
+                    <td><strong>Attendance</strong><br>92%</td>
+                </tr>
+                <tr>
+                    <td><strong>GPA</strong><br>3.8</td>
+                </tr>
+                <tr>
+                    <td><strong>House</strong><br>Blue</td>
+                </tr>
+                <tr>
+                    <td><strong>Student Status</strong><br>Active</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+
+<script>
+    let allStudents = [
+        { id: 1, first_name: "Alice", last_name: "Johnson", gender: "Female", class: "7A" },
+        { id: 2, first_name: "Liam", last_name: "Smith", gender: "Male", class: "7B" }
+    ];
+
+    function populateStudents() {
+        const tbody = document.getElementById("students-table-body");
+        tbody.innerHTML = allStudents.map(s => `
+            <tr>
+                <td><input type="checkbox" class="row-checkbox"></td>
+                <td>${s.id}</td>
+                <td>${s.first_name}</td>
+                <td>${s.last_name}</td>
+                <td>${s.gender}</td>
+                <td>${s.class}</td>
+            </tr>
+        `).join('');
+        filterTable(); // also update count
+    }
+
+    function filterTable() {
+        const search = document.getElementById("search-input").value.toLowerCase();
+        const classFilter = document.getElementById("class-filter").value.toLowerCase();
+        const rows = document.querySelectorAll("#students-table-body tr");
+
+        let visible = 0;
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const fullName = (cells[2].textContent + " " + cells[3].textContent).toLowerCase();
+            const classValue = cells[5].textContent.toLowerCase();
+
+            const matchesSearch = fullName.includes(search);
+            const matchesClass = classFilter === "" || classValue === classFilter;
+
+            if (matchesSearch && matchesClass) {
+                row.style.display = "";
+                visible++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        document.getElementById("student-count").textContent = `Total Students: ${allStudents.length}`;
+        document.getElementById("student-range").textContent = `Showing 1–${visible} of ${allStudents.length} students`;
+    }
+
+    function printTable() {
+        window.print();
+    }
+
+    function exportTable() {
+        alert("Export feature coming soon.");
+    }
+
+    function createStudent() {
+        alert("Create student form not implemented yet.");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        populateStudents();
+        const selectAll = document.getElementById("select-all");
+        selectAll.addEventListener("change", function () {
+            document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = this.checked);
+        });
+    });
+</script>
+
+</body>
+</html>
