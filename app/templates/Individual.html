@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Individual Visualization{% endblock %}
+
+{% block content %}
+<h1>Individual Network Visualization</h1>
+
+<div class="main-content-box">
+    <p>This interactive network graph is powered by <strong>Retina</strong> and visualizes individual-level relationships from the Gephi dataset.</p>
+
+    <div style="margin-top: 20px; text-align: center;">
+        <iframe
+  width="800"
+  height="600"
+  src="https://ouestware.gitlab.io/retina/beta/#/embed/?url=https%3A%2F%2Fgist.githubusercontent.com%2FSom00712%2F7198d971b2ff55adfd4ac05e9608813c%2Fraw%2F723a68e7e2d93dce0c7438f92640c5885c0575ee%2Fnetwork-402e456c-035.gexf"
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
+    </div>
+</div>
+{% endblock %}
