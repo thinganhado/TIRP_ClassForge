@@ -1,6 +1,14 @@
 class Config:
-    SECRET_KEY = 'dev'  # Replace in production
+    SECRET_KEY = 'dev'  # Replace this with a secure value in production
 
-    # Supabase credentials
-    SUPABASE_URL = "https://gtnfkwequyuzsxhjbdqt.supabase.co"
-    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0bmZrd2VxdXl1enN4aGpiZHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTA2MjQsImV4cCI6MjA2MDk2NjYyNH0.KlYUcx3Sf9YPJMPYPEhYXQNEf2zIwT-l4zJTs6P3Z68"
+    # MySQL Database configuration (AWS RDS)
+    DB_USER = 'admin'
+    DB_PASSWORD = 'databasepassword_g21'
+    DB_HOST = 'database-tirp.c1gieoo4asys.us-east-1.rds.amazonaws.com'
+    DB_PORT = '3306'
+    DB_NAME = 'tirp'
+
+    SQLALCHEMY_DATABASE_URI = (
+        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

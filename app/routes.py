@@ -16,3 +16,8 @@ def students():
 @main.route('/visualization/overall')
 def overall():
     return render_template('Overall.html')
+
+# Individual visualization page
+@main.route('/visualization/individual')
+def individual():
+    return render_template('Individual.html')
