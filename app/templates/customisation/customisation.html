@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Customisation{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> / <span>Customisation</span>
+</div>
+
+<div class="customisation-container">
+    <h1 class="customisation-title">Customisation <span class="title-accent">O</span></h1>
+    
+    <div class="customisation-grid">
+        <div class="customisation-card">
+            <h2 class="card-title">Set Priorities</h2>
+            <div class="card-content">
+                <p>Customize weights for social, academic, and well-being factors to balance classroom allocation</p>
+                <a href="{{ url_for('main.set_priorities') }}" class="configure-button">Configure</a>
+            </div>
+        </div>
+        
+        <div class="customisation-card">
+            <h2 class="card-title">Specification</h2>
+            <div class="card-content">
+                <p>Set specific student placements and define groups that should be separated</p>
+                <a href="{{ url_for('main.specification') }}" class="configure-button">Configure</a>
+            </div>
+        </div>
+        
+        <div class="customisation-card">
+            <h2 class="card-title">AI Assistant</h2>
+            <div class="card-content">
+                <p>Get help with optimization settings through natural language conversation</p>
+                <a href="{{ url_for('main.ai_assistant') }}" class="configure-button">Configure</a>
+            </div>
+        </div>
+        
+        <div class="customisation-card">
+            <h2 class="card-title">History</h2>
+            <div class="card-content">
+                <p>View and compare previous classroom allocations and their performance metrics</p>
+                <a href="{{ url_for('main.history') }}" class="configure-button">Configure</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Customisation - Set priorities{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation') }}">Customisation</a> / <span>Set priorities</span>
+</div>
+
+<div class="customisation-container">
+    <h2 class="section-title">Objective Priorities (Soft constraints)</h2>
+    <p class="section-subtitle">Rank from highest to lowest</p>
+    
+    <div class="priorities-grid">
+        <div class="priority-column">
+            <div class="priority-input">
+                <label for="social">Social</label>
+                <input type="text" id="social" name="social" value="Social" disabled class="priority-field">
+            </div>
+            
+            <div class="priority-input">
+                <label for="well-being">Well-being</label>
+                <input type="text" id="well-being" name="well-being" value="Well-being" disabled class="priority-field">
+            </div>
+            
+            <div class="priority-input">
+                <label for="academic">Academic</label>
+                <input type="text" id="academic" name="academic" value="Academic" disabled class="priority-field">
+            </div>
+        </div>
+        
+        <div class="priority-column">
+            <h2 class="section-title">Behavioural considerations (Hard constraints)</h2>
+            
+            <div class="dropdown-container">
+                <label for="disruptive">Disruptive</label>
+                <select id="disruptive" name="disruptive" class="customisation-dropdown">
+                    <option value="">Select option</option>
+                    <option value="high">High impact</option>
+                    <option value="moderate">Moderate impact</option>
+                    <option value="low">Low impact</option>
+                </select>
+            </div>
+            
+            <div class="dropdown-container">
+                <label for="influential">Influential</label>
+                <select id="influential" name="influential" class="customisation-dropdown">
+                    <option value="">Select option</option>
+                    <option value="high">High impact</option>
+                    <option value="moderate">Moderate impact</option>
+                    <option value="low">Low impact</option>
+                </select>
+            </div>
+            
+            <div class="dropdown-container">
+                <label for="isolated">Isolated</label>
+                <select id="isolated" name="isolated" class="customisation-dropdown">
+                    <option value="">Select option</option>
+                    <option value="high" selected>High impact</option>
+                    <option value="moderate">Moderate impact</option>
+                    <option value="low">Low impact</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="action-container">
+        <button class="apply-button">Apply</button>
+    </div>
+</div>
+{% endblock %} 

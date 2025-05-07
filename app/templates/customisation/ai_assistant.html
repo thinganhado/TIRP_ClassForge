@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Customisation - AI Assistant{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation') }}">Customisation</a> / <span>AI Assistant</span>
+</div>
+
+<div class="assistant-container">
+    <div class="message-input-container">
+        <input type="text" id="ai-prompt" class="prompt-input" value="Prioritize Academic over Well-being and Social" placeholder="Enter your request...">
+        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
+    </div>
+    
+    <div class="chat-container">
+        <div class="assistant-message">
+            <div class="assistant-avatar">C</div>
+            <div class="message-content">
+                <p>Based on your request to prioritize Academic over Well-being and Social, 
+                    I will adjust the weightings in the optimization algorithm as follows for example:</p>
+                <ul>
+                    <li>Academic:0.6</li>
+                    <li>Well-being:0.3</li>
+                    <li>Social:0.1</li>
+                </ul>
+                <p>Would you like to confirm these changes? 
+                    Please let me know if you'd like to modify the weightings further, 
+                    or if you'd like me to enforce the update as is.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="action-buttons">
+        <button class="confirm-button">Confirm changes</button>
+    </div>
+    
+    <div class="message-input-footer">
+        <input type="text" id="chat-message" class="message-input" placeholder="Send a message...">
+        <button class="send-button"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+{% endblock %} 
