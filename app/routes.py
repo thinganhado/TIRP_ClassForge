@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+from app.db.student_queries import fetch_all_students
 
 main = Blueprint('main', __name__)
 
@@ -8,9 +9,14 @@ def dashboard():
     return render_template('Index.html')
 
 # Students page under Management section
-@main.route('/management/students')
+@main.route('/students')
 def students():
     return render_template('Students.html')
+
+@main.route("/api/students")
+def api_students():
+    students = fetch_all_students()
+    return jsonify(students)
 
 # Overall visualization page
 @main.route('/visualization/overall')

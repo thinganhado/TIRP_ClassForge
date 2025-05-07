@@ -9,6 +9,20 @@
             "name": "TIRP_DB_CONNECT",
             "database": "database-1",
             "username": "postgres"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "database-tirp.c1gieoo4asys.us-east-1.rds.amazonaws.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "tirp_db_connect",
+            "database": "tirp",
+            "username": "admin",
+            "askForPassword": true
         }
     ]
 }

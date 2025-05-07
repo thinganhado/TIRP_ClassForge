@@ -3,127 +3,63 @@
 {% block title %}Students{% endblock %}
 
 {% block content %}
-<h1 class="page-title">Students</h1>
 
-<div class="table-actions">
-    <button class="action-button" onclick="printTable()"><i class="fas fa-print"></i> Print</button>
-    <button class="action-button" onclick="exportTable()"><i class="fas fa-file-export"></i> Export</button>
-    <button class="action-button" onclick="createStudent()"><i class="fas fa-user-plus"></i> Create Student</button>
+<div class="breadcrumb-bar">
+  <a href="#">Home</a> / <span>Management</span> / <span>Students</span>
 </div>
 
-<div class="table-filters">
-    <input type="text" id="search-input" placeholder="Search by name..." onkeyup="filterTable()" />
-    <select id="class-filter" onchange="filterTable()">
-        <option value="">All Classes</option>
-        <option value="7A">7A</option>
-        <option value="7B">7B</option>
-    </select>
-</div>
+<!-- Page Intro -->
+<section class="page-intro">
+    <h2>Manage Students</h2>
+    <p>
+      On this page, you can view, add, remove, and filter students by their assigned classes. 
+      Select a student to see detailed information, or use the controls to export or manage records efficiently.
+    </p>
+  </section>  
 
-<div class="table-summary">
-    <span id="student-count">Total Students: 0</span>
-    <span id="student-range">Showing 0–0 of 0 students</span>
-</div>
-
-<div class="table-row">
-    <div class="table-container">
+<!-- Page Body Layout -->
+<div class="page-body">
+    <!-- Left Section: Toolbar + Table -->
+    <div class="table-section">
+      <div class="students-toolbar">
+        <div class="toolbar-left">
+          <span id="student-count">Total Students: 0</span>
+        </div>
+        <div class="toolbar-right">
+          <input type="text" id="search-input" placeholder="Search by name..." onkeyup="filterTable()" />
+          <select id="class-filter" onchange="filterTable()">
+            <option value="">All Classes</option>
+            <option value="7A">7A</option>
+            <option value="7B">7B</option>
+          </select>
+          <button class="action-button" onclick="exportTable()"><i class="fas fa-file-export"></i> Export</button>
+          <button class="action-button" onclick="createStudent()"><i class="fas fa-user-plus"></i> Create</button>
+        </div>
+      </div>
+  
+      <div class="table-container">
         <table class="students-table">
-            <thead>
-                <tr>
-                    <th><input type="checkbox" id="select-all"></th>
-                    <th><strong>ID</strong></th>
-                    <th><strong>First Name</strong></th>
-                    <th><strong>Last Name</strong></th>
-                    <th><strong>Gender</strong></th>
-                    <th><strong>Class</strong></th>
-                </tr>
-            </thead>
-            <tbody id="students-table-body"></tbody>
-        </table>
-    </div>
-
-    <div class="table-container student-details">
-        <h3>Student Details</h3>
-        <table class="details-table vertical">
-            <tr><td><strong>ID</strong><br>1</td></tr>
-            <tr><td><strong>First Name</strong><br>Alice</td></tr>
-            <tr><td><strong>Last Name</strong><br>Johnson</td></tr>
-            <tr><td><strong>Gender</strong><br>Female</td></tr>
-            <tr><td><strong>Email</strong><br>alice@example.com</td></tr>
-            <tr><td><strong>Contact Number</strong><br>0412 345 678</td></tr>
-            <tr><td><strong>Attendance</strong><br>92%</td></tr>
-            <tr><td><strong>GPA</strong><br>3.8</td></tr>
-            <tr><td><strong>House</strong><br>Blue</td></tr>
-            <tr><td><strong>Student Status</strong><br>Active</td></tr>
-        </table>
-    </div>
-</div>
-
-<script>
-    let allStudents = [
-        { id: 1, first_name: "Alice", last_name: "Johnson", gender: "Female", class: "7A" },
-        { id: 2, first_name: "Liam", last_name: "Smith", gender: "Male", class: "7B" }
-    ];
-
-    function populateStudents() {
-        const tbody = document.getElementById("students-table-body");
-        tbody.innerHTML = allStudents.map(s => `
+          <thead>
             <tr>
-                <td><input type="checkbox" class="row-checkbox"></td>
-                <td>${s.id}</td>
-                <td>${s.first_name}</td>
-                <td>${s.last_name}</td>
-                <td>${s.gender}</td>
-                <td>${s.class}</td>
+              <th><input type="checkbox" id="select-all"></th>
+              <th>ID</th>
+              <th>First Name</th>
+              <th><strong>Email</strong></th>
+              <th><strong>House</strong></th>
+              <th>Class</th>
             </tr>
-        `).join('');
-        filterTable();
-    }
+          </thead>
+          <tbody id="students-table-body"></tbody>
+        </table>
+        <div class="table-range" id="student-range">Showing 0–0 of 0 students</div>
+      </div>
+    </div>
+  
+    <!-- Right Section: Details Panel -->
+    <div class="details-container" id="student-details">
+      <h3>Student Details</h3>
+      <p>Select a student to see more information.</p>
+    </div>
+  </div>  
 
-    function filterTable() {
-        const search = document.getElementById("search-input").value.toLowerCase();
-        const classFilter = document.getElementById("class-filter").value.toLowerCase();
-        const rows = document.querySelectorAll("#students-table-body tr");
-
-        let visible = 0;
-        rows.forEach(row => {
-            const cells = row.querySelectorAll("td");
-            const fullName = (cells[2].textContent + " " + cells[3].textContent).toLowerCase();
-            const classValue = cells[5].textContent.toLowerCase();
-
-            const matchesSearch = fullName.includes(search);
-            const matchesClass = classFilter === "" || classValue === classFilter;
-
-            if (matchesSearch && matchesClass) {
-                row.style.display = "";
-                visible++;
-            } else {
-                row.style.display = "none";
-            }
-        });
-
-        document.getElementById("student-count").textContent = `Total Students: ${allStudents.length}`;
-        document.getElementById("student-range").textContent = `Showing 1–${visible} of ${allStudents.length} students`;
-    }
-
-    function printTable() {
-        window.print();
-    }
-
-    function exportTable() {
-        alert("Export feature coming soon.");
-    }
-
-    function createStudent() {
-        alert("Create student form not implemented yet.");
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        populateStudents();
-        const selectAll = document.getElementById("select-all");
-        selectAll.addEventListener("change", function () {
-            document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = this.checked);
-        });
-    });
-</script>
 {% endblock %}
