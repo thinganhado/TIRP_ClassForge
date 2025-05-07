@@ -1,7 +1,4 @@
-function loadPage(pageName) {
-    document.getElementById("main-title").textContent = pageName;
-    document.getElementById("main-content").textContent = `You are now viewing the ${pageName} page.`;
-}
+// script.js (Updated)
 
 function loadPage(pageName) {
     const title = document.getElementById("main-title");
@@ -16,6 +13,20 @@ function loadPage(pageName) {
                 <button class="action-button" onclick="printTable()"><i class="fas fa-print"></i> Print</button>
                 <button class="action-button" onclick="exportTable()"><i class="fas fa-file-export"></i> Export</button>
                 <button class="action-button" onclick="createStudent()"><i class="fas fa-user-plus"></i> Create Student</button>
+            </div>
+
+            <div class="table-filters">
+                <input type="text" id="search-input" placeholder="Search by name..." onkeyup="filterTable()" />
+                <select id="class-filter" onchange="filterTable()">
+                    <option value="">All Classes</option>
+                    <option value="7A">7A</option>
+                    <option value="7B">7B</option>
+                </select>
+            </div>
+
+            <div class="table-summary">
+                <span id="student-count">Total Students: 0</span>
+                <span id="student-range">Showing 0–0 of 0 students</span>
             </div>
 
             <div class="table-container">
@@ -35,47 +46,32 @@ function loadPage(pageName) {
             </div>
         `;
 
-        const students = [
+        // Load initial dummy data (simulate future DB query)
+        allStudents = [
             { id: 1, first_name: "Alice", last_name: "Johnson", gender: "Female", class: "7A" },
             { id: 2, first_name: "Liam", last_name: "Smith", gender: "Male", class: "7B" }
         ];
 
-        allStudents = students;
-
-        const tbody = document.getElementById("students-table-body");
-        tbody.innerHTML = students.map(s => `
-            <tr>
-                <td><input type="checkbox" class="row-checkbox"></td>
-                <td>${s.id}</td>
-                <td>${s.first_name}</td>
-                <td>${s.last_name}</td>
-                <td>${s.gender}</td>
-                <td>${s.class}</td>
-            </tr>
-        `).join('');
-        filterTable();
-
-        const selectAll = document.getElementById("select-all");
-        const checkboxes = document.querySelectorAll(".row-checkbox");
-
-        if (selectAll) {
-            selectAll.addEventListener("change", function () {
-                checkboxes.forEach(cb => cb.checked = this.checked);
-            });
-        }
+        renderStudentTable();
+        setupSelectAllCheckbox();
     }
 }
 
-function printTable() {
-    window.print();
-}
+function renderStudentTable() {
+    const tbody = document.getElementById("students-table-body");
+    tbody.innerHTML = allStudents.map(s => `
+        <tr>
+            <td><input type="checkbox" class="row-checkbox"></td>
+            <td>${s.id}</td>
+            <td>${s.first_name}</td>
+            <td>${s.last_name}</td>
+            <td>${s.email}</td>
+            <td>${s.house}</td>
+            <td>${s.class}</td>
+        </tr>
+    `).join('');
 
-function exportTable() {
-    alert("Export functionality coming soon!");
-}
-
-function createStudent() {
-    alert("Open student creation form here.");
+    filterTable();
 }
 
 function filterTable() {
@@ -84,7 +80,6 @@ function filterTable() {
     const rows = document.querySelectorAll("#students-table-body tr");
 
     let visible = 0;
-
     rows.forEach(row => {
         const cells = row.querySelectorAll("td");
         const fullName = (cells[2].textContent + " " + cells[3].textContent).toLowerCase();
@@ -101,9 +96,29 @@ function filterTable() {
         }
     });
 
-    const total = allStudents.length; //  now reflects full dataset
-    document.getElementById("student-count").textContent = `Total Students: ${total}`;
-    document.getElementById("student-range").textContent = `Showing 1–${visible} of ${total} students`;
+    document.getElementById("student-count").textContent = `Total Students: ${allStudents.length}`;
+    document.getElementById("student-range").textContent = `Showing 1–${visible} of ${allStudents.length} students`;
+}
+
+function setupSelectAllCheckbox() {
+    const selectAll = document.getElementById("select-all");
+    if (selectAll) {
+        selectAll.addEventListener("change", function () {
+            document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = this.checked);
+        });
+    }
+}
+
+function printTable() {
+    window.print();
+}
+
+function exportTable() {
+    alert("Export functionality coming soon!");
+}
+
+function createStudent() {
+    alert("Open student creation form here.");
 }
 
 function toggleSidebar() {
@@ -112,3 +127,17 @@ function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
     }
 }
+
+let allStudents = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.pathname.includes("students")) {
+        fetch("/api/students")
+            .then(res => res.json())
+            .then(data => {
+                allStudents = data;
+                renderStudentTable();
+                setupSelectAllCheckbox();
+            });
+    }
+});

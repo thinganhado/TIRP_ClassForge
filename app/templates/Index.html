@@ -1,19 +1,41 @@
-<!-- templates/Index.html -->
 {% extends "base.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 id="main-title">Welcome to ClassForge</h1>
 
-<div class="main-content-box">
-    <h2><i class="fas fa-briefcase"></i> Management</h2>
-    <p>Add or remove students, and adjust the number of classes...</p>
-
-    <h2><i class="fas fa-chart-bar"></i> Visualization</h2>
-    <p>See visual representations of the classroom allocation...</p>
-
-    <h2><i class="fas fa-cogs"></i> Customization</h2>
-    <p>Adjust factors like academic balance, social needs...</p>
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="#">Home</a> / <span>Dashboard</span>
 </div>
+
+<!-- ClassForge Intro Section -->
+<section class="intro-box">
+    <h2>Welcome to ClassForge</h2>
+    <p>
+        ClassForge is an AI-assisted platform designed to optimize classroom assignments in schools.
+        By combining social network analysis, well-being data, and academic metrics, it intelligently
+        groups students to promote balanced learning environments, reduce isolation, and foster friendships.
+    </p>
+</section>
+
+<!-- Dashboard Feature Cards -->
+<div class="dashboard-card-container">
+    <a href="Students.html" class="dashboard-feature-card">
+        <h3>Management</h3>
+        <p>Add or remove students, and adjust the number of classes...</p>
+        <span class="card-button">Explore</span>
+    </a>
+    <a href="Overall.html" class="dashboard-feature-card">
+        <h3>Visualization</h3>
+        <p>See visual representations of the classroom allocation...</p>
+        <span class="card-button">Explore</span>
+    </a>
+    <a href="#" class="dashboard-feature-card">
+        <h3>Customization</h3>
+        <p>Adjust factors like academic balance, social needs...</p>
+        <span class="card-button">Explore</span>
+    </a>
+</div>
+
 {% endblock %}

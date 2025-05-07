@@ -1,47 +1,34 @@
-<!-- templates/components/menu.html -->
-<div class="sidebar-container">
-    <div class="sidebar" id="sidebar">
-    <h2>Classforge</h2>
+<nav class="topnav">
+    <div class="logo">ClassForge</div>
+    <ul class="nav-links">
+        <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
 
-    <!-- Dashboard -->
-    <div class="menu-section spaced">
-        <a class="menu-item primary" href="{{ url_for('main.dashboard') }}">
-            <i class="fas fa-home"></i> Dashboard
-        </a>
-    </div>
+        <li class="dropdown">
+            <a href="#">Management ▾</a>
+            <ul class="dropdown-content">
+                <li><a href="#">Classes</a></li>
+                <li><a href="{{ url_for('main.students') }}">Students</a></li>
+            </ul>
+        </li>
 
-    <!-- Management -->
-    <div class="menu-section">
-        <div class="menu-item section-label"><i class="fas fa-briefcase"></i> Management</div>
-        <div class="submenu-group">
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Classes</a>
-            <a class="submenu-item" href="{{ url_for('main.students') }}"><i class="fas fa-angle-right"></i> Students</a>
-        </div>
+        <li class="dropdown">
+            <a href="#">Visualization ▾</a>
+            <ul class="dropdown-content">
+                <li><a href="{{ url_for('main.overall') }}">Overall</a></li>
+                <li><a href="{{ url_for('main.individual') }}">Individual</a></li>
+            </ul>
+        </li>
 
-        <!-- Visualization -->
-<div class="menu-item section-label"><i class="fas fa-chart-bar"></i> Visualization</div>
-<div class="submenu-group">
-    <a class="submenu-item" href="{{ url_for('main.overall') }}"><i class="fas fa-angle-right"></i> Overall</a>
-    <a class="submenu-item" href="{{ url_for('main.individual') }}"><i class="fas fa-angle-right"></i> Individual</a>
-</div>
+        <li class="dropdown">
+            <a href="#">Customization ▾</a>
+            <ul class="dropdown-content">
+                <li><a href="#">Set Priorities</a></li>
+                <li><a href="#">Specifications</a></li>
+                <li><a href="#">AI Assistant</a></li>
+                <li><a href="#">History</a></li>
+            </ul>
+        </li>
 
-        <!-- Customization -->
-        <div class="menu-item section-label"><i class="fas fa-cogs"></i> Customization</div>
-        <div class="submenu-group">
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Set Priorities</a>
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> Specifications</a>
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> AI Assistant</a>
-            <a class="submenu-item" href="#"><i class="fas fa-angle-right"></i> History</a>
-        </div>
-    </div>
-</div>
-    <!-- QnA -->
-    <div class="menu-section spaced">
-        <a class="menu-item primary" href="#"><i class="fas fa-question-circle"></i> QnA</a>
-    </div>
-
-    <!-- Toggle Button -->
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-</div>
+        <li><a href="#">QnA</a></li>
+    </ul>
+</nav>
