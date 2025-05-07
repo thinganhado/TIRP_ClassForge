@@ -1,18 +1,15 @@
 import torch
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, mean_squared_error, r2_score, mean_absolute_error
+from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import RGCNConv
 from torch_geometric.transforms import RandomNodeSplit
-from scipy import stats
 import os
 import warnings
 warnings.filterwarnings('ignore')
@@ -121,27 +118,15 @@ class HeteroRGCN(torch.nn.Module):
 
 def check_data_distribution(df, feature_cols):
     """Analyze data distribution for skewness and outliers"""
-    print("\nAnalyzing data distribution:")
+    print("\nAnalyzing data distribution...")
     
     # Calculate summary statistics
     summary = df[feature_cols].describe()
-    print("\nSummary statistics:")
-    print(summary)
     
     # Check for skewness
     skewness = df[feature_cols].skew()
-    print("\nSkewness analysis:")
-    for col, skew_val in skewness.items():
-        print(f"  {col}: Skewness = {skew_val:.4f} ", end="")
-        if abs(skew_val) < 0.5:
-            print("(approximately symmetric)")
-        elif abs(skew_val) < 1.0:
-            print("(moderately skewed)")
-        else:
-            print("(highly skewed)")
     
     # Check for outliers using IQR method
-    print("\nOutlier analysis (using IQR method):")
     outliers_summary = {}
     
     for col in feature_cols:
@@ -156,7 +141,6 @@ def check_data_distribution(df, feature_cols):
         outliers_count = len(outliers)
         outliers_pct = 100 * outliers_count / len(df)
         
-        print(f"  {col}: {outliers_count} outliers ({outliers_pct:.2f}%)")
         outliers_summary[col] = {
             'count': outliers_count,
             'percentage': outliers_pct,
@@ -168,18 +152,10 @@ def check_data_distribution(df, feature_cols):
 
 def handle_missing_values(df, feature_cols, method='median'):
     """Handle missing values in the dataset"""
-    print("\nHandling missing values:")
+    print("\nHandling missing values...")
     
     # Count missing values
     missing = df[feature_cols].isnull().sum()
-    missing_pct = 100 * missing / len(df)
-    
-    print("Missing values before imputation:")
-    for col, count in missing.items():
-        if count > 0:
-            print(f"  {col}: {count} missing values ({missing_pct[col]:.2f}%)")
-        else:
-            print(f"  {col}: No missing values")
     
     # Make a copy to avoid modifying the original
     df_imputed = df.copy()
@@ -190,14 +166,12 @@ def handle_missing_values(df, feature_cols, method='median'):
             if missing[col] > 0:
                 median_val = df[col].median()
                 df_imputed[col] = df[col].fillna(median_val)
-                print(f"  Imputed {missing[col]} values in {col} with median: {median_val:.4f}")
     
     elif method == 'mean':
         for col in feature_cols:
             if missing[col] > 0:
                 mean_val = df[col].mean()
                 df_imputed[col] = df[col].fillna(mean_val)
-                print(f"  Imputed {missing[col]} values in {col} with mean: {mean_val:.4f}")
     
     elif method == 'knn':
         from sklearn.impute import KNNImputer
@@ -206,20 +180,12 @@ def handle_missing_values(df, feature_cols, method='median'):
             imputer.fit_transform(df[feature_cols]), 
             columns=feature_cols
         )
-        print("  Used KNN imputation for missing values")
-    
-    # Check if any missing values remain
-    still_missing = df_imputed[feature_cols].isnull().sum().sum()
-    if still_missing > 0:
-        print(f"Warning: {still_missing} missing values remain after imputation")
-    else:
-        print("  All missing values have been imputed")
     
     return df_imputed
 
 def handle_outliers(df, feature_cols, outliers_summary, method='winsorize'):
     """Handle outliers in the dataset"""
-    print("\nHandling outliers:")
+    print("\nHandling outliers...")
     
     # Make a copy to avoid modifying the original
     df_cleaned = df.copy()
@@ -236,9 +202,6 @@ def handle_outliers(df, feature_cols, outliers_summary, method='winsorize'):
                     lower,
                     np.where(df[col] > upper, upper, df[col])
                 )
-                
-                print(f"  {col}: Winsorized {outliers_summary[col]['count']} outliers " +
-                      f"({outliers_summary[col]['percentage']:.2f}%)")
     
     elif method == 'trim':
         # Create a mask for non-outlier rows
@@ -255,8 +218,6 @@ def handle_outliers(df, feature_cols, outliers_summary, method='winsorize'):
                 
         # Apply mask to get trimmed dataframe
         df_cleaned = df[mask].copy()
-        removed = len(df) - len(df_cleaned)
-        print(f"  Removed {removed} rows ({100*removed/len(df):.2f}%) containing outliers")
     
     return df_cleaned
 
@@ -295,7 +256,7 @@ def load_and_preprocess_data(excel_file):
         print(f"Initial data: {merged_df.shape[0]} rows, {merged_df.shape[1]} columns")
         
         # Focus on the specified survey columns
-        feature_cols = ['School_support_engage6', 'Manbox5_overall', 'Masculinity_contrained', 'pwi_wellbeing']
+        feature_cols = ['School_support_engage6', 'Manbox5_overall', 'Masculinity_contrained', 'GrowthMindset']
         
         # Check if all required columns exist
         for col in feature_cols:
@@ -312,6 +273,11 @@ def load_and_preprocess_data(excel_file):
                     if alt_cols:
                         print(f"Using alternative column: {alt_cols[0]}")
                         merged_df['Manbox5_overall'] = merged_df[alt_cols[0]]
+                if col == 'GrowthMindset':
+                    alt_cols = [c for c in merged_df.columns if 'growth' in c.lower() and 'mind' in c.lower()]
+                    if alt_cols:
+                        print(f"Using alternative column: {alt_cols[0]}")
+                        merged_df['GrowthMindset'] = merged_df[alt_cols[0]]
         
         # Check available columns after potential renaming
         available_cols = [col for col in feature_cols if col in merged_df.columns]
@@ -402,11 +368,10 @@ def perform_clustering(scaled_df, feature_cols, max_clusters=10):
             
         score = silhouette_score(X, cluster_labels)
         silhouette_scores.append(score)
-        print(f"  K={k}: Silhouette Score = {score:.4f}")
     
     # Find optimal k 
     optimal_k = silhouette_scores.index(max(silhouette_scores)) + 2
-    print(f"\nOptimal number of clusters: {optimal_k}")
+    print(f"Optimal number of clusters: {optimal_k}")
     
     # Apply K-Means with optimal k
     kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
@@ -417,13 +382,26 @@ def perform_clustering(scaled_df, feature_cols, max_clusters=10):
     
     # Create and save cluster profiles
     cluster_profiles = scaled_df.groupby('cluster')[feature_cols].mean()
-    print("Cluster profiles (mean values of features for each cluster):")
-    print(cluster_profiles)
     
     return scaled_df, optimal_k, cluster_profiles
 
+def analyze_feature_correlations(df, feature_cols, target_col=None):
+    """Analyze correlations between features and with target if provided"""
+    print("\nStep 3a: Analyzing feature correlations...")
+    
+    # Create a correlation matrix for all features
+    if target_col is not None and target_col in df.columns:
+        # Include target column if provided
+        corr_cols = feature_cols + [target_col]
+    else:
+        corr_cols = feature_cols
+    
+    corr_matrix = df[corr_cols].corr()
+    
+    return corr_matrix
+
 def apply_pca_for_wellbeing_score(scaled_df, feature_cols):
-    """Apply PCA to create a synthetic social wellbeing score"""
+    """Apply PCA to create a synthetic social wellbeing score using two principal components"""
     print("\nStep 3: Applying PCA to create synthetic social wellbeing score...")
     
     # Extract scaled features for PCA
@@ -433,36 +411,23 @@ def apply_pca_for_wellbeing_score(scaled_df, feature_cols):
     pca = PCA(n_components=len(feature_cols))
     principal_components = pca.fit_transform(X)
     
-    # Extract first principal component
+    # Extract first two principal components
     pc1 = principal_components[:, 0]
+    pc2 = principal_components[:, 1]
     
     # Check variance explained
     explained_variance = pca.explained_variance_ratio_
-    print(f"Variance explained by each component: {explained_variance}")
-    print(f"Variance explained by first component: {explained_variance[0]:.4f} ({explained_variance[0]*100:.2f}%)")
+    print(f"Variance explained by first two components: PC1={explained_variance[0]:.4f}, PC2={explained_variance[1]:.4f}")
+    print(f"Total variance explained: {(explained_variance[0] + explained_variance[1]):.4f}")
     
-    # Check correlation with pwi_wellbeing if available
-    if 'pwi_wellbeing' in scaled_df.columns:
-        corr = np.corrcoef(pc1, scaled_df['pwi_wellbeing'])[0, 1]
-        print(f"Correlation between PC1 and pwi_wellbeing: {corr:.4f}")
-        
-        # If negatively correlated, reverse the PC1 scores
-        if corr < 0:
-            pc1 = -pc1
-            print("PC1 was negatively correlated with wellbeing. Scale reversed.")
+    # Create a weighted sum of the first two components based on their explained variance
+    weighted_sum = (explained_variance[0] * pc1 + explained_variance[1] * pc2) / (explained_variance[0] + explained_variance[1])
     
     # Normalize to 1-100 scale
-    social_wellbeing = 100 * (pc1 - pc1.min()) / (pc1.max() - pc1.min())
+    social_wellbeing = 100 * (weighted_sum - weighted_sum.min()) / (weighted_sum.max() - weighted_sum.min())
     
     # Add to DataFrame
     scaled_df['social_wellbeing'] = social_wellbeing
-    
-    print(f"Social wellbeing score range: {social_wellbeing.min():.2f} to {social_wellbeing.max():.2f}")
-    
-    # Calculate average wellbeing score by cluster
-    cluster_wellbeing = scaled_df.groupby('cluster')['social_wellbeing'].mean()
-    print("Average wellbeing score by cluster:")
-    print(cluster_wellbeing)
     
     return scaled_df, social_wellbeing, pca
 
@@ -505,19 +470,11 @@ def prepare_graph_data(scaled_df, friend_edges, disrespect_edges, feature_cols, 
     transform = RandomNodeSplit(split='train_rest', num_val=0.1, num_test=0.2)
     data = transform(data)
     
-    print(f"Graph data prepared:")
-    print(f"  - {data['student'].x.size(0)} student nodes")
-    print(f"  - {data['student', 'friend', 'student'].edge_index.size(1)} friend edges")
-    print(f"  - {data['student', 'disrespect', 'student'].edge_index.size(1)} disrespect edges")
-    print(f"Data split: {data['student'].train_mask.sum().item()} train, "
-          f"{data['student'].val_mask.sum().item()} validation, "
-          f"{data['student'].test_mask.sum().item()} test nodes")
-    
     return data
 
 def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
     """Train RGCN for Regression"""
-    print("\nStep 5: Training RGCN for regression...")
+    print("\nStep 5: Training RGCN model...")
     
     # Get node and edge types
     node_types = list(data.node_types)
@@ -538,13 +495,10 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
     
     # Set up learning rate scheduler
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=10, verbose=True
+        optimizer, mode='min', factor=0.5, patience=10, verbose=False
     )
     
     # Training loop
-    train_losses = []
-    val_losses = []
-    test_losses = []
     best_val_loss = float('inf')
     patience = 20
     counter = 0
@@ -565,7 +519,6 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
         # Backward pass
         loss.backward()
         optimizer.step()
-        train_losses.append(loss.item())
         
         # Validation
         model.eval()
@@ -575,11 +528,6 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
             
             val_loss = F.mse_loss(out['student'][data['student'].val_mask].squeeze(), 
                                  data['student'].y[data['student'].val_mask].squeeze())
-            val_losses.append(val_loss.item())
-            
-            test_loss = F.mse_loss(out['student'][data['student'].test_mask].squeeze(), 
-                                  data['student'].y[data['student'].test_mask].squeeze())
-            test_losses.append(test_loss.item())
         
         # Update learning rate scheduler
         scheduler.step(val_loss)
@@ -592,56 +540,19 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
         else:
             counter += 1
             if counter >= patience:
-                print(f"Early stopping at epoch {epoch} (no improvement for {patience} epochs)")
+                print(f"Early stopping at epoch {epoch}")
                 break
-        
-        if epoch % 10 == 0:
-            print(f"Epoch {epoch}/{epochs}, Train Loss: {loss:.4f}, Val Loss: {val_loss:.4f}, Test Loss: {test_loss:.4f}")
     
     # Load best model for evaluation
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
     
-    print(f"Training completed. Best validation loss: {best_val_loss:.4f}")
+    print(f"Training completed.")
     
-    return model, train_losses, val_losses, test_losses
+    return model
 
-def evaluate_model(model, data):
-    """Evaluate model and make predictions"""
-    print("\nStep 6: Evaluating model and making predictions...")
-    
-    # Set model to evaluation mode
-    model.eval()
-    
-    with torch.no_grad():
-        # Forward pass
-        out = model(data.x_dict, data.edge_index_dict)
-        
-        # Get predictions for all students
-        all_preds = out['student'].squeeze().cpu().numpy()
-        all_true = data['student'].y.squeeze().cpu().numpy()
-        
-        # Predictions for test set
-        test_mask = data['student'].test_mask.cpu().numpy()
-        test_preds = all_preds[test_mask]
-        test_true = all_true[test_mask]
-        
-        # Calculate metrics
-        mse = mean_squared_error(test_true, test_preds)
-        mae = mean_absolute_error(test_true, test_preds)
-        r2 = r2_score(test_true, test_preds)
-        
-        print("\nTest Set Metrics:")
-        print(f"  MSE: {mse:.4f}")
-        print(f"  MAE: {mae:.4f}")
-        print(f"  R²: {r2:.4f}")
-    
-    return all_preds, all_true, mse, r2, mae
-
-def predict_new_student(model, data, features, friend_connections=None, disrespect_connections=None):
-    """Predict wellbeing for a new student based on features and connections"""
-    print("\nPredicting social wellbeing for a new student...")
-    
+def predict_wellbeing(model, data, features, friend_connections=None, disrespect_connections=None):
+    """Predict wellbeing for a student based on features and connections"""
     # Create a copy of the data
     new_data = data.clone()
     
@@ -716,7 +627,6 @@ def predict_new_student(model, data, features, friend_connections=None, disrespe
         out = model(new_data.x_dict, new_data.edge_index_dict)
         prediction = out['student'][-1].item()  # Get prediction for the new student
     
-    print(f"Predicted social wellbeing: {prediction:.2f}")
     return prediction
 
 def main():
@@ -731,33 +641,14 @@ def main():
         # Step 3: Apply PCA to create social wellbeing score
         scaled_df, social_wellbeing, pca = apply_pca_for_wellbeing_score(scaled_df, feature_cols)
         
+        # Step 3a: Analyze correlations between features
+        corr_matrix = analyze_feature_correlations(scaled_df, feature_cols, target_col='social_wellbeing')
+        
         # Step 4: Prepare graph data for GNN
         graph_data = prepare_graph_data(scaled_df, friend_edges, disrespect_edges, feature_cols, social_wellbeing)
         
         # Step 5: Train RGCN model
-        model, train_losses, val_losses, test_losses = train_rgcn_model(graph_data)
-        
-        # Step 6: Evaluate model and make predictions
-        all_preds, all_true, mse, r2, mae = evaluate_model(model, graph_data)
-        
-        # Save predictions to CSV
-        scaled_df['predicted_wellbeing'] = np.nan
-        idx_list = [i for i, mask in enumerate(graph_data['student'].test_mask) if mask]
-        
-        for idx in idx_list:
-            scaled_df.loc[idx, 'predicted_wellbeing'] = all_preds[idx]
-        
-        scaled_df['actual_wellbeing'] = all_true
-        scaled_df.to_csv('output/social_wellbeing_predictions.csv', index=False)
-        
-        # Example: Predict for a new student
-        print("\n--- Example: Predicting for a new student ---")
-        example_features = [0.5, -0.2, 1.0, 0.3]  # Scaled features
-        example_friends = [0, 5, 10]  # Example friends
-        
-        new_prediction = predict_new_student(
-            model, graph_data, example_features, friend_connections=example_friends
-        )
+        model = train_rgcn_model(graph_data)
         
         # Save the trained model
         torch.save(model.state_dict(), 'output/social_wellbeing_rgcn_model.pt')
