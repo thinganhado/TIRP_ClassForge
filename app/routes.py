@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template
-from app.db.student_queries import fetch_all_students
+from flask import Blueprint, render_template, jsonify
+from app.database.student_queries import fetch_all_students, fetch_student_details
+from app.database.class_queries    import fetch_unique_classes
 
 main = Blueprint('main', __name__)
 
@@ -15,8 +16,16 @@ def students():
 
 @main.route("/api/students")
 def api_students():
-    students = fetch_all_students()
-    return jsonify(students)
+    return jsonify(fetch_all_students())
+
+# app/routes.py  (add after /api/students)
+@main.route("/api/students/<int:sid>")
+def api_student_detail(sid):
+    return jsonify(fetch_student_details(sid))
+
+@main.route("/api/classes")          # ← NEW
+def api_classes():
+    return jsonify(fetch_unique_classes())
 
 # Overall visualization page
 @main.route('/visualization/overall')
