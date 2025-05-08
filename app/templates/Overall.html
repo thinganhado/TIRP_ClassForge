@@ -1,23 +1,165 @@
+{#  templates/Overall.html  #}
 {% extends "base.html" %}
 
 {% block title %}Overall Visualization{% endblock %}
 
+{% block extra_head %}
+  <style>
+      /* ─── simple tab strip ─────────────────────────────── */
+      ul.tabs{
+          display:flex;gap:4px;margin:0 0 24px 0;padding:0;list-style:none;
+          border-bottom:2px solid #e0e0e0;
+      }
+      ul.tabs li{
+          padding:10px 18px;
+          font-weight:500;
+          cursor:pointer;
+          border-radius:6px 6px 0 0;
+          color:#152259;
+      }
+      ul.tabs li.active{
+          background:#152259;color:#fff;
+      }
+      .tab-pane{display:none;}
+      .tab-pane.active{display:block;}
+      /* keep Power BI + graphs centred & limited width */
+      .tab-pane > .embed-wrapper{
+          margin:auto;max-width:1150px;display:flex;justify-content:center;
+      }
+  </style>
+{% endblock %}
+
 {% block content %}
-<h1>Overall Visualization</h1>
 
-<div class="main-content-box">
-    <p>This embedded dashboard shows an overview of class allocation insights.</p>
+<!-- ───────  breadcrumb bar ─────── -->
+<div class="breadcrumb-bar">
+  <a href="{{ url_for('main.dashboard') }}">Home</a>
+  / <span>Visualization</span> / <span>Overall</span>
+</div>
 
-    <!-- Power BI Embed -->
-    <div style="margin-top: 20px; text-align: center;">
-        <iframe title="Jan_dashboard"
-                width="1140"
-                height="541.25"
-                src="https://app.powerbi.com/reportEmbed?reportId=14c0b4fd-b9ea-4f66-a4ae-9271d99999ba&autoAuth=true&ctid=df7f7579-3e9c-4a7e-b844-420280f53859"
-                frameborder="0"
-                style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-                allowfullscreen="true">
-        </iframe>
+<!-- ───────  page intro  ─────── -->
+<section class="page-intro">
+  <h2>Overall Visualization</h2>
+  <p>
+    Explore a high-level dashboard of class-allocation metrics, or switch
+    to the network graphs for deeper insight.
+  </p>
+</section>
+
+<!-- ───────  tab strip  ─────── -->
+<ul class="tabs" id="vizTabs">
+  <li class="active" data-tab="dash">Dashboard</li>
+  <li data-tab="net_friend">Friendship Graph</li>
+  <li data-tab="net_moretime">More Time Graph</li>
+  <li data-tab="net_influence">Influence Graph</li>
+  <li data-tab="net_feedback">Feedback Graph</li>
+  <li data-tab="net_advice">Advice Graph</li>
+  <li data-tab="net_disrespect">Disrespect Graph</li>
+</ul>
+
+<!-- ───────  panes  ─────── -->
+<div id="dash"  class="tab-pane active">
+   <div class="embed-wrapper">
+     <iframe title="Overall dashboard" width="920" height="541.25"
+             src="https://app.powerbi.com/view?r=eyJrIjoiODdiMmVkMDQtMmMyNy00Nzg2LTliMzktYjJjNGUwZjUzNWIwIiwidCI6ImRmN2Y3NTc5LTNlOWMtNGE3ZS1iODQ0LTQyMDI4MGY1Mzg1OSIsImMiOjEwfQ%3D%3D"
+             frameborder="0" allowfullscreen></iframe>
+   </div>
+</div>
+
+<div id="net_friend" class="tab-pane">
+    <div class="embed-wrapper">
+        <!-- TODO: insert your first network graph here -->
+        <iframe
+  width="800"
+  height="600"
+  src="https://ouestware.gitlab.io/retina/beta/#/graph/?url=https://gist.githubusercontent.com/gdawg95/4264166867944c5cd4ffb7333074286d/raw/6ee930f0932ae6c5fef1d43ca745ab77a011e0d0/network-4d8d0707-4a0.gexf"
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
     </div>
 </div>
+
+<div id="net_moretime" class="tab-pane">
+    <div class="embed-wrapper">
+        <iframe
+  width="800"
+  height="600"
+  src="https://ouestware.gitlab.io/retina/beta/#/graph/?url=https://gist.githubusercontent.com/gdawg95/75d6bacb0645b881c2414535c7afd9fa/raw/55aea5f1baa3ab4dbec34f642cb8b4771726b2aa/network-dd489c03-31e.gexf"
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
+    </div>
+</div>
+
+<div id="net_influence" class="tab-pane">
+    <div class="embed-wrapper">
+        <iframe
+  width="800"
+  height="600"
+  src=""
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
+    </div>
+</div>
+
+<div id="net_feedback" class="tab-pane">
+    <div class="embed-wrapper">
+        <iframe
+  width="800"
+  height="600"
+  src="https://ouestware.gitlab.io/retina/beta/#/graph/?url=https://gist.githubusercontent.com/gdawg95/7deea0ed85bfdcded19f8d2f57ccbf6a/raw/249897668c898a48e1914218ad2142ede457257c/network-17f38e24-718.gexf"
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
+    </div>
+</div>
+
+<div id="net_advice" class="tab-pane">
+    <div class="embed-wrapper">
+        <iframe
+  width="800"
+  height="600"
+  src="https://ouestware.gitlab.io/retina/beta/#/graph/?url=https://gist.githubusercontent.com/gdawg95/df5fdd03714a98d8e1a97fd817011f90/raw/1d0bf6cc2425c5b9eef85122d967a32390aa4ded/network-25067d1e-826.gexf"
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
+    </div>
+</div>
+
+<div id="net_disrespect" class="tab-pane">
+    <div class="embed-wrapper">
+        <iframe
+  width="800"
+  height="600"
+  src="https://ouestware.gitlab.io/retina/beta/#/graph/?url=https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2Fc239c426e82115dc9c43bad7fdefa109%2Fraw%2F07a7c90e9042aa62448e1f5ebec1edcc47d779cd%2Fnetwork-a7e7808f-6e6.gexf"
+  frameBorder="0"
+  title="Retina"
+  allowFullScreen
+></iframe>
+    </div>
+</div>
+
+</div>
+<!-- ───────  tiny tab-switcher ─────── -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+   const tabs = document.querySelectorAll("#vizTabs li");
+   tabs.forEach(t => t.addEventListener("click", () => {
+       /* activate chosen tab */
+       tabs.forEach(x=>x.classList.remove("active"));
+       t.classList.add("active");
+
+       /* show relevant pane */
+       document.querySelectorAll(".tab-pane")
+               .forEach(p => p.classList.toggle("active", p.id===t.dataset.tab));
+   }));
+});
+</script>
+
 {% endblock %}
