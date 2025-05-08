@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, accuracy_score, classification_report
 from sklearn.decomposition import PCA
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,15 +21,16 @@ np.random.seed(42)
 # Create output directories
 os.makedirs("output", exist_ok=True)
 
-class HeteroRGCN(torch.nn.Module):
-    """Heterogeneous Relational Graph Convolutional Network for social wellbeing prediction"""
-    def __init__(self, node_types, edge_types, hidden_channels=128, out_channels=1, num_layers=2, dropout=0.3):
+class HeteroRGCNClassifier(torch.nn.Module):
+    """Heterogeneous Relational Graph Convolutional Network for social wellbeing classification"""
+    def __init__(self, node_types, edge_types, num_classes, hidden_channels=128, num_layers=2, dropout=0.3):
         super().__init__()
         
         # Store node and edge types
         self.node_types = node_types
         self.edge_types = edge_types
         self.dropout = dropout
+        self.num_classes = num_classes
         
         # Create embeddings for each node type
         self.embeddings = torch.nn.ModuleDict()
@@ -57,10 +58,10 @@ class HeteroRGCN(torch.nn.Module):
                 )
             self.convs.append(conv)
         
-        # Output layers for each node type
+        # Output layers for each node type (now outputs multiple classes)
         self.output = torch.nn.ModuleDict()
         for node_type in node_types:
-            self.output[node_type] = torch.nn.Linear(hidden_channels, out_channels)
+            self.output[node_type] = torch.nn.Linear(hidden_channels, num_classes)
     
     def forward(self, x_dict, edge_index_dict):
         # Transform features for each node type
@@ -109,7 +110,7 @@ class HeteroRGCN(torch.nn.Module):
             # Update node representations
             h_dict = h_dict_new
         
-        # Apply output transformation
+        # Apply output transformation and return logits
         out_dict = {}
         for node_type, h in h_dict.items():
             out_dict[node_type] = self.output[node_type](h)
@@ -346,11 +347,11 @@ def load_and_preprocess_data(excel_file):
         
     except Exception as e:
         print(f"Error loading data: {str(e)}")
-        raise
+        raise 
 
 def perform_clustering(scaled_df, feature_cols, max_clusters=10):
-    """Apply K-Means clustering to the scaled survey data"""
-    print("\nStep 2: Performing K-Means clustering...")
+    """Apply K-Means clustering to the scaled survey data to generate class labels"""
+    print("\nStep 2: Performing K-Means clustering for classification labels...")
     
     # Extract scaled features for clustering
     X = scaled_df[feature_cols].values
@@ -371,23 +372,31 @@ def perform_clustering(scaled_df, feature_cols, max_clusters=10):
     
     # Find optimal k 
     optimal_k = silhouette_scores.index(max(silhouette_scores)) + 2
-    print(f"Optimal number of clusters: {optimal_k}")
+    print(f"Optimal number of clusters (classes): {optimal_k}")
     
     # Apply K-Means with optimal k
     kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
     cluster_labels = kmeans.fit_predict(X)
     
     # Add cluster labels to the DataFrame
-    scaled_df['cluster'] = cluster_labels
+    scaled_df['cluster_label'] = cluster_labels
     
     # Create and save cluster profiles
-    cluster_profiles = scaled_df.groupby('cluster')[feature_cols].mean()
+    cluster_profiles = scaled_df.groupby('cluster_label')[feature_cols].mean()
+    print("\nCluster profiles (class centroids):")
+    print(cluster_profiles)
     
-    return scaled_df, optimal_k, cluster_profiles
+    # Print class distribution
+    class_dist = scaled_df['cluster_label'].value_counts().sort_index()
+    print("\nClass distribution:")
+    for class_idx, count in class_dist.items():
+        print(f"  - Class {class_idx}: {count} samples ({100 * count / len(scaled_df):.1f}%)")
+    
+    return scaled_df, optimal_k, cluster_profiles, kmeans
 
 def analyze_feature_correlations(df, feature_cols, target_col=None):
     """Analyze correlations between features and with target if provided"""
-    print("\nStep 3a: Analyzing feature correlations...")
+    print("\nStep 3: Analyzing feature correlations...")
     
     # Create a correlation matrix for all features
     if target_col is not None and target_col in df.columns:
@@ -400,51 +409,20 @@ def analyze_feature_correlations(df, feature_cols, target_col=None):
     
     return corr_matrix
 
-def apply_pca_for_wellbeing_score(scaled_df, feature_cols):
-    """Apply PCA to create a synthetic social wellbeing score using two principal components"""
-    print("\nStep 3: Applying PCA to create synthetic social wellbeing score...")
-    
-    # Extract scaled features for PCA
-    X = scaled_df[feature_cols].values
-    
-    # Apply PCA
-    pca = PCA(n_components=len(feature_cols))
-    principal_components = pca.fit_transform(X)
-    
-    # Extract first two principal components
-    pc1 = principal_components[:, 0]
-    pc2 = principal_components[:, 1]
-    
-    # Check variance explained
-    explained_variance = pca.explained_variance_ratio_
-    print(f"Variance explained by first two components: PC1={explained_variance[0]:.4f}, PC2={explained_variance[1]:.4f}")
-    print(f"Total variance explained: {(explained_variance[0] + explained_variance[1]):.4f}")
-    
-    # Create a weighted sum of the first two components based on their explained variance
-    weighted_sum = (explained_variance[0] * pc1 + explained_variance[1] * pc2) / (explained_variance[0] + explained_variance[1])
-    
-    # Normalize to 1-100 scale
-    social_wellbeing = 100 * (weighted_sum - weighted_sum.min()) / (weighted_sum.max() - weighted_sum.min())
-    
-    # Add to DataFrame
-    scaled_df['social_wellbeing'] = social_wellbeing
-    
-    return scaled_df, social_wellbeing, pca
-
-def prepare_graph_data(scaled_df, friend_edges, disrespect_edges, feature_cols, social_wellbeing):
-    """Prepare graph data for GNN"""
-    print("\nStep 4: Preparing graph data for GNN...")
+def prepare_graph_data_for_classification(scaled_df, friend_edges, disrespect_edges, feature_cols):
+    """Prepare graph data for GNN classification"""
+    print("\nStep 4: Preparing graph data for GNN classification...")
     
     # Create graph data object
     data = HeteroData()
     
-    # Add student nodes and their features
+    # Get features (X) and cluster labels (y)
     X = scaled_df[feature_cols].values
-    y = social_wellbeing.reshape(-1, 1)  # target: social wellbeing score
+    y = scaled_df['cluster_label'].values
     
     # Convert to PyTorch tensors
     x = torch.tensor(X, dtype=torch.float)
-    y = torch.tensor(y, dtype=torch.float)
+    y = torch.tensor(y, dtype=torch.long)
     
     # Add node information
     data['student'].x = x
@@ -472,20 +450,20 @@ def prepare_graph_data(scaled_df, friend_edges, disrespect_edges, feature_cols, 
     
     return data
 
-def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
-    """Train RGCN for Regression"""
-    print("\nStep 5: Training RGCN model...")
+def train_rgcn_classification_model(data, num_classes, epochs=100, lr=0.01, weight_decay=5e-4):
+    """Train RGCN for Classification"""
+    print("\nStep 5: Training RGCN classification model...")
     
     # Get node and edge types
     node_types = list(data.node_types)
     edge_types = list(data.edge_types)
     
     # Create model
-    model = HeteroRGCN(
+    model = HeteroRGCNClassifier(
         node_types=node_types,
         edge_types=edge_types,
+        num_classes=num_classes,
         hidden_channels=128,
-        out_channels=1,
         num_layers=2,
         dropout=0.3
     )
@@ -512,9 +490,9 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
         # Forward pass
         out = model(data.x_dict, data.edge_index_dict)
         
-        # Calculate loss
-        loss = F.mse_loss(out['student'][data['student'].train_mask].squeeze(), 
-                          data['student'].y[data['student'].train_mask].squeeze())
+        # Calculate loss (cross entropy for classification)
+        loss = F.cross_entropy(out['student'][data['student'].train_mask], 
+                              data['student'].y[data['student'].train_mask])
         
         # Backward pass
         loss.backward()
@@ -526,8 +504,16 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
             # Forward pass
             out = model(data.x_dict, data.edge_index_dict)
             
-            val_loss = F.mse_loss(out['student'][data['student'].val_mask].squeeze(), 
-                                 data['student'].y[data['student'].val_mask].squeeze())
+            val_loss = F.cross_entropy(out['student'][data['student'].val_mask], 
+                                     data['student'].y[data['student'].val_mask])
+            
+            # Calculate validation accuracy
+            pred = out['student'][data['student'].val_mask].argmax(dim=1)
+            correct = (pred == data['student'].y[data['student'].val_mask]).sum()
+            val_acc = int(correct) / int(data['student'].val_mask.sum())
+            
+            if epoch % 10 == 0:
+                print(f"Epoch {epoch}: Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}, Val Acc: {val_acc:.4f}")
         
         # Update learning rate scheduler
         scheduler.step(val_loss)
@@ -547,12 +533,33 @@ def train_rgcn_model(data, epochs=100, lr=0.01, weight_decay=5e-4):
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
     
+    # Final evaluation on test set
+    model.eval()
+    with torch.no_grad():
+        out = model(data.x_dict, data.edge_index_dict)
+        
+        # Get predictions
+        pred = out['student'][data['student'].test_mask].argmax(dim=1)
+        y_true = data['student'].y[data['student'].test_mask]
+        
+        # Calculate accuracy
+        correct = (pred == y_true).sum()
+        test_acc = int(correct) / int(data['student'].test_mask.sum())
+        
+        print(f"\nTest Accuracy: {test_acc:.4f}")
+        
+        # Print classification report
+        y_pred = pred.cpu().numpy()
+        y_true = y_true.cpu().numpy()
+        print("\nClassification Report:")
+        print(classification_report(y_true, y_pred))
+    
     print(f"Training completed.")
     
     return model
 
-def predict_wellbeing(model, data, features, friend_connections=None, disrespect_connections=None):
-    """Predict wellbeing for a student based on features and connections"""
+def predict_class(model, data, features, friend_connections=None, disrespect_connections=None):
+    """Predict class for a student based on features and connections"""
     # Create a copy of the data
     new_data = data.clone()
     
@@ -568,7 +575,7 @@ def predict_wellbeing(model, data, features, friend_connections=None, disrespect
     new_data['student'].x = new_x
     
     # Add dummy target
-    dummy_y = torch.zeros(1, 1)
+    dummy_y = torch.zeros(1, dtype=torch.long)
     new_y = torch.cat([new_data['student'].y, dummy_y], dim=0)
     new_data['student'].y = new_y
     
@@ -621,44 +628,155 @@ def predict_wellbeing(model, data, features, friend_connections=None, disrespect
             
         new_data['student', 'disrespect', 'student'].edge_index = new_edge_index
     
-    # Predict wellbeing for the new student
+    # Predict class for the new student
     model.eval()
     with torch.no_grad():
         out = model(new_data.x_dict, new_data.edge_index_dict)
-        prediction = out['student'][-1].item()  # Get prediction for the new student
+        logits = out['student'][-1]
+        probabilities = F.softmax(logits, dim=0)
+        predicted_class = probabilities.argmax().item()
     
-    return prediction
+    return predicted_class, probabilities.tolist()
 
-def main():
+def assign_meaningful_labels(scaled_df, cluster_profiles, feature_cols):
+    """Assign meaningful labels to clusters based on feature values"""
+    print("\nStep 2a: Assigning meaningful labels to clusters...")
+    
+    # Analyze the cluster profiles to determine which represents higher wellbeing
+    # We'll consider higher school support and growth mindset as indicators of higher wellbeing
+    # Lower manbox scores and masculinity constraints also indicate higher wellbeing
+    
+    wellbeing_indicators = {}
+    
+    for cluster_id in cluster_profiles.index:
+        # Calculate a wellbeing score for each cluster based on feature values
+        # Positive contribution: higher school support and growth mindset
+        # Negative contribution: higher manbox score and masculinity constraints
+        wellbeing_score = (
+            cluster_profiles.loc[cluster_id, 'School_support_engage6'] + 
+            cluster_profiles.loc[cluster_id, 'GrowthMindset'] -
+            cluster_profiles.loc[cluster_id, 'Manbox5_overall'] -
+            cluster_profiles.loc[cluster_id, 'Masculinity_contrained']
+        )
+        wellbeing_indicators[cluster_id] = wellbeing_score
+    
+    # Identify high and low wellbeing clusters
+    high_wellbeing_cluster = max(wellbeing_indicators, key=wellbeing_indicators.get)
+    low_wellbeing_cluster = min(wellbeing_indicators, key=wellbeing_indicators.get)
+    
+    # Create a mapping dictionary
+    cluster_labels = {}
+    for cluster_id in cluster_profiles.index:
+        if cluster_id == high_wellbeing_cluster:
+            cluster_labels[cluster_id] = 'High Wellbeing'
+        else:
+            cluster_labels[cluster_id] = 'Low Wellbeing'
+    
+    # Add meaningful labels to the DataFrame
+    scaled_df['wellbeing_label'] = scaled_df['cluster_label'].map(cluster_labels)
+    
+    # Print the mapping
+    print("\nCluster meaning:")
+    for cluster_id, label in cluster_labels.items():
+        print(f"  - Cluster {cluster_id}: {label}")
+        print(f"    Feature averages: {dict(zip(feature_cols, cluster_profiles.loc[cluster_id].values))}")
+    
+    return scaled_df, cluster_labels
+
+def silent_print(*args, **kwargs):
+    """A function that does nothing - used to suppress prints"""
+    pass
+
+def main(verbose=True):
+    # Store original print function
+    original_print = print
+    
     try:
+        # If not verbose, replace print with silent version
+        if not verbose:
+            globals()['print'] = silent_print
+        
         # Step 1: Load and preprocess the data
         excel_file = "Student Survey - Jan.xlsx"
         filtered_df, scaled_df, feature_cols, friend_edges, disrespect_edges, id_to_idx = load_and_preprocess_data(excel_file)
         
-        # Step 2: Perform clustering
-        scaled_df, optimal_k, cluster_profiles = perform_clustering(scaled_df, feature_cols)
+        # Step 2: Perform clustering to generate class labels
+        scaled_df, num_classes, cluster_profiles, kmeans_model = perform_clustering(scaled_df, feature_cols)
         
-        # Step 3: Apply PCA to create social wellbeing score
-        scaled_df, social_wellbeing, pca = apply_pca_for_wellbeing_score(scaled_df, feature_cols)
+        # Step 2a: Assign meaningful labels to clusters
+        scaled_df, cluster_labels = assign_meaningful_labels(scaled_df, cluster_profiles, feature_cols)
         
-        # Step 3a: Analyze correlations between features
-        corr_matrix = analyze_feature_correlations(scaled_df, feature_cols, target_col='social_wellbeing')
+        # Step 3: Analyze correlations between features
+        corr_matrix = analyze_feature_correlations(scaled_df, feature_cols, target_col='cluster_label')
         
-        # Step 4: Prepare graph data for GNN
-        graph_data = prepare_graph_data(scaled_df, friend_edges, disrespect_edges, feature_cols, social_wellbeing)
+        # Step 4: Prepare graph data for GNN classification
+        graph_data = prepare_graph_data_for_classification(scaled_df, friend_edges, disrespect_edges, feature_cols)
         
-        # Step 5: Train RGCN model
-        model = train_rgcn_model(graph_data)
+        # Step 5: Train RGCN classification model
+        model = train_rgcn_classification_model(graph_data, num_classes)
         
-        # Save the trained model
-        torch.save(model.state_dict(), 'output/social_wellbeing_rgcn_model.pt')
-        print("\nModel saved to output/social_wellbeing_rgcn_model.pt")
-        print("\nWorkflow completed successfully!")
+        # Restore print function for final output
+        if not verbose:
+            globals()['print'] = original_print
+        
+        # Save models
+        torch.save(model.state_dict(), 'output/social_wellbeing_rgcn_classifier.pt')
+        print("Classification model saved to output/social_wellbeing_rgcn_classifier.pt")
+        
+        # Save classifier output
+        output_file = 'output/wellbeing_classification_results.csv'
+        
+        # Add prediction probabilities to the dataframe
+        with torch.no_grad():
+            model.eval()
+            out = model(graph_data.x_dict, graph_data.edge_index_dict)
+            probs = F.softmax(out['student'], dim=1).cpu().numpy()
+            
+            # Add probabilities to dataframe
+            for i in range(num_classes):
+                scaled_df[f'prob_class_{i}'] = probs[:, i]
+        
+        # Save the results to CSV
+        result_df = scaled_df[['Participant-ID', 'cluster_label', 'wellbeing_label'] + 
+                             [f'prob_class_{i}' for i in range(num_classes)] +
+                             feature_cols]
+        result_df.to_csv(output_file, index=False)
+        print(f"Classification results saved to {output_file}")
+        
+        # Save KMeans model for future class mapping
+        try:
+            import joblib
+            joblib.dump(kmeans_model, 'output/kmeans_cluster_model.pkl')
+            joblib.dump(cluster_profiles, 'output/cluster_profiles.pkl')
+            joblib.dump(cluster_labels, 'output/cluster_labels.pkl')
+        except Exception as e:
+            print(f"Warning: Could not save support models: {str(e)}")
+        
+        # Display summary statistics only
+        class_dist = scaled_df['wellbeing_label'].value_counts()
+        print("\nSummary of classification results:")
+        for label, count in class_dist.items():
+            print(f"  - {label}: {count} students ({100 * count / len(scaled_df):.1f}%)")
+        
+        print("\nAverage feature values by wellbeing label:")
+        label_profiles = scaled_df.groupby('wellbeing_label')[feature_cols].mean()
+        print(label_profiles)
+        
+        return model, scaled_df, cluster_labels
         
     except Exception as e:
+        # Restore print function in case of error
+        if not verbose:
+            globals()['print'] = original_print
         print(f"An error occurred: {str(e)}")
         import traceback
         traceback.print_exc()
+        return None, None, None
+
+def run_classification_only():
+    """Run the classification model with minimal output"""
+    print("Running social wellbeing classification...")
+    main(verbose=False)
 
 if __name__ == "__main__":
-    main() 
+    run_classification_only() 

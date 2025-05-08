@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Customisation - History{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation') }}">Customisation</a> / <span>History</span>
+</div>
+
+<div class="history-container">
+    <div class="history-toolbar">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        
+        <div class="filter-dropdown">
+            <button class="filter-button">Filter <i class="fas fa-chevron-down"></i></button>
+        </div>
+    </div>
+    
+    <div class="history-table-container">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th class="select-column"><input type="checkbox"></th>
+                    <th>TIME</th>
+                    <th>TITLE</th>
+                    <th>AVG SOCIAL</th>
+                    <th>AVG ACADEMIC</th>
+                    <th>AVG WELL-BEING</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>17/04/2025</td>
+                    <td>ALLOCATION 1</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>18/04/2025</td>
+                    <td>ALLOCATION 2</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="action-container">
+        <button class="compare-button">Compare</button>
+    </div>
+</div>
+{% endblock %} 

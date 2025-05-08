@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Customisation - Specification{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation') }}">Customisation</a> / <span>Specification</span>
+</div>
+
+<div class="customisation-container">
+    <div class="specification-section">
+        <h2 class="section-title">Specific allocation</h2>
+        
+        <div class="spec-grid">
+            <div class="spec-column">
+                <div class="dropdown-container">
+                    <label for="student">Student</label>
+                    <select id="student" name="student" class="customisation-dropdown">
+                        <option value="">Select student</option>
+                        <!-- Student options will be loaded dynamically -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="spec-column">
+                <div class="dropdown-container">
+                    <label for="class">Class</label>
+                    <select id="class" name="class" class="customisation-dropdown">
+                        <option value="">Select class</option>
+                        <!-- Class options will be loaded dynamically -->
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <button class="add-button">Add</button>
+    </div>
+    
+    <div class="specification-section">
+        <h2 class="section-title">Groups to avoid</h2>
+        
+        <div class="group-item">
+            <span class="group-label">Group 1</span>
+            
+            <div class="dropdown-container wide">
+                <select id="students-to-avoid" name="students-to-avoid" class="customisation-dropdown">
+                    <option value="">Students</option>
+                    <!-- Student options will be loaded dynamically -->
+                </select>
+            </div>
+        </div>
+        
+        <button class="add-button">Add</button>
+    </div>
+    
+    <div class="action-container">
+        <button class="apply-button">Apply</button>
+    </div>
+</div>
+{% endblock %} 

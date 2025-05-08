@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Customisation - Set priorities{% endblock %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/customisation.js') }}"></script>
+
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation') }}">Customisation</a> / <span>Set priorities</span>
+</div>
+
+<div class="customisation-container">
+    <h2 class="section-title">Optimization Settings</h2>
+    
+    <!-- Hard Constraints Section -->
+    <div class="constraint-section">
+        <h3 class="subsection-title">Hard Constraints <span class="constraint-badge">Required</span></h3>
+        
+        <div class="constraint-grid">
+            <div class="constraint-item">
+                <label for="class-size">Class Size:</label>
+                <div class="input-group">
+                    <input type="number" id="class-size" name="class-size" value="25" min="15" max="40" class="constraint-input">
+                    <span class="input-unit">students</span>
+                </div>
+            </div>
+            
+            <div class="constraint-item">
+                <label for="max-classes">Maximum Number of Classes:</label>
+                <div class="input-group">
+                    <input type="number" id="max-classes" name="max-classes" value="4" min="1" max="10" class="constraint-input">
+                    <span class="input-unit">classes</span>
+                </div>
+            </div>
+            
+            <div class="constraint-item">
+                <label for="min-friends">Required Friendships per Student:</label>
+                <div class="input-group">
+                    <input type="number" id="min-friends" name="min-friends" value="1" min="0" max="5" class="constraint-input">
+                    <span class="input-unit">friends</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Criteria Section -->
+    <div class="constraint-section">
+        <h3 class="subsection-title">Classification Criteria & Soft Goals</h3>
+        
+        <div class="criteria-container">
+            <!-- Academic Performance Panel -->
+            <div class="criteria-panel">
+                <h4 class="criteria-title">Academic Performance</h4>
+                <div class="criteria-option">
+                    <label for="grade-variance-slider">Minimize Grade Variance (Scale 1-100):</label>
+                    <div class="slider-container criteria-value-display-container">
+                        <input type="range" id="grade-variance-slider" name="grade-variance" min="1" max="100" value="34" class="criteria-slider">
+                        <span class="slider-value">34</span>
+                    </div>
+                </div>
+            </div>
+<!-- Student Wellbeing Panel -->
+<div class="criteria-panel">
+    <h4 class="criteria-title">Student Wellbeing</h4>
+    <div class="criteria-option">
+        <label for="wellbeing-strategy">Wellbeing Optimization Strategy:</label>
+        <select id="wellbeing-strategy" name="wellbeing-strategy" class="customisation-dropdown">
+            <option value="balance">Even Distribution of Wellbeing Levels</option>
+            <option value="supportive" selected>Supportive Pairing Strategy</option>
+            <option value="minimal">Basic Wellbeing Consideration</option>
+        </select>
+    </div>
+    <div class="criteria-option">
+        <label for="wellbeing-threshold-slider">Wellbeing Threshold (Scale 1-100):</label>
+        <div class="slider-container criteria-value-display-container">
+            <input type="range" id="wellbeing-threshold-slider" name="wellbeing-threshold" min="1" max="100" value="50" class="criteria-slider">
+            <span class="slider-value">50%</span>
+        </div>
+    </div>
+</div>
+
+            <!-- Bullying Prevention Panel -->
+            <div class="criteria-panel">
+                <h4 class="criteria-title">Bullying Prevention</h4>
+                <div class="criteria-option">
+                    <label for="bully-victim-handling">Bully-Victim Handling:</label>
+                    <select id="bully-victim-handling" name="bully-victim-handling" class="customisation-dropdown">
+                        <option value="separate">Separate Bullies and Victims</option>
+                        <option value="minimize_pairs">Minimize Bully-Victim Pairs</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Social Influence Balance Panel -->
+            <div class="criteria-panel">
+                <h4 class="criteria-title">Social Influence Balance</h4>
+                <div class="criteria-option">
+                    <label for="influential-threshold-slider">Influential Student Threshold (Scale 1-100):</label>
+                    <div class="slider-container criteria-value-display-container">
+                        <input type="range" id="influential-threshold-slider" name="influential-threshold" min="1" max="100" value="60" class="criteria-slider">
+                        <span class="slider-value">60</span>
+                    </div>
+                </div>
+                <div class="criteria-option">
+                    <label for="isolated-threshold-slider">Isolated Student Threshold (Scale 1-100):</label>
+                    <div class="slider-container criteria-value-display-container">
+                        <input type="range" id="isolated-threshold-slider" name="isolated-threshold" min="1" max="100" value="60" class="criteria-slider">
+                        <span class="slider-value">60</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Friendship & Social Connections Panel -->
+            <div class="criteria-panel">
+                <h4 class="criteria-title">Friendship & Social Connections</h4>
+                <div class="criteria-option button-group-option">
+                    <label>Maximize Friendship Connections:</label>
+                    <div class="criteria-button-group" data-target="maximize-friendships">
+                        <button type="button" class="criteria-button" data-value="false">Off</button>
+                        <button type="button" class="criteria-button active" data-value="true">On</button>
+                        <input type="hidden" id="maximize-friendships" name="maximize-friendships" value="true">
+                    </div>
+                </div>
+                <div class="criteria-option button-group-option">
+                    <label>Balance Friendship Density Across Classes:</label>
+                    <div class="criteria-button-group" data-target="balance-friendship-density">
+                        <button type="button" class="criteria-button" data-value="false">Off</button>
+                        <button type="button" class="criteria-button active" data-value="true">On</button>
+                        <input type="hidden" id="balance-friendship-density" name="balance-friendship-density" value="true">
+                    </div>
+                </div>
+                <div class="criteria-option button-group-option">
+                    <label>Optimize Friend Group Distribution:</label>
+                    <div class="criteria-button-group" data-target="optimize-friend-groups">
+                        <button type="button" class="criteria-button" data-value="false">Off</button>
+                        <button type="button" class="criteria-button active" data-value="true">On</button>
+                        <input type="hidden" id="optimize-friend-groups" name="optimize-friend-groups" value="true">
+                    </div>
+                </div>
+                <div class="criteria-option button-group-option">
+                    <label>Prevent Social Isolation:</label>
+                    <div class="criteria-button-group" data-target="prevent-isolation">
+                        <button type="button" class="criteria-button" data-value="false">Off</button>
+                        <button type="button" class="criteria-button active" data-value="true">On</button>
+                        <input type="hidden" id="prevent-isolation" name="prevent-isolation" value="true">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Weights Section -->
+    <div class="constraint-section">
+        <h3 class="subsection-title">Objective Priorities <span class="constraint-badge">Soft Constraints</span></h3>
+        <p class="section-subtitle">Drag to rank from highest to lowest importance. These weights apply to the goals selected above.</p>
+        
+        <div class="priority-container">
+            <div class="priority-list" id="priority-sortable">
+                <div class="priority-item" draggable="true" data-objective="academic_performance">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="priority-content">
+                        <div class="priority-name">Academic Performance</div>
+                        <div class="priority-desc">Optimizing for grade variance and distribution.</div>
+                    </div>
+                    <div class="priority-weight">
+                        <input type="number" min="1" max="5" value="5" class="weight-input" readonly>
+                    </div>
+                </div>
+                
+                <div class="priority-item" draggable="true" data-objective="student_wellbeing">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="priority-content">
+                        <div class="priority-name">Student Wellbeing</div>
+                        <div class="priority-desc">Balancing and supporting students based on wellbeing scores.</div>
+                    </div>
+                    <div class="priority-weight">
+                        <input type="number" min="1" max="5" value="4" class="weight-input" readonly>
+                    </div>
+                </div>
+                
+                <div class="priority-item" draggable="true" data-objective="bullying_prevention">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="priority-content">
+                        <div class="priority-name">Bullying Prevention</div>
+                        <div class="priority-desc">Minimizing negative interactions and protecting vulnerable students.</div>
+                    </div>
+                    <div class="priority-weight">
+                        <input type="number" min="1" max="5" value="3" class="weight-input" readonly>
+                    </div>
+                </div>
+                
+                <div class="priority-item" draggable="true" data-objective="social_influence">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="priority-content">
+                        <div class="priority-name">Social Influence Balance</div>
+                        <div class="priority-desc">Managing distribution of influential and isolated students.</div>
+                    </div>
+                    <div class="priority-weight">
+                        <input type="number" min="1" max="5" value="2" class="weight-input" readonly>
+                    </div>
+                </div>
+                
+                <div class="priority-item" draggable="true" data-objective="friendship_connections">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="priority-content">
+                        <div class="priority-name">Friendship & Social Connections</div>
+                        <div class="priority-desc">Maximizing and balancing friendship density.</div>
+                    </div>
+                    <div class="priority-weight">
+                        <input type="number" min="1" max="5" value="1" class="weight-input" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+   
+</div>
+
+<script>
+// This script is just for the slider value display and will be moved to customisation.js
+document.addEventListener('DOMContentLoaded', function() {
+    const sliders = document.querySelectorAll('.criteria-slider');
+    sliders.forEach(slider => {
+        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        if (valueDisplay) {
+            // Set initial value
+            if (slider.id === 'grade-variance-slider' || slider.id === 'influential-threshold-slider' || slider.id === 'isolated-threshold-slider') {
+                valueDisplay.textContent = slider.value + '%';
+            } else {
+                valueDisplay.textContent = slider.value;
+            }
+            // Add event listener
+            slider.addEventListener('input', function() {
+                if (this.id === 'grade-variance-slider' || this.id === 'influential-threshold-slider' || this.id === 'isolated-threshold-slider') {
+                    valueDisplay.textContent = this.value + '%';
+                } else {
+                    valueDisplay.textContent = this.value;
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 
