@@ -42,7 +42,7 @@ participant_data.columns = participant_data.columns.str.strip()  # Fix spaces
 participant_data['Perc_Academic'] = participant_data['Perc_Academic'].fillna(participant_data['Perc_Academic'].mean())
 
 
-# --- Load CP-SAT starting point ---
+# --- Load starting point ---
 hetero_graph = torch.load("R-GCN_files/hetero_graph.pt", weights_only=False)
 friendship_df = pd.read_excel("R-GCN_files/friendship_scores.xlsx")
 student_scores_df = pd.read_excel("R-GCN_files/student_scores.xlsx")
@@ -89,8 +89,8 @@ friendship_df["Participant1-ID"] = friendship_df["student1"].map(index_to_id)
 friendship_df["Participant2-ID"] = friendship_df["student2"].map(index_to_id)
 
 # --- Build starting individual ---
-cpsat_df = pd.read_excel("student_data/seed_allocations.xlsx")
-cpsat_individual = cpsat_df.sort_values("student_index")["class_assigned"].tolist()
+start_df = pd.read_excel("student_data/seed_allocations.xlsx")
+start_individual = start_df.sort_values("student_index")["class_assigned"].tolist()
 
 # --- Build friendship lookup ---
 friendship_lookup = {}
@@ -292,16 +292,16 @@ tournament_size = 3
 weights = None  # or a dictionary of custom weights
 
 # --- Initialize Population ---
-def initialize_population(cpsat_individual, population_size):
-    population = [cpsat_individual]  # Start with CP-SAT solution
+def initialize_population(start_individual, population_size):
+    population = [start_individual]  # Start with seed
 
     for _ in range(population_size - 1):
-        new_individual = mutate(cpsat_individual, num_swaps=num_swaps_per_mutation)
+        new_individual = mutate(start_individual, num_swaps=num_swaps_per_mutation)
         population.append(new_individual)
 
     return population
 
-population = initialize_population(cpsat_individual, population_size)
+population = initialize_population(start_individual, population_size)
 
 # --- Main Evolution Loop ---
 best_fitness_over_time = []
