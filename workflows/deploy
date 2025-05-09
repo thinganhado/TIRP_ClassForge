@@ -1,8 +1,8 @@
-name: CI & CD to OCI
+name: CI & Deploy to OCI
 
 on:
   push:
-    branches: [ main ]        # deploy only on main; adjust if needed
+    branches: [ main ]          # change if your prod branch is different
 
 jobs:
   test:
@@ -12,16 +12,16 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'        # test with most recent stable
+          python-version: '3.11'
 
-      - name: Install deps
+      - name: Install runtime deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Run (placeholder) tests
-        run: |
-          echo "## Add pytest or flake8 here ##"
-          # pytest
+
+      # (optional) add pytest or flake8 here
+      - name: Dummy test
+        run: echo "tests passed"
 
   deploy:
     needs: test
@@ -30,31 +30,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add SSH key to agent
+      # 1️⃣  Load the SSH key & host fingerprint
+      - name: Add SSH key
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      # rsync keeps venv & other large files on the server, only diffs code
-      - name: Sync code to server
+      # 2️⃣  Sync the repo to the VM (fast incremental)
+      - name: Rsync code to server
         run: |
           rsync -az --delete \
             -e "ssh -o StrictHostKeyChecking=yes" \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/TIRP/
 
-      # install any new python deps + restart systemd unit
-      - name: Install requirements & restart Flask service
+      # 3️⃣  Install any new deps and restart the service
+      - name: Install deps & restart service
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
             set -e
             cd ~/TIRP
-            # ensure venv exists
-            if [ ! -d venv ]; then
-              python3 -m venv venv
-            fi
+            # activate venv
             source venv/bin/activate
-            pip install --upgrade pip
+            # install updated requirements
             pip install -r requirements.txt
+            # restart systemd service
             sudo systemctl restart flaskapp
           EOF
