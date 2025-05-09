@@ -12,8 +12,6 @@ from app import db
 import subprocess
 import pandas as pd
 from sqlalchemy import text
-import os
-from app.ml_models.finalallocation import run_allocation
 
 main = Blueprint("main", __name__)
 
@@ -115,8 +113,38 @@ def submit_customisation():
         with open("app/ml_models/soft_constraints_config.json", "w") as f:
             json.dump(constraints, f, indent=2)
 
-        # ✅ Redirect to loading screen
-        return redirect(url_for("main.customisation_loading"))
+        # --- Run GA Script ---
+        
+        result = subprocess.run(
+            ["python", "finalallocation.py"],
+            capture_output=True,
+            text=True,
+            cwd="app/ml_models"  # Run from inside this directory
+        )
+
+        if result.returncode != 0:
+            # Log the error output from the script
+            print("GA Script Error Output:\n", result.stderr)
+            flash(f"GA Allocation failed. Error:\n{result.stderr}")
+            return redirect(url_for("main.set_priorities"))
+
+
+        # --- Insert GA Output into DB ---
+
+        df = pd.read_excel("app/ml_models/final_class_allocations_ga.xlsx")
+
+        # Clear old records
+        db.session.execute(text("DELETE FROM allocations"))
+
+        # Insert new
+        for _, row in df.iterrows():
+            db.session.execute(
+                text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
+                {"class_id": int(row["final_class_assigned"]), "student_id": str(row["participant_id"])}
+            )
+        db.session.commit()
+
+        return redirect(url_for("main.overall"))
 
     except Exception as e:
         flash(f"Submission error: {e}")
@@ -144,54 +172,3 @@ def api_student_detail(sid):
 @main.route("/api/classes")
 def api_classes():
     return jsonify(fetch_unique_classes())
-
-# ----- Running GA ----
-
-@main.route("/run_ga")
-def run_ga():
-    try:
-        # --- Change working directory temporarily ---
-        original_dir = os.getcwd()
-        os.chdir("app/ml_models")  # ⬅️ Pretend you're inside this folder
-        # --- Run GA directly as a function ---
-        run_allocation()  # <-- No subprocess!
-
-        # --- Confirm Excel output exists ---
-        excel_path = "final_class_allocations_ga.xlsx"
-        if not os.path.exists(excel_path):
-            return jsonify({
-                "status": "error",
-                "message": "GA completed, but Excel file not found."
-            })
-
-        # --- Read Excel output ---
-        try:
-            df = pd.read_excel(excel_path)
-        except Exception as e:
-            return jsonify({
-                "status": "error",
-                "message": f"Excel read error: {str(e)}"
-            })
-
-        # --- Insert into DB ---
-        try:
-            db.session.execute(text("DELETE FROM allocations"))
-            for _, row in df.iterrows():
-                db.session.execute(
-                    text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
-                    {"class_id": int(row["final_class_assigned"]), "student_id": str(row["participant_id"])}
-                )
-            db.session.commit()
-        except Exception as e:
-            return jsonify({
-                "status": "error",
-                "message": f"DB insert error: {str(e)}"
-            })
-
-        return jsonify({"status": "success"})
-
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Unexpected error: {str(e)}"
-        })
