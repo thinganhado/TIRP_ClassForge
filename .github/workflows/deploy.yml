@@ -2,7 +2,7 @@ name: CI & Deploy to OCI
 
 on:
   push:
-    branches: [ main ]          # deploy only from main
+    branches: [ main ]       
 
 jobs:
   test:
@@ -22,26 +22,30 @@ jobs:
       - name: Dummy test
         run: echo "tests passed"
 
-deploy:
-  needs: test
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Add SSH key
-      uses: shimataro/ssh-key-action@v2
-      with:
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.KNOWN_HOSTS }}
-        # (SSH_USER and SERVER_IP stay in secrets)
+      # Inject the private key and host fingerprint
+      - name: Add SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-    - name: Pull latest code, install deps, restart
-      run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
-          set -e
-          cd ~/TIRP
-          git pull --ff-only
-          source venv/bin/activate
-          pip install -r requirements.txt
-          sudo systemctl restart flaskapp
-        EOF
+      # Pull latest code on the server, install deps, restart service
+      - name: Pull code, install deps, restart service
+        env:
+          VM_USER:  ${{ secrets.SSH_USER }}
+          VM_IP:    ${{ secrets.SERVER_IP }}
+        run: |
+          ssh "${VM_USER}@${VM_IP}" <<'EOF'
+            set -e
+            cd ~/TIRP
+            git pull --ff-only
+            source venv/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart flaskapp
+          EOF
