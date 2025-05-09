@@ -8,6 +8,7 @@ from app.database.student_queries import (
 )
 from app.database.class_queries import fetch_unique_classes
 from app.database.softcons_queries import SoftConstraint
+from app import db
 
 
 main = Blueprint("main", __name__)
@@ -55,43 +56,57 @@ def history():
 def submit_customisation():
     try:
         # --- Extract form data ---
-        gpa_penalty = int(request.form.get("gpa_penalty_weight", 30))
-        wellbeing_penalty = int(request.form.get("wellbeing_penalty_weight", 50))
-        bully_penalty = int(request.form.get("bully_penalty_weight", 60))
-        influence_weight = int(request.form.get("influence_std_weight", 60))
-        isolation_weight = int(request.form.get("isolated_std_weight", 60))
-        friend_score_toggle = request.form.get("friend_score_toggle", "true") == "true"
-        friend_balance_toggle = request.form.get("friend_balance_toggle", "true") == "true"
-        min_friends = int(request.form.get("min_friends", 1))
+        gpa_penalty_weight = int(request.form.get("gpa_penalty_weight", 30))
+        wellbeing_penalty_weight = int(request.form.get("wellbeing_penalty_weight", 50))
+        bully_penalty_weight = int(request.form.get("bully_penalty_weight", 60))
+        influence_std_weight = int(request.form.get("influence_std_weight", 60))
+        isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
+        min_friends_required = int(request.form.get("min_friends", 1))
+        friendship_score_weight = 100 if request.form.get("friend_score_toggle", "true") == "true" else 0
+        friendship_balance_weight = 100 if request.form.get("friend_balance_toggle", "true") == "true" else 0
+
         priority_csv = request.form.get("priority_order", "")
         priority_list = priority_csv.split(",") if priority_csv else []
 
+        # --- Map priority list to weights ---
+        priority_mapping = {
+            "academic_performance": "prioritize_academic",
+            "student_wellbeing": "prioritize_wellbeing",
+            "bullying_prevention": "prioritize_bullying",
+            "social_influence": "prioritize_social_influence",
+            "friendship_connections": "prioritize_friendship"
+        }
+        priority_weights = {v: 0 for v in priority_mapping.values()}
+        for rank, key in enumerate(priority_list[::-1], start=1):  # Higher rank = higher weight
+            if key in priority_mapping:
+                priority_weights[priority_mapping[key]] = rank
+
         # --- Store in SQL ---
         new_entry = SoftConstraint(
-            gpa_penalty=gpa_penalty,
-            wellbeing_penalty=wellbeing_penalty,
-            bully_penalty=bully_penalty,
-            influence_weight=influence_weight,
-            isolation_weight=isolation_weight,
-            friend_score_toggle=friend_score_toggle,
-            friend_balance_toggle=friend_balance_toggle,
-            min_friends=min_friends,
-            priority_order=",".join(priority_list)
+            gpa_penalty_weight=gpa_penalty_weight,
+            wellbeing_penalty_weight=wellbeing_penalty_weight,
+            bully_penalty_weight=bully_penalty_weight,
+            influence_std_weight=influence_std_weight,
+            isolated_std_weight=isolated_std_weight,
+            min_friends_required=min_friends_required,
+            friendship_score_weight=friendship_score_weight,
+            friendship_balance_weight=friendship_balance_weight,
+            **priority_weights
         )
         db.session.add(new_entry)
         db.session.commit()
 
         # --- Optional: Save JSON too ---
         constraints = {
-            "gpa_penalty": gpa_penalty,
-            "wellbeing_penalty": wellbeing_penalty,
-            "bully_penalty": bully_penalty,
-            "influence_weight": influence_weight,
-            "isolation_weight": isolation_weight,
-            "friend_score_toggle": friend_score_toggle,
-            "friend_balance_toggle": friend_balance_toggle,
-            "min_friends": min_friends,
-            "priority_order": priority_list
+            "gpa_penalty_weight": gpa_penalty_weight,
+            "wellbeing_penalty_weight": wellbeing_penalty_weight,
+            "bully_penalty_weight": bully_penalty_weight,
+            "influence_std_weight": influence_std_weight,
+            "isolated_std_weight": isolated_std_weight,
+            "min_friends_required": min_friends_required,
+            "friendship_score_weight": friendship_score_weight,
+            "friendship_balance_weight": friendship_balance_weight,
+            **priority_weights
         }
         with open("soft_constraints_config.json", "w") as f:
             json.dump(constraints, f, indent=2)

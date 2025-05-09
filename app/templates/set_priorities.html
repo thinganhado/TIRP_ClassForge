@@ -3,6 +3,21 @@
 {% block title %}Customisation - Set priorities{% endblock %}
 
 {% block extra_head %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+<style>
+    .breadcrumb-bar {
+        padding-top: 110px;
+}
+</style>
 <script src="{{ url_for('static', filename='js/customisation.js') }}"></script>
 
 
@@ -193,7 +208,7 @@
         </div>
     </div>
     <div class="submit-section" style="margin-top: 30px; text-align: right;">
-    <button type="submit" class="submit-button">Run Allocation</button>
+    <button type="submit" class="configure-button">Run Allocation</button>
     </div>
 </div>
 
