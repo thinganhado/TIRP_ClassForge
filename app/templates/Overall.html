@@ -1,4 +1,3 @@
-{#  templates/Overall.html  #}
 {% extends "base.html" %}
 
 {% block title %}Overall Visualization{% endblock %}
@@ -7,29 +6,30 @@
 <style>
   /* --------------- tab strip ----------------- */
   ul.tabs{
-      display:flex;gap:4px;margin:0 0 24px 0;padding:0;list-style:none;
+      display:flex; gap:4px; margin:0 0 24px 0; padding:0; list-style:none;
       border-bottom:2px solid #e0e0e0;
   }
   ul.tabs li{
-      padding:10px 18px;font-weight:500;cursor:pointer;
-      border-radius:6px 6px 0 0;color:#152259;
+      padding:10px 18px; font-weight:500; cursor:pointer;
+      border-radius:6px 6px 0 0; color:#152259;
   }
-  ul.tabs li.active{background:#152259;color:#fff;}
-  .tab-pane{display:none;}
-  .tab-pane.active{display:block;}
+  ul.tabs li.active{ background:#152259; color:#fff; }
+  .tab-pane{ display:none; }
+  .tab-pane.active{ display:block; }
 
   /* --------------- embed wrappers ------------- */
-  .tab-pane>.embed-wrapper{
-      margin:auto;
-      max-width:1150px;          /* don’t let it stretch too wide */
-      width:100%;                /* always own some width → fixes “container 0 px” */
-      display:flex;justify-content:center;
+  .tab-pane > .embed-wrapper {
+      margin: auto;
+      max-width: 1150px;  /* constrain width */
+      width: 100%;        /* ensure non-zero width */
+      display: flex;
+      justify-content: center;
   }
-  .embed-wrapper>iframe{
-      width:100%;                /* responsive */
-      max-width:1150px;
-      height:600px;              /* graphs need a height */
-      border:0;
+  .embed-wrapper > iframe {
+      width: 100%;
+      max-width: 1150px;
+      height: 600px;
+      border: 0;
   }
 </style>
 {% endblock %}
@@ -42,7 +42,7 @@
   / <span>Visualization</span> / <span>Overall</span>
 </div>
 
-<!-- ───────  page intro  ─────── -->
+<!-- ───────  page intro ─────── -->
 <section class="page-intro">
   <h2>Overall Visualization</h2>
   <p>
@@ -51,7 +51,7 @@
   </p>
 </section>
 
-<!-- ───────  tab strip  ─────── -->
+<!-- ───────  tab strip ─────── -->
 <ul class="tabs" id="vizTabs">
   <li class="active" data-tab="dash">Dashboard</li>
   <li data-tab="net_friend">Friendship Graph</li>
@@ -62,9 +62,13 @@
   <li data-tab="net_disrespect">Disrespect Graph</li>
 </ul>
 
-<!-- ───────  panes  ─────── -->
-<div id="dash"  class="tab-pane active">
-  <iframe title="Updatefile" width="1200" height="747" src="https://app.powerbi.com/view?r=eyJrIjoiYzVlY2M0YzQtZDc3Ny00ZjkwLWIwYWQtZDRlYjRiM2IxYjk4IiwidCI6ImRmN2Y3NTc5LTNlOWMtNGE3ZS1iODQ0LTQyMDI4MGY1Mzg1OSIsImMiOjEwfQ%3D%3D" frameborder="0" allowFullScreen="true"></iframe>
+<!-- ───────  panes ─────── -->
+<div id="dash" class="tab-pane active">
+  <div class="embed-wrapper">
+    <iframe title="Overall dashboard"
+            src="https://app.powerbi.com/view?r=eyJrIjoiYzVlY2M0YzQtZDc3Ny00ZjkwLWIwYWQtZDRlYjRiM2IxYjk4IiwidCI6ImRmN2Y3NTc5LTNlOWMtNGE3ZS1iODQ0LTQyMDI4MGY1Mzg1OSIsImMiOjEwfQ%3D%3D"
+            allowFullScreen>
+    </iframe>
   </div>
 </div>
 
@@ -73,69 +77,66 @@
 <div id="net_friend" class="tab-pane">
   <div class="embed-wrapper">
     <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F4264166867944c5cd4ffb7333074286d%2Fraw%2F6ee930f0932ae6c5fef1d43ca745ab77a011e0d0%2Fnetwork-4d8d0707-4a0.gexf"
-            title="Friendship graph"></iframe>
+            title="Friendship graph">
+    </iframe>
   </div>
 </div>
 
 <div id="net_moretime" class="tab-pane">
   <div class="embed-wrapper">
     <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F75d6bacb0645b881c2414535c7afd9fa%2Fraw%2F55aea5f1baa3ab4dbec34f642cb8b4771726b2aa%2Fnetwork-dd489c03-31e.gexf"
-            title="More-time graph"></iframe>
+            title="More-time graph">
+    </iframe>
   </div>
 </div>
 
 <div id="net_influence" class="tab-pane">
-    <div class="embed-wrapper">
-        <iframe data-src="https://ouestware.gitlab.io/retina/beta/#/embed/?url=https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F3d67320f53c024c6f1e4336fed5c5ca8%2Fraw%2F67850f2ebb600788a892260150bd9f11b94503e5%2Fnetwork-7cbaefee-881.gexf"
-                title="Influence graph"></iframe>
-      </div>
-    </div>
+  <div class="embed-wrapper">
+    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F3d67320f53c024c6f1e4336fed5c5ca8%2Fraw%2F67850f2ebb600788a892260150bd9f11b94503e5%2Fnetwork-7cbaefee-881.gexf"
+            title="Influence graph">
+    </iframe>
+  </div>
+</div>
 
 <div id="net_feedback" class="tab-pane">
   <div class="embed-wrapper">
     <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F7deea0ed85bfdcded19f8d2f57ccbf6a%2Fraw%2F249897668c898a48e1914218ad2142ede457257c%2Fnetwork-17f38e24-718.gexf"
-            title="Feedback graph"></iframe>
+            title="Feedback graph">
+    </iframe>
   </div>
 </div>
 
 <div id="net_advice" class="tab-pane">
   <div class="embed-wrapper">
     <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2Fdf5fdd03714a98d8e1a97fd817011f90%2Fraw%2F1d0bf6cc2425c5b9eef85122d967a32390aa4ded%2Fnetwork-25067d1e-826.gexf"
-            title="Advice graph"></iframe>
+            title="Advice graph">
+    </iframe>
   </div>
 </div>
 
 <div id="net_disrespect" class="tab-pane">
   <div class="embed-wrapper">
     <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F027d529776a1f2b71787eebc20b35899%2Fraw%2Ffdfd891ffe14e836ba0cf3ca3f2c3e492b1789d4%2Fnetwork-01b8f299-35e.gexf"
-            title="Disrespect graph"></iframe>
+            title="Disrespect graph">
+    </iframe>
   </div>
 </div>
 
-<!-- ───────  tiny tab-switcher / lazy loader ─────── -->
+<!-- ───────  tab-switcher / lazy-load ─────── -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const tabs  = document.querySelectorAll("#vizTabs li");
-  const panes = document.querySelectorAll(".tab-pane");
-
-  function activate(tab){
-      /* highlight tab */
+  document.addEventListener("DOMContentLoaded",()=>{
+    const tabs  = document.querySelectorAll("#vizTabs li");
+    const panes = document.querySelectorAll(".tab-pane");
+    function activate(tab){
       tabs.forEach(t=>t.classList.toggle("active",t===tab));
-      /* show pane */
       panes.forEach(p=>p.classList.toggle("active",p.id===tab.dataset.tab));
-
-      /* lazy-load iframe inside that pane (once) */
       const pane   = document.getElementById(tab.dataset.tab);
       const iframe = pane.querySelector("iframe[data-src]");
-      if (iframe && !iframe.src){
-          iframe.src = iframe.dataset.src;
-      }
-  }
-
-  tabs.forEach(t => t.addEventListener("click", () => activate(t)));
-  /* ensure first pane’s iframe is loaded immediately */
-  activate(document.querySelector("#vizTabs li.active"));
-});
+      if(iframe&& !iframe.src) iframe.src = iframe.dataset.src;
+    }
+    tabs.forEach(t=>t.addEventListener("click",()=>activate(t)));
+    activate(document.querySelector("#vizTabs li.active"));
+  });
 </script>
 
 {% endblock %}
