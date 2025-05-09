@@ -2,7 +2,7 @@ name: CI & Deploy to OCI
 
 on:
   push:
-    branches: [ main ]          # change if your prod branch is different
+    branches: [ main ]       
 
 jobs:
   test:
@@ -19,44 +19,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # (optional) add pytest or flake8 here
       - name: Dummy test
         run: echo "tests passed"
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  steps:
-    - uses: actions/checkout@v4
-
-    - name: Install rsync            # ← NEW
-      run: sudo apt-get update && sudo apt-get install -y rsync
-
-      # 1️⃣  Load the SSH key & host fingerprint
+      # Inject the private key and host fingerprint
       - name: Add SSH key
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      # 2️⃣  Sync the repo to the VM (fast incremental)
-      - name: Rsync code to server
+      # Pull latest code on the server, install deps, restart service
+      - name: Pull code, install deps, restart service
+        env:
+          VM_USER:  ${{ secrets.SSH_USER }}
+          VM_IP:    ${{ secrets.SERVER_IP }}
         run: |
-          rsync -az --delete \
-            -e "ssh -o StrictHostKeyChecking=yes" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/TIRP/
-
-      # 3️⃣  Install any new deps and restart the service
-      - name: Install deps & restart service
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
+          ssh "${VM_USER}@${VM_IP}" <<'EOF'
             set -e
             cd ~/TIRP
-            # activate venv
+            git pull --ff-only
             source venv/bin/activate
-            # install updated requirements
             pip install -r requirements.txt
-            # restart systemd service
             sudo systemctl restart flaskapp
           EOF
