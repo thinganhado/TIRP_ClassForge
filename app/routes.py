@@ -205,3 +205,12 @@ def run_ga():
             "status": "error",
             "message": f"Unexpected error: {str(e)}"
         })
+
+@main.route("/test_write")
+def test_write():
+    try:
+        with open("app/ml_models/test_permission.txt", "w") as f:
+            f.write("Flask has permission.\n")
+        return "Success: Flask wrote to the file."
+    except Exception as e:
+        return f"Failure: {str(e)}"
