@@ -21,17 +21,17 @@
 
 <!-- Dashboard Feature Cards -->
 <div class="dashboard-card-container">
-    <a href="Students.html" class="dashboard-feature-card">
+    <a href="{{ url_for('main.students') }}" class="dashboard-feature-card">
         <h3>Management</h3>
         <p>Add or remove students, and adjust the number of classes...</p>
         <span class="card-button">Explore</span>
     </a>
-    <a href="Overall.html" class="dashboard-feature-card">
+    <a href="{{ url_for('main.overall') }}" class="dashboard-feature-card">
         <h3>Visualization</h3>
         <p>See visual representations of the classroom allocation...</p>
         <span class="card-button">Explore</span>
     </a>
-    <a href="customisation.html" class="dashboard-feature-card">
+    <a href="{{ url_for('main.customisation_home') }}" class="dashboard-feature-card">
         <h3>Customization</h3>
         <p>Adjust factors like academic balance, social needs...</p>
         <span class="card-button">Explore</span>
