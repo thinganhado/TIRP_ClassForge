@@ -6,7 +6,7 @@
 <div class="loading-container">
     <div class="spinner"></div>
     <h2>Running your classroom allocation...</h2>
-    <p>Please wait while we process your customisation preferences.</p>
+    <p>Please wait while we process your customisation preferences. This takes around 2-4 minutes. If there is an error you will be redirected back to the customisation page</p>
 </div>
 {% endblock %}
 
@@ -36,4 +36,24 @@
     100% { transform: rotate(360deg); }
 }
 </style>
+
+<script>
+    // Automatically call /run_ga after this page loads
+    window.onload = function () {
+        fetch("{{ url_for('main.run_ga') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    window.location.href = "{{ url_for('main.overall') }}";
+                } else {
+                    alert("GA failed: " + data.message);
+                    window.location.href = "{{ url_for('main.set_priorities') }}";
+                }
+            })
+            .catch(err => {
+                alert("Server error: " + err);
+                window.location.href = "{{ url_for('main.set_priorities') }}";
+            });
+    };
+</script>
 {% endblock %}

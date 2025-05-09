@@ -9,7 +9,9 @@ from app.database.student_queries import (
 from app.database.class_queries import fetch_unique_classes
 from app.database.softcons_queries import SoftConstraint
 from app import db
-
+import subprocess
+import pandas as pd
+from sqlalchemy import text
 
 main = Blueprint("main", __name__)
 
@@ -61,9 +63,9 @@ def submit_customisation():
         bully_penalty_weight = int(request.form.get("bully_penalty_weight", 60))
         influence_std_weight = int(request.form.get("influence_std_weight", 60))
         isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
-        min_friends_required = int(request.form.get("min_friends", 1))
-        friendship_score_weight = 100 if request.form.get("friend_score_toggle", "true") == "true" else 0
-        friendship_balance_weight = 100 if request.form.get("friend_balance_toggle", "true") == "true" else 0
+        min_friends_required = int(request.form.get("min_friends_required", 1))
+        friend_inclusion_weight = int(request.form.get("friend_inclusion_weight", 60))
+        friendship_balance_weight = int(request.form.get("friendship_balance_weight", 60))
 
         priority_csv = request.form.get("priority_order", "")
         priority_list = priority_csv.split(",") if priority_csv else []
@@ -89,7 +91,7 @@ def submit_customisation():
             influence_std_weight=influence_std_weight,
             isolated_std_weight=isolated_std_weight,
             min_friends_required=min_friends_required,
-            friendship_score_weight=friendship_score_weight,
+            friend_inclusion_weight=friend_inclusion_weight,
             friendship_balance_weight=friendship_balance_weight,
             **priority_weights
         )
@@ -104,13 +106,14 @@ def submit_customisation():
             "influence_std_weight": influence_std_weight,
             "isolated_std_weight": isolated_std_weight,
             "min_friends_required": min_friends_required,
-            "friendship_score_weight": friendship_score_weight,
+            "friend_inclusion_weight": friend_inclusion_weight,
             "friendship_balance_weight": friendship_balance_weight,
             **priority_weights
         }
-        with open("soft_constraints_config.json", "w") as f:
+        with open("app/ml_models/soft_constraints_config.json", "w") as f:
             json.dump(constraints, f, indent=2)
 
+        # ✅ Redirect to loading screen
         return redirect(url_for("main.customisation_loading"))
 
     except Exception as e:
@@ -139,3 +142,34 @@ def api_student_detail(sid):
 @main.route("/api/classes")
 def api_classes():
     return jsonify(fetch_unique_classes())
+
+# ----- Running GA ----
+
+@main.route("/run_ga")
+def run_ga():
+    try:
+        result = subprocess.run(
+            ["python", "finalallocation.py"],
+            capture_output=True,
+            text=True,
+            cwd="app/ml_models"
+        )
+
+        if result.returncode != 0:
+            print("GA Script Error Output:\n", result.stderr)
+            return jsonify({"status": "error", "message": result.stderr})
+
+        df = pd.read_excel("app/ml_models/final_class_allocations_ga.xlsx")
+
+        db.session.execute(text("DELETE FROM allocations"))
+        for _, row in df.iterrows():
+            db.session.execute(
+                text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
+                {"class_id": int(row["final_class_assigned"]), "student_id": str(row["participant_id"])}
+            )
+        db.session.commit()
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})

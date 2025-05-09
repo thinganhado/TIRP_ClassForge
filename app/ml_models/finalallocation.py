@@ -5,6 +5,18 @@ import copy
 import numpy as np
 import pandas as pd
 import torch
+import os
+import json
+
+
+# Load soft constraint config
+if os.path.exists("soft_constraints_config.json"):
+    with open("soft_constraints_config.json", "r") as f:
+        weights_config = json.load(f)
+else:
+    weights_config = {}  # Use defaults
+
+weights = weights_config
 
 # Load student survey responses (features)
 student_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="responses")
@@ -154,8 +166,8 @@ def fitness(individual, weights=None):
     friendship_balance_penalty = np.std(friendship_counts)
 
     friend_inclusion_score = (
-        weights["friend_inclusion_weight"] * avg_friend_coverage -
-        weights["friend_balance_weight"] * friend_coverage_imbalance
+    weights["friend_inclusion_weight"] * avg_friend_coverage
+    - weights["friend_balance_weight"] * friend_coverage_imbalance
     )
 
     # --- R-GCN Scores ---
@@ -358,4 +370,4 @@ final_df = pd.DataFrame(results)
 
 # --- Save Final Output ---
 final_df.to_excel("final_class_allocations_ga.xlsx", index=False)
-print("✅ Final class allocations saved to 'final_class_allocations_ga.xlsx'")
+print("Final class allocations saved to 'final_class_allocations_ga.xlsx'")
