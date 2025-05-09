@@ -12,6 +12,7 @@ from app import db
 import subprocess
 import pandas as pd
 from sqlalchemy import text
+import os
 
 main = Blueprint("main", __name__)
 
@@ -147,7 +148,10 @@ def api_classes():
 
 @main.route("/run_ga")
 def run_ga():
+    import os
+
     try:
+        # --- Run GA Script ---
         result = subprocess.run(
             ["python", "finalallocation.py"],
             capture_output=True,
@@ -157,19 +161,47 @@ def run_ga():
 
         if result.returncode != 0:
             print("GA Script Error Output:\n", result.stderr)
-            return jsonify({"status": "error", "message": result.stderr})
+            return jsonify({
+                "status": "error",
+                "message": "GA script failed to run:\n" + result.stderr
+            })
 
-        df = pd.read_excel("app/ml_models/final_class_allocations_ga.xlsx")
+        # --- Confirm Excel output exists ---
+        excel_path = os.path.join("app", "ml_models", "final_class_allocations_ga.xlsx")
+        if not os.path.exists(excel_path):
+            return jsonify({
+                "status": "error",
+                "message": "GA completed, but Excel file not found."
+            })
 
-        db.session.execute(text("DELETE FROM allocations"))
-        for _, row in df.iterrows():
-            db.session.execute(
-                text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
-                {"class_id": int(row["final_class_assigned"]), "student_id": str(row["participant_id"])}
-            )
-        db.session.commit()
+        # --- Read Excel output ---
+        try:
+            df = pd.read_excel(excel_path)
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"Excel read error: {str(e)}"
+            })
+
+        # --- Insert into DB ---
+        try:
+            db.session.execute(text("DELETE FROM allocations"))
+            for _, row in df.iterrows():
+                db.session.execute(
+                    text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
+                    {"class_id": int(row["final_class_assigned"]), "student_id": str(row["participant_id"])}
+                )
+            db.session.commit()
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"DB insert error: {str(e)}"
+            })
 
         return jsonify({"status": "success"})
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+        return jsonify({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        })
