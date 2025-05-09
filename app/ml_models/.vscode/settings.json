@@ -1,16 +1,6 @@
 {
     "sqltools.connections": [
         {
-            "previewLimit": 50,
-            "server": "database-1.c1gieoo4asys.us-east-1.rds.amazonaws.com",
-            "port": 5432,
-            "askForPassword": true,
-            "driver": "PostgreSQL",
-            "name": "TIRP_DB_CONNECT",
-            "database": "database-1",
-            "username": "postgres"
-        },
-        {
             "mysqlOptions": {
                 "authProtocol": "default",
                 "enableSsl": "Disabled"
