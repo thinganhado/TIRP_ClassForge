@@ -153,7 +153,7 @@ def run_ga():
     try:
         # --- Run GA Script ---
         result = subprocess.run(
-            ["python", "finalallocation.py"],
+            ["/home/opc/TIRP/venv/bin/python3", "finalallocation.py"],
             capture_output=True,
             text=True,
             cwd="app/ml_models"
@@ -205,12 +205,3 @@ def run_ga():
             "status": "error",
             "message": f"Unexpected error: {str(e)}"
         })
-
-@main.route("/test_write")
-def test_write():
-    try:
-        with open("app/ml_models/test_permission.txt", "w") as f:
-            f.write("Flask has permission.\n")
-        return "Success: Flask wrote to the file."
-    except Exception as e:
-        return f"Failure: {str(e)}"
