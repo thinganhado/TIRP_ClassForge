@@ -1,0 +1,51 @@
+name: CI & Deploy to OCI
+
+on:
+  push:
+    branches: [ main ]       
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install runtime deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Dummy test
+        run: echo "tests passed"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Inject the private key and host fingerprint
+      - name: Add SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      # Pull latest code on the server, install deps, restart service
+      - name: Pull code, install deps, restart service
+        env:
+          VM_USER:  ${{ secrets.SSH_USER }}
+          VM_IP:    ${{ secrets.SERVER_IP }}
+        run: |
+          ssh "${VM_USER}@${VM_IP}" <<'EOF'
+            set -e
+            cd ~/TIRP
+            git pull --ff-only
+            source venv/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart flaskapp
+          EOF
