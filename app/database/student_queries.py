@@ -31,7 +31,9 @@ def fetch_all_students():
         for r in rows
     ]
 
-def fetch_student_details(student_id: int) -> dict | None:
+from typing import Optional
+
+def fetch_student_details(student_id: int) -> Optional[dict]:
     """Return detail row for a single student-id or None."""
     q = text("""
         SELECT
