@@ -3,6 +3,21 @@
 {% block title %}Customisation - Set priorities{% endblock %}
 
 {% block extra_head %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+<style>
+    .breadcrumb-bar {
+        padding-top: 110px;
+}
+</style>
 <script src="{{ url_for('static', filename='js/customisation.js') }}"></script>
 
 
