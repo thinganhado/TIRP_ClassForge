@@ -13,6 +13,7 @@ import subprocess
 import pandas as pd
 from sqlalchemy import text
 import os
+from app.ml_models.finalallocation import run_allocation
 
 main = Blueprint("main", __name__)
 
@@ -148,26 +149,15 @@ def api_classes():
 
 @main.route("/run_ga")
 def run_ga():
-    import os
-
     try:
-        # --- Run GA Script ---
-        result = subprocess.run(
-            ["/home/opc/TIRP/venv/bin/python3", "finalallocation.py"],
-            capture_output=True,
-            text=True,
-            cwd="app/ml_models"
-        )
-
-        if result.returncode != 0:
-            print("GA Script Error Output:\n", result.stderr)
-            return jsonify({
-                "status": "error",
-                "message": "GA script failed to run:\n" + result.stderr
-            })
+        # --- Change working directory temporarily ---
+        original_dir = os.getcwd()
+        os.chdir("app/ml_models")  # ⬅️ Pretend you're inside this folder
+        # --- Run GA directly as a function ---
+        run_allocation()  # <-- No subprocess!
 
         # --- Confirm Excel output exists ---
-        excel_path = os.path.join("app", "ml_models", "final_class_allocations_ga.xlsx")
+        excel_path = "final_class_allocations_ga.xlsx"
         if not os.path.exists(excel_path):
             return jsonify({
                 "status": "error",
