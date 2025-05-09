@@ -22,35 +22,26 @@ jobs:
       - name: Dummy test
         run: echo "tests passed"
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+deploy:
+  needs: test
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
 
-      - name: Install rsync
-        run: |
-          sudo apt-get update -y
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y rsync
+    - name: Add SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.KNOWN_HOSTS }}
+        # (SSH_USER and SERVER_IP stay in secrets)
 
-      - name: Add SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.KNOWN_HOSTS }}
-
-      - name: Sync code to server
-        run: |
-          rsync -az --delete \
-            -e "ssh -o StrictHostKeyChecking=yes" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/TIRP/
-
-      - name: Install deps and restart service
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
-            set -e
-            cd ~/TIRP
-            source venv/bin/activate
-            pip install -r requirements.txt
-            sudo systemctl restart flaskapp
-          EOF
+    - name: Pull latest code, install deps, restart
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
+          set -e
+          cd ~/TIRP
+          git pull --ff-only
+          source venv/bin/activate
+          pip install -r requirements.txt
+          sudo systemctl restart flaskapp
+        EOF
