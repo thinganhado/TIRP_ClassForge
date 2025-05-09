@@ -98,7 +98,7 @@ def submit_customisation():
         db.session.add(new_entry)
         db.session.commit()
 
-        # --- Optional: Save JSON too ---
+        # --- Save JSON config for GA ---
         constraints = {
             "gpa_penalty_weight": gpa_penalty_weight,
             "wellbeing_penalty_weight": wellbeing_penalty_weight,
@@ -113,37 +113,20 @@ def submit_customisation():
         with open("app/ml_models/soft_constraints_config.json", "w") as f:
             json.dump(constraints, f, indent=2)
 
-        # --- Run GA Script ---
-        
+        # --- Run GA script (which handles DB insertion itself) ---
         result = subprocess.run(
             ["python", "finalallocation.py"],
             capture_output=True,
             text=True,
-            cwd="app/ml_models"  # Run from inside this directory
+            cwd="app/ml_models"
         )
 
         if result.returncode != 0:
-            # Log the error output from the script
             print("GA Script Error Output:\n", result.stderr)
             flash(f"GA Allocation failed. Error:\n{result.stderr}")
             return redirect(url_for("main.set_priorities"))
 
-
-        # --- Insert GA Output into DB ---
-
-        df = pd.read_excel("app/ml_models/final_class_allocations_ga.xlsx")
-
-        # Clear old records
-        db.session.execute(text("DELETE FROM allocations"))
-
-        # Insert new
-        for _, row in df.iterrows():
-            db.session.execute(
-                text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
-                {"class_id": int(row["final_class_assigned"]), "student_id": str(row["participant_id"])}
-            )
-        db.session.commit()
-
+        # --- Success ---
         return redirect(url_for("main.overall"))
 
     except Exception as e:

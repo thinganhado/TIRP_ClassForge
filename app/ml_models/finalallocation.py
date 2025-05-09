@@ -6,7 +6,13 @@ import numpy as np
 import pandas as pd
 import torch
 import os
-import json     
+import json
+from sqlalchemy import create_engine, text
+import sys
+import os
+# Ensure parent dir is in path to allow app import
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from app import create_app, db
 
 # Load soft constraint config
 if os.path.exists("soft_constraints_config.json"):
@@ -352,21 +358,23 @@ final_fitnesses = [fitness(ind, weights) for ind in population]
 best_individual = population[final_fitnesses.index(max(final_fitnesses))]
 
 # --- Create Final Output DataFrame ---
-results = []
+app = create_app()
 
-for i, class_id in enumerate(best_individual):
-    results.append({
-        "student_index": i,
-        "participant_id": index_to_id[i],
-        "final_class_assigned": class_id,
-        "Predicted_GPA": gpa_df.loc[gpa_df['Participant-ID'] == index_to_id[i], 'Predicted_GPA'].values[0] if index_to_id[i] in gpa_df['Participant-ID'].values else None,
-        "influential_score": student_scores_df.loc[i, "influential_score"],
-        "isolated_score": student_scores_df.loc[i, "isolated_score"],
-        "wellbeing_label": wellbeing_df.set_index("Participant-ID").reindex([index_to_id[i] for i in best_individual])["wellbeing_label"].values
-    })
+with app.app_context():
+    # Clear existing records
+    db.session.execute(text("DELETE FROM allocations"))
 
-final_df = pd.DataFrame(results)
+    for i, class_id in enumerate(best_individual):
+        participant_id = index_to_id[i]
+        predicted_gpa = gpa_df.loc[gpa_df['Participant-ID'] == participant_id, 'Predicted_GPA'].values[0] if participant_id in gpa_df['Participant-ID'].values else None
+        influential_score = student_scores_df.loc[i, "influential_score"]
+        isolated_score = student_scores_df.loc[i, "isolated_score"]
+        wellbeing_label = wellbeing_df.set_index("Participant-ID").reindex([participant_id])["wellbeing_label"].values[0]
 
-# --- Save Final Output ---
-final_df.to_excel("final_class_allocations_ga.xlsx", index=False)
-print("Final class allocations saved to 'final_class_allocations_ga.xlsx'")
+        db.session.execute(
+            text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
+            {"class_id": int(class_id), "student_id": str(participant_id)}
+        )
+
+    db.session.commit()
+    print("Final class allocations inserted directly into the database.")
