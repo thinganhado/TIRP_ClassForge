@@ -1,0 +1,1235 @@
+[
+  {
+    "timestamp": "2025-05-12 21:18:28",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "hello ",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 21:18:37",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "lets do bullying ",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 60 \u2192 90\nBullying Priority: 3 \u2192 5\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5).'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "gpa_penalty_weight": 30,
+      "wellbeing_penalty_weight": 50,
+      "bully_penalty_weight": 90,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "friendship_score_weight": 100,
+      "friendship_balance_weight": 100,
+      "prioritize_academic": 5,
+      "prioritize_wellbeing": 4,
+      "prioritize_bullying": 5,
+      "prioritize_social_influence": 2,
+      "prioritize_friendship": 1
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:04:37",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "Hello",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:04:59",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "Can you balance bullying for me ?",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 60 \u2192 90\nBullying Priority: 3 \u2192 5\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5).'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "gpa_penalty_weight": 30,
+      "wellbeing_penalty_weight": 50,
+      "bully_penalty_weight": 90,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "friendship_score_weight": 100,
+      "friendship_balance_weight": 100,
+      "prioritize_academic": 5,
+      "prioritize_wellbeing": 4,
+      "prioritize_bullying": 5,
+      "prioritize_social_influence": 2,
+      "prioritize_friendship": 1
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:09:40",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "Hello ",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:09:50",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "acedemic performance ",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 30 \u2192 60\n\n\nBased on teacher feedback for similar situations: 'For better social dynamics, increase influence_std_weight and isolated_std_weight to 70, and prioritize social influence (4-5).'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:15:35",
+    "session_id": "1747052135",
+    "user_input": "I have a student who struggles with math but is very verbal and social",
+    "response": "I've analyzed your request and recommend the following changes:\n\nInfluence Std Weight: 60 \u2192 90\nIsolated Std Weight: 60 \u2192 90\nSocial_Influence Priority: 2 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To optimize friendship connections, set min_friends_required to 2, increase friend_inclusion_weight to 75-85, and prioritize friendship (4-5) for better integration.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 90,
+      "isolated_std_weight": 90,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 4,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:15:35",
+    "session_id": "1747052135",
+    "user_input": "There's a student with anxiety who needs a supportive environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Priority: 4 \u2192 5\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Set friend_inclusion_weight to 80 with specific friend inclusions.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 5,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:15:35",
+    "session_id": "1747052135",
+    "user_input": "I need to focus on helping recently immigrated students integrate better",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:15:35",
+    "session_id": "1747052135",
+    "user_input": "We have a student who's faced bullying and needs protection",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 100\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 100,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:15:36",
+    "session_id": "1747052136",
+    "user_input": "Can you help with a student who has ADHD and needs structure",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:16:05",
+    "session_id": "1747052165",
+    "user_input": "I have a student who struggles with math but is very verbal and social",
+    "response": "I've analyzed your request and recommend the following changes:\n\nInfluence Std Weight: 60 \u2192 90\nIsolated Std Weight: 60 \u2192 90\nSocial_Influence Priority: 2 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'Set academic as priority (4) with specialized mathematics support and cross-domain leveraging. Consider complementary peer grouping for balance.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 90,
+      "isolated_std_weight": 90,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 4,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:16:05",
+    "session_id": "1747052165",
+    "user_input": "There's a student with anxiety who needs a supportive environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Priority: 4 \u2192 5\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'I recommend prioritizing academic balance with a higher GPA penalty weight (60-70) and setting academic as the top priority (5). Also consider lowering social_influence_weight to 40-50 to reduce distractions.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 5,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:16:05",
+    "session_id": "1747052165",
+    "user_input": "I need to focus on helping recently immigrated students integrate better",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:16:05",
+    "session_id": "1747052165",
+    "user_input": "We have a student who's faced bullying and needs protection",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 100\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 100,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:16:05",
+    "session_id": "1747052165",
+    "user_input": "Can you help with a student who has ADHD and needs structure",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:17:31",
+    "session_id": "1747052251",
+    "user_input": "I have a student who struggles with math but is very verbal and social",
+    "response": "I've analyzed your request and recommend the following changes:\n\nInfluence Std Weight: 60 \u2192 90\nIsolated Std Weight: 60 \u2192 90\nSocial_Influence Priority: 2 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'Set academic as priority (4) with specialized mathematics support and cross-domain leveraging. Consider complementary peer grouping for balance.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 90,
+      "isolated_std_weight": 90,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 4,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:17:31",
+    "session_id": "1747052251",
+    "user_input": "There's a student with anxiety who needs a supportive environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 65\nWellbeing Priority: 4 \u2192 5\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'I recommend prioritizing academic balance with a higher GPA penalty weight (60-70) and setting academic as the top priority (5). Also consider lowering social_influence_weight to 40-50 to reduce distractions.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 65,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 5,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:17:31",
+    "session_id": "1747052251",
+    "user_input": "I need to focus on helping recently immigrated students integrate better",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:17:31",
+    "session_id": "1747052251",
+    "user_input": "We have a student who's faced bullying and needs protection",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 100\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 100,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:17:32",
+    "session_id": "1747052252",
+    "user_input": "Can you help with a student who has ADHD and needs structure",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 70,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 75
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:19:03",
+    "session_id": "1747052343",
+    "user_input": "I have a student who struggles with math but is very verbal and social",
+    "response": "I've analyzed your request and recommend the following changes:\n\nInfluence Std Weight: 60 \u2192 90\nIsolated Std Weight: 60 \u2192 90\nSocial_Influence Priority: 2 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'Set academic as priority (4) with specialized mathematics support and cross-domain leveraging. Consider complementary peer grouping for balance.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 90,
+      "isolated_std_weight": 90,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 4,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:19:03",
+    "session_id": "1747052343",
+    "user_input": "There's a student with anxiety who needs a supportive environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 65\nWellbeing Priority: 4 \u2192 5\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'I recommend prioritizing academic balance with a higher GPA penalty weight (60-70) and setting academic as the top priority (5). Also consider lowering social_influence_weight to 40-50 to reduce distractions.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 65,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 5,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:19:03",
+    "session_id": "1747052343",
+    "user_input": "I need to focus on helping recently immigrated students integrate better",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:19:03",
+    "session_id": "1747052343",
+    "user_input": "We have a student who's faced bullying and needs protection",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 100\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 100,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:19:03",
+    "session_id": "1747052343",
+    "user_input": "Can you help with a student who has ADHD and needs structure",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 65,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 5,
+      "wellbeing_penalty_weight": 75
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:19:29",
+    "session_id": "1747052369",
+    "user_input": "I need to focus on helping recently immigrated students integrate better",
+    "response": "I'm ClassForge's AI assistant. I can help you optimize class allocation by adjusting weights and priorities. Try asking me to focus on specific aspects like academic performance, wellbeing, bullying prevention, or social dynamics.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:50:00",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "hello",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:50:15",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "i want balaned well-being ",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:51:35",
+    "session_id": "1747054295",
+    "user_input": "i want balanced well-being",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:52:10",
+    "session_id": "1747054330",
+    "user_input": "i want balanced well-being",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:54:39",
+    "session_id": "1747054479",
+    "user_input": "i want balanced well-being",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:55:25",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "hello",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 22:56:02",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "bullying should be balanced ",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 100\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 100,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 22:56:37",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "disrepect should be avoided ",
+    "response": "I don't see any specific customization needs in your request. Would you like to focus on a particular aspect like academic performance, wellbeing, bullying prevention, or social dynamics?",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:05:22",
+    "session_id": "1747055122",
+    "user_input": "creat a balaced friend ship group",
+    "response": "I've analyzed your request and recommend the following changes:\n\nFriendship Balance Weight: 100 \u2192 70\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To optimize friendship connections, set min_friends_required to 2 and increase friend_inclusion_weight to 70-80. Consider setting prioritize_friendship to 4 to ensure social support.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 70,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 75
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:05:22",
+    "session_id": "1747055122",
+    "user_input": "disrepect should be avoided",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:05:22",
+    "session_id": "1747055122",
+    "user_input": "make sure students dont disrespect each other",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:05:59",
+    "session_id": "1747055159",
+    "user_input": "creat a balaced friend ship group",
+    "response": "I've analyzed your request and recommend the following changes:\n\nFriendship Balance Weight: 100 \u2192 70\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To optimize friendship connections, set min_friends_required to 2 and increase friend_inclusion_weight to 70-80. Consider setting prioritize_friendship to 4 to ensure social support.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 70,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 75
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:05:59",
+    "session_id": "1747055159",
+    "user_input": "disrepect should be avoided",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:05:59",
+    "session_id": "1747055159",
+    "user_input": "make sure students dont disrespect each other",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:00",
+    "session_id": "1747055160",
+    "user_input": "i want balaned well-being",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 70\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 70,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 57
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:07",
+    "session_id": "1747055167",
+    "user_input": "creat a balaced friend ship group",
+    "response": "I've analyzed your request and recommend the following changes:\n\nFriendship Balance Weight: 100 \u2192 70\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To optimize friendship connections, set min_friends_required to 2 and increase friend_inclusion_weight to 70-80. Consider setting prioritize_friendship to 4 to ensure social support.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 70,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 75
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:07",
+    "session_id": "1747055167",
+    "user_input": "disrepect should be avoided",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:07",
+    "session_id": "1747055167",
+    "user_input": "make sure students dont disrespect each other",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:08",
+    "session_id": "1747055168",
+    "user_input": "i want balaned well-being",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 70\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 70,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 57
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:32",
+    "session_id": "1747055192",
+    "user_input": "optimize academic performance",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'I recommend prioritizing academic balance with a higher GPA penalty weight (60-70) and setting academic as the top priority (5). However, also consider setting friend_inclusion_weight to 55-60 to ensure social needs aren't neglected.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:32",
+    "session_id": "1747055192",
+    "user_input": "create a balanced wellbeing environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:32",
+    "session_id": "1747055192",
+    "user_input": "prevent bullying in the classroom",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:40",
+    "session_id": "1747055200",
+    "user_input": "optimize academic performance",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'I recommend prioritizing academic balance with a higher GPA penalty weight (60-70) and setting academic as the top priority (5). However, also consider setting friend_inclusion_weight to 55-60 to ensure social needs aren't neglected.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:40",
+    "session_id": "1747055200",
+    "user_input": "create a balanced wellbeing environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:06:40",
+    "session_id": "1747055200",
+    "user_input": "prevent bullying in the classroom",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:09:20",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "HELLO",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 85\nGpa Penalty Weight: 60 \u2192 71\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 85,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 71,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 57
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:10:40",
+    "session_id": "1747055440",
+    "user_input": "hello",
+    "response": "I've analyzed your request and recommend the following changes:\n\nBully Penalty Weight: 90 \u2192 85\nGpa Penalty Weight: 60 \u2192 71\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 85,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 71,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 57
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:18:38",
+    "session_id": "1747055918",
+    "user_input": "hello",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:18:38",
+    "session_id": "1747055918",
+    "user_input": "help me",
+    "response": "I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, bullying prevention, social dynamics, or friendship connections.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:18:39",
+    "session_id": "1747055919",
+    "user_input": "optimize academic performance",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'I recommend prioritizing academic balance with a higher GPA penalty weight (60-70) and setting academic as the top priority (5). However, also consider setting friend_inclusion_weight to 55-60 to ensure social needs aren't neglected.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:18:39",
+    "session_id": "1747055919",
+    "user_input": "create a balanced wellbeing environment",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:18:39",
+    "session_id": "1747055919",
+    "user_input": "i want students to be friends",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 71\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To optimize friendship connections, set min_friends_required to 2 and increase friend_inclusion_weight to 70-80. Consider setting prioritize_friendship to 4 to ensure social support.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 71,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 57
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:18:39",
+    "session_id": "1747055919",
+    "user_input": "i like pizza",
+    "response": "I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, bullying prevention, social dynamics, or friendship connections.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:18:39",
+    "session_id": "1747055919",
+    "user_input": "test",
+    "response": "I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, bullying prevention, social dynamics, or friendship connections.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:24:31",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "HELLO",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:24:34",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "HI",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:24:54",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "can you maximise bullying ?",
+    "response": "I've analyzed your request and recommend the following changes:\n\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'To address bullying concerns, set bully_penalty_weight to 80-90 and make bullying prevention the top priority (5). Additionally, increase wellbeing_penalty_weight to 70 to create a protective environment.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 60,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 1,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:25:18",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "sorry can you maximise influence",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 70\nInfluence Std Weight: 60 \u2192 75\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'For better social dynamics, increase influence_std_weight to 75 and prioritize social influence (4). Balance with academic priority (3-4) for optimal outcomes.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 70,
+      "influence_std_weight": 75,
+      "isolated_std_weight": 60,
+      "min_friends_required": 1,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:34:03",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "gday",
+    "response": "I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, bullying prevention, social dynamics, or friendship connections.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:36:45",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "hello",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:37:02",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "hello",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-12 23:37:25",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "can you analyse classes for me ?",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 71\nFriendship Priority: 1 \u2192 4\n\n\nBased on teacher feedback for similar situations: 'To optimize friendship connections, set min_friends_required to 2 and increase friend_inclusion_weight to 70-80. Consider setting prioritize_friendship to 4 to ensure social support.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 71,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 50,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-12 23:38:04",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "hello",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-13 13:02:47",
+    "session_id": "3d335106-3936-4ef7-8955-9f974b62a823",
+    "user_input": "HELLO",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-13 13:02:56",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "HELLO ",
+    "response": "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-13 13:05:32",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "improve wellbeing",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 72\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 72,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-13 13:06:39",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "i like pizza ",
+    "response": "I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, bullying prevention, social dynamics, or friendship connections.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-13 13:08:35",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "set wellbeing",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 72\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 72,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 58
+    }
+  },
+  {
+    "timestamp": "2025-05-13 13:10:09",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "hell",
+    "response": "I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, bullying prevention, social dynamics, or friendship connections.",
+    "modified_config": null
+  },
+  {
+    "timestamp": "2025-05-13 13:10:21",
+    "session_id": "session_lh0av8qx3gjkpwymv2nyhb",
+    "user_input": "set wellbeing to 70%",
+    "response": "I've analyzed your request and recommend the following changes:\n\nGpa Penalty Weight: 60 \u2192 73\nFriendship Priority: 1 \u2192 4\nWellbeing Penalty Weight: 50 \u2192 80\n\n\nBased on teacher feedback for similar situations: 'For student wellbeing focus, set wellbeing_penalty_weight to 75-85 and make it the top priority (5). Increase min_friends_required to 2 and friend_inclusion_weight to 70.'\n\nWould you like me to apply these changes to your class allocation settings?",
+    "modified_config": {
+      "bully_penalty_weight": 90,
+      "friendship_balance_weight": 100,
+      "friendship_score_weight": 100,
+      "gpa_penalty_weight": 73,
+      "influence_std_weight": 60,
+      "isolated_std_weight": 60,
+      "min_friends_required": 2,
+      "prioritize_academic": 5,
+      "prioritize_bullying": 5,
+      "prioritize_friendship": 4,
+      "prioritize_social_influence": 2,
+      "prioritize_wellbeing": 4,
+      "wellbeing_penalty_weight": 80,
+      "friend_inclusion_weight": 58
+    }
+  }
+]

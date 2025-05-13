@@ -1,7 +1,7 @@
 {# templates/studentindividual.html #}
 {% extends "base.html" %}
 
-{% block title %}Student‐level Visualization{% endblock %}
+{% block title %}Student Individual Visualization{% endblock %}
 
 {% block extra_head %}
   <style>
@@ -11,6 +11,17 @@
       margin: 0 auto 60px;
       display: flex;
       justify-content: center;
+    }
+    .embed-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .embed-wrapper > iframe {
+      width: 100%;
+      max-width: 1150px;
+      height: 700px;
+      border: 0;
     }
   </style>
 {% endblock %}
@@ -25,17 +36,18 @@
 
   <!-- intro -->
   <section class="page-intro">
-    <h2>Student‐level Visualization</h2>
+    <h2>Student Individual</h2>
     <p>
-      Use the report below to inspect the complete profile of a single
-      student.  Select a student ID from the slicer inside Power BI
-      to update every visual on the page.
+      Explore detailed visualizations for individual students.
     </p>
   </section>
 
 <!-- ───────  Power BI frame  ─────── -->
-<div class="dashboard-wrapper">
-  <iframe title="Updatefile (1)" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiZTdkYWQxOGUtN2RlZC00NTY3LThiYmEtZmE4Njk0MjA2MWE0IiwidCI6ImRmN2Y3NTc5LTNlOWMtNGE3ZS1iODQ0LTQyMDI4MGY1Mzg1OSIsImMiOjEwfQ%3D%3D" frameborder="0" allowFullScreen="true"></iframe>
+<div class="embed-wrapper">
+  <iframe title="Student visualization" src="https://app.powerbi.com/view?r=eyJrIjoiNzc3YTU2NWUtOGJmYS00OTIwLWI3YjYtNjFiZDFiYzQ5ZjM3IiwidCI6ImRmN2Y3NTc5LTNlOWMtNGE3ZS1iODQ0LTQyMDI4MGY1Mzg1OSIsImMiOjEwfQ%3D%3D" frameborder="0" allowFullScreen></iframe>
 </div>
+
+<!-- Include chatbot widget -->
+{% include 'chatbot_widget.html' %}
 
 {% endblock %}

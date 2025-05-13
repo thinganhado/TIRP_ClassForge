@@ -1,7 +1,8 @@
 # app/routes.py
 from flask import Blueprint, render_template, jsonify
-from flask import request, redirect, url_for, flash
+from flask import request, redirect, url_for, flash, session
 import json
+import uuid
 from app.database.student_queries import (
     fetch_all_students,
     fetch_student_details,
@@ -12,6 +13,11 @@ from app import db
 import subprocess
 import pandas as pd
 from sqlalchemy import text
+from app.models.assistant import AssistantModel
+from datetime import datetime
+
+# Initialize the assistant model
+assistant = AssistantModel()
 
 main = Blueprint("main", __name__)
 
@@ -27,11 +33,15 @@ def students():
 # ─────────────  visualisation  ───────────
 @main.route("/visualization/overall")
 def overall():
-    return render_template("Overall.html")
+    # Get chatbot recommendations to include in page
+    recommendations = assistant.get_recommendations()
+    return render_template("Overall.html", recommendations=recommendations)
 
 @main.route("/visualization/individual")
 def individual():
-    return render_template("studentindividual.html")   # ← file name
+    # Get chatbot recommendations to include in page
+    recommendations = assistant.get_recommendations()
+    return render_template("studentindividual.html", recommendations=recommendations)   # ← file name
 
 # ─────────────  customisation section ────
 @main.route("/customisation")
@@ -40,7 +50,13 @@ def customisation_home():
 
 @main.route("/customisation/set-priorities")
 def set_priorities():
-    return render_template("set_priorities.html")
+    # Generate a session ID if not present
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        
+    # Get priority recommendations from the assistant
+    priority_recommendations = assistant.get_priority_recommendations()
+    return render_template("set_priorities.html", recommendations=priority_recommendations, session_id=session['session_id'])
 
 @main.route("/customisation/specifications")
 def specification():
@@ -48,11 +64,22 @@ def specification():
 
 @main.route("/customisation/ai-assistant")
 def ai_assistant():
-    return render_template("ai_assistant.html")
+    # Generate a session ID if not present
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    
+    # Get chat history for current session
+    chat_history = assistant.get_chat_history(session_id=session['session_id'])
+    
+    return render_template("ai_assistant.html", 
+                          chat_history=chat_history, 
+                          session_id=session['session_id'])
 
 @main.route("/customisation/history")
 def history():
-    return render_template("history.html")
+    # Get all chat history for admin view
+    all_chat_history = assistant.get_chat_history(limit=50)  # Get last 50 conversations
+    return render_template("history.html", chat_history=all_chat_history)
 
 @main.route('/submit_customisation', methods=['POST'])
 def submit_customisation():
@@ -61,8 +88,7 @@ def submit_customisation():
         gpa_penalty_weight = int(request.form.get("gpa_penalty_weight", 30))
         wellbeing_penalty_weight = int(request.form.get("wellbeing_penalty_weight", 50))
         bully_penalty_weight = int(request.form.get("bully_penalty_weight", 60))
-        influence_std_weight = int(request.form.get("influence_std_weight", 60))
-        isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
+        influence_std_weight = int(request.form.get("influence_std_weight", 60))        isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
         min_friends_required = int(request.form.get("min_friends_required", 1))
         friend_inclusion_weight = int(request.form.get("friend_inclusion_weight", 60))
         friendship_balance_weight = int(request.form.get("friend_balance_weight", 60))
@@ -98,7 +124,7 @@ def submit_customisation():
         db.session.add(new_entry)
         db.session.commit()
 
-        # --- Save JSON config for GA ---
+        # --- Optional: Save JSON too ---
         constraints = {
             "gpa_penalty_weight": gpa_penalty_weight,
             "wellbeing_penalty_weight": wellbeing_penalty_weight,
@@ -110,24 +136,10 @@ def submit_customisation():
             "friendship_balance_weight": friendship_balance_weight,
             **priority_weights
         }
-        with open("app/ml_models/soft_constraints_config.json", "w") as f:
+        with open("soft_constraints_config.json", "w") as f:
             json.dump(constraints, f, indent=2)
 
-        # --- Run GA script (which handles DB insertion itself) ---
-        result = subprocess.run(
-            ["python", "finalallocation.py"],
-            capture_output=True,
-            text=True,
-            cwd="app/ml_models"
-        )
-
-        if result.returncode != 0:
-            print("GA Script Error Output:\n", result.stderr)
-            flash(f"GA Allocation failed. Error:\n{result.stderr}")
-            return redirect(url_for("main.set_priorities"))
-
-        # --- Success ---
-        return redirect(url_for("main.overall"))
+        return redirect(url_for("main.customisation_loading"))
 
     except Exception as e:
         flash(f"Submission error: {e}")
@@ -155,3 +167,216 @@ def api_student_detail(sid):
 @main.route("/api/classes")
 def api_classes():
     return jsonify(fetch_unique_classes())
+
+# ─────────────  Chatbot API Endpoints  ───────────────
+@main.route("/api/assistant/analyze", methods=["POST"])
+def analyze_request():
+    """Analyze a user request and provide customization recommendations"""
+    try:
+        data = request.get_json()
+        user_input = data.get("input", "")
+        session_id = data.get("session_id", None) or session.get('session_id')
+        
+        if not user_input:
+            return jsonify({"success": False, "message": "No input provided"}), 400
+        
+        # Process the request using our assistant model
+        result = assistant.analyze_request(user_input, session_id=session_id)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error processing request: {str(e)}"}), 500
+
+@main.route("/api/assistant/confirm", methods=["POST"])
+def confirm_changes():
+    """Confirm and apply changes recommended by the assistant"""
+    try:
+        data = request.get_json()
+        config = data.get("config", {})
+        
+        if not config:
+            return jsonify({"success": False, "message": "No configuration provided"}), 400
+        
+        # Save the configuration
+        updated_config = assistant.save_config(config)
+        
+        # Store in database
+        new_entry = SoftConstraint(
+            gpa_penalty_weight=config.get("gpa_penalty_weight", 30),
+            wellbeing_penalty_weight=config.get("wellbeing_penalty_weight", 50),
+            bully_penalty_weight=config.get("bully_penalty_weight", 60),
+            influence_std_weight=config.get("influence_std_weight", 60),
+            isolated_std_weight=config.get("isolated_std_weight", 60),
+            min_friends_required=config.get("min_friends_required", 1),
+            friendship_score_weight=config.get("friendship_score_weight", 50),
+            friendship_balance_weight=config.get("friendship_balance_weight", 60),
+            prioritize_academic=config.get("prioritize_academic", 5),
+            prioritize_wellbeing=config.get("prioritize_wellbeing", 4),
+            prioritize_bullying=config.get("prioritize_bullying", 3),
+            prioritize_social_influence=config.get("prioritize_social_influence", 2),
+            prioritize_friendship=config.get("prioritize_friendship", 1)
+        )
+        db.session.add(new_entry)
+        db.session.commit()
+        
+        # Add a success message to the conversation history
+        if 'session_id' in session:
+            conversation_entry = {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "session_id": session['session_id'],
+                "user_input": "Applied changes",
+                "response": "Changes have been applied successfully. The optimization will now use your customized settings.",
+                "modified_config": None
+            }
+            assistant.conversation_history.append(conversation_entry)
+            assistant._save_chat_history()
+        
+        return jsonify({"success": True, "message": "Changes applied successfully", "config": updated_config})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error applying changes: {str(e)}"}), 500
+
+@main.route("/api/assistant/recommendations", methods=["GET"])
+def get_recommendations():
+    """Get general recommendations from the assistant"""
+    try:
+        # Get student data from request if available
+        student_data = request.args.get("student_data")
+        student_data_obj = json.loads(student_data) if student_data else None
+        
+        # Get recommendations from the assistant
+        recommendations = assistant.get_recommendations(student_data=student_data_obj)
+        
+        return jsonify({"success": True, "recommendations": recommendations})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error getting recommendations: {str(e)}"}), 500
+
+@main.route("/api/assistant/chat_history", methods=["GET"])
+def get_chat_history():
+    """Get chat history for the current session or all sessions"""
+    try:
+        # Get session_id from request
+        session_id = request.args.get("session_id") or session.get('session_id')
+        limit = int(request.args.get("limit", 10))
+        
+        # Get history from the assistant
+        history = assistant.get_chat_history(session_id=session_id, limit=limit)
+        
+        return jsonify({"success": True, "history": history})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error getting chat history: {str(e)}"}), 500
+
+@main.route("/api/assistant/priority_recommendations", methods=["GET"])
+def get_priority_recommendations():
+    """Get recommendations for priority settings"""
+    try:
+        # Get recommendations for priorities
+        recommendations = assistant.get_priority_recommendations()
+        
+        return jsonify({"success": True, "recommendations": recommendations})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error getting priority recommendations: {str(e)}"}), 500
+
+@main.route("/api/assistant/export_training_data", methods=["GET"])
+def export_training_data():
+    """Generate and export training data for the chatbot"""
+    try:
+        # Generate CSV data
+        csv_data = assistant.generate_csv_data()
+        
+        return jsonify({"success": True, "data": csv_data})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error generating training data: {str(e)}"}), 500
+
+@main.route("/api/assistant/fine_tune", methods=["POST"])
+def fine_tune_model():
+    """Fine-tune the model with the provided training data"""
+    try:
+        # Fine-tune the model
+        success = assistant.fine_tune_model()
+        
+        if success:
+            return jsonify({"success": True, "message": "Model fine-tuned successfully"})
+        else:
+            return jsonify({"success": False, "message": "Failed to fine-tune model. See server logs for details."}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error fine-tuning model: {str(e)}"}), 500
+
+# ─────────────  Social Network Analysis Endpoints  ───────────────
+
+@main.route("/api/network/analyze", methods=["POST"])
+def analyze_network():
+    """Analyze the social network structure"""
+    try:
+        data = request.get_json()
+        relationships = data.get("relationships", {})
+        
+        # Convert relationship data format if needed
+        formatted_relationships = {}
+        for rel in relationships:
+            student1 = rel.get("student1")
+            student2 = rel.get("student2")
+            strength = rel.get("strength", 1.0)
+            if student1 and student2:
+                formatted_relationships[(student1, student2)] = strength
+        
+        # Perform network analysis
+        result = assistant.analyze_network_structure(formatted_relationships)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error analyzing network: {str(e)}"}), 500
+
+@main.route("/api/network/isolated", methods=["POST"])
+def identify_isolated_students():
+    """Identify isolated students in the network"""
+    try:
+        data = request.get_json()
+        relationships = data.get("relationships", {})
+        
+        # Convert relationship data format if needed
+        formatted_relationships = {}
+        for rel in relationships:
+            student1 = rel.get("student1")
+            student2 = rel.get("student2")
+            strength = rel.get("strength", 1.0)
+            if student1 and student2:
+                formatted_relationships[(student1, student2)] = strength
+        
+        # Find isolated students
+        result = assistant.identify_isolated_students(formatted_relationships)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error identifying isolated students: {str(e)}"}), 500
+
+@main.route("/api/network/communities", methods=["POST"])
+def analyze_communities():
+    """Analyze friendship groups and communities"""
+    try:
+        data = request.get_json()
+        relationships = data.get("relationships", {})
+        
+        # Convert relationship data format if needed
+        formatted_relationships = {}
+        for rel in relationships:
+            student1 = rel.get("student1")
+            student2 = rel.get("student2")
+            strength = rel.get("strength", 1.0)
+            if student1 and student2:
+                formatted_relationships[(student1, student2)] = strength
+        
+        # Analyze friendship groups
+        result = assistant.analyze_friendship_groups(formatted_relationships)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error analyzing communities: {str(e)}"}), 500
+
+@main.route("/api/network/recommendations", methods=["GET"])
+def get_network_recommendations():
+    """Get recommendations based on social network patterns"""
+    try:
+        recommendations = assistant.get_network_recommendations()
+        return jsonify({"success": True, "recommendations": recommendations})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error getting recommendations: {str(e)}"}), 500
