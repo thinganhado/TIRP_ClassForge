@@ -14,7 +14,7 @@ class SoftConstraint(db.Model):
 
     min_friends_required = db.Column(db.Integer)
     friend_inclusion_weight = db.Column(db.Integer)
-    friendship_balance_weight = db.Column(db.Integer)
+    friend_balance_weight = db.Column(db.Integer)
 
     prioritize_academic = db.Column(db.Integer)
     prioritize_wellbeing = db.Column(db.Integer)
