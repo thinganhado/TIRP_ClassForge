@@ -65,7 +65,7 @@ def submit_customisation():
         isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
         min_friends_required = int(request.form.get("min_friends_required", 1))
         friend_inclusion_weight = int(request.form.get("friend_inclusion_weight", 60))
-        friend_balance_weight = int(request.form.get("friend_balance_weight", 60))
+        friendship_balance_weight = int(request.form.get("friend_balance_weight", 60))
 
         priority_csv = request.form.get("priority_order", "")
         priority_list = priority_csv.split(",") if priority_csv else []
@@ -92,7 +92,7 @@ def submit_customisation():
             isolated_std_weight=isolated_std_weight,
             min_friends_required=min_friends_required,
             friend_inclusion_weight=friend_inclusion_weight,
-            friend_balance_weight=friend_balance_weight,
+            friendship_balance_weight=friendship_balance_weight,
             **priority_weights
         )
         db.session.add(new_entry)
@@ -107,7 +107,7 @@ def submit_customisation():
             "isolated_std_weight": isolated_std_weight,
             "min_friends_required": min_friends_required,
             "friend_inclusion_weight": friend_inclusion_weight,
-            "friendship_balance_weight": friend_balance_weight,
+            "friendship_balance_weight": friendship_balance_weight,
             **priority_weights
         }
         with open("app/ml_models/soft_constraints_config.json", "w") as f:
