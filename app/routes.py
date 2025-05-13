@@ -181,6 +181,12 @@ def analyze_request():
         if not user_input:
             return jsonify({"success": False, "message": "No input provided"}), 400
         
+        # Check if this is the first request - if so, initialize the models
+        if not assistant.models_loaded:
+            load_success = assistant.initialize_model()
+            if not load_success:
+                return jsonify({"success": False, "message": "Could not load NLP models. Using rule-based analysis only."}), 500
+        
         # Process the request using our assistant model
         result = assistant.analyze_request(user_input, session_id=session_id)
         

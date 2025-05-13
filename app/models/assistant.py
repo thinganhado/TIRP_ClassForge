@@ -92,12 +92,15 @@ class AssistantModel:
         # Load existing chat history if available
         self._load_chat_history()
         
-        # Initialize model
+        # Initialize model states but don't load models yet
         self.bert_model = None
         self.bert_tokenizer = None
         self.sentence_transformer = None
+        self.models_loaded = False
         self.data_cache = {}  # Cache for loaded data
-        self.initialize_model()
+        
+        # Load CSV data since it's lightweight
+        self._load_csv_data()
         
     def _load_chat_history(self):
         """Load existing chat history from file"""
@@ -122,16 +125,20 @@ class AssistantModel:
             print(f"Error saving chat history: {e}")
         
     def initialize_model(self):
-        """Initialize BERT models for text processing"""
-        # Initialize BERT models
-        self.bert_model = None
-        self.bert_tokenizer = None
-        self.sentence_transformer = None
-        
-        try:
-            # Load BERT model for intent recognition
-            print("Initializing BERT models...")
+        """Initialize BERT models for text processing (only when needed)"""
+        # Skip if models are already loaded
+        if self.models_loaded:
+            return True
             
+        print("Initializing BERT models on demand...")
+        
+        # Initialize BERT models
+        try:
+            # Check if transformers are available
+            if not TRANSFORMERS_AVAILABLE:
+                print("Transformers library not available. Using rule-based analysis only.")
+                return False
+                
             # Check if fine-tuned model exists and try to load it
             fine_tuned_dir = "app/models/fine_tuned_bert"
             if os.path.exists(fine_tuned_dir):
@@ -179,16 +186,19 @@ class AssistantModel:
                     print(f"Error loading DistilBERT model: {e}")
                     self.bert_model = None
                     self.bert_tokenizer = None
-                    
-            # Load CSV data for better responses
-            self._load_csv_data()
+                    return False
+                
+            # Mark models as loaded
+            self.models_loaded = True
+            return True
                 
         except Exception as e:
             print(f"Error initializing BERT models: {e}")
             self.bert_model = None
             self.bert_tokenizer = None
             self.sentence_transformer = None
-            
+            return False
+    
     def _load_csv_data(self):
         """Load CSV data for context-aware responses"""
         try:
@@ -495,7 +505,11 @@ class AssistantModel:
         return base_response
     
     def analyze_request(self, user_input, session_id=None):
-        """Analyze user request to determine what constraints to modify"""
+        """Analyze user request and determine required configuration changes"""
+        # Initialize models if not already loaded
+        if not self.models_loaded:
+            self.initialize_model()
+            
         # First, detect conversation intents
         if self._is_simple_greeting(user_input):
             greeting_response = "Hello! I'm ClassForge's AI assistant. I can help you optimize class allocation settings. Try asking about academic performance, wellbeing, or bullying prevention."

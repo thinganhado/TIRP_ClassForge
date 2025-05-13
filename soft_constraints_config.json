@@ -1,16 +1,15 @@
 {
-  "bully_penalty_weight": 90,
-  "friend_inclusion_weight": 58,
-  "friendship_balance_weight": 100,
-  "friendship_score_weight": 100,
-  "gpa_penalty_weight": 73,
+  "gpa_penalty_weight": 30,
+  "wellbeing_penalty_weight": 50,
+  "bully_penalty_weight": 60,
   "influence_std_weight": 60,
   "isolated_std_weight": 60,
-  "min_friends_required": 2,
+  "min_friends_required": 1,
+  "friend_inclusion_weight": 50,
+  "friendship_balance_weight": 40,
   "prioritize_academic": 5,
-  "prioritize_bullying": 5,
-  "prioritize_friendship": 4,
-  "prioritize_social_influence": 2,
   "prioritize_wellbeing": 4,
-  "wellbeing_penalty_weight": 80
+  "prioritize_bullying": 3,
+  "prioritize_social_influence": 2,
+  "prioritize_friendship": 1
 }
