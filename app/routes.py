@@ -85,6 +85,11 @@ def history():
 def submit_customisation():
     try:
         # --- Extract form data ---
+        # Hard constraints
+        class_size = int(request.form.get("class-size", 30))
+        max_classes = int(request.form.get("max-classes", 6))
+        
+        # Soft constraints
         gpa_penalty_weight = int(request.form.get("gpa_penalty_weight", 30))
         wellbeing_penalty_weight = int(request.form.get("wellbeing_penalty_weight", 50))
         bully_penalty_weight = int(request.form.get("bully_penalty_weight", 60))
@@ -112,6 +117,8 @@ def submit_customisation():
 
         # --- Store in SQL ---
         new_entry = SoftConstraint(
+            class_size=class_size,
+            max_classes=max_classes,
             gpa_penalty_weight=gpa_penalty_weight,
             wellbeing_penalty_weight=wellbeing_penalty_weight,
             bully_penalty_weight=bully_penalty_weight,
@@ -127,6 +134,8 @@ def submit_customisation():
 
         # --- Optional: Save JSON too ---
         constraints = {
+            "class_size": class_size,
+            "max_classes": max_classes,
             "gpa_penalty_weight": gpa_penalty_weight,
             "wellbeing_penalty_weight": wellbeing_penalty_weight,
             "bully_penalty_weight": bully_penalty_weight,
@@ -209,6 +218,8 @@ def confirm_changes():
         
         # Store in database
         new_entry = SoftConstraint(
+            class_size=config.get("class_size", 30),
+            max_classes=config.get("max_classes", 6),
             gpa_penalty_weight=config.get("gpa_penalty_weight", 30),
             wellbeing_penalty_weight=config.get("wellbeing_penalty_weight", 50),
             bully_penalty_weight=config.get("bully_penalty_weight", 60),

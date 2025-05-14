@@ -6,6 +6,11 @@ class SoftConstraint(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
 
+    # Hard constraints
+    class_size = db.Column(db.Integer, default=30)
+    max_classes = db.Column(db.Integer, default=6)
+
+    # Soft constraints
     gpa_penalty_weight = db.Column(db.Integer)
     wellbeing_penalty_weight = db.Column(db.Integer)
     bully_penalty_weight = db.Column(db.Integer)

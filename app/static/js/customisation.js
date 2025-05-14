@@ -132,14 +132,18 @@ document.addEventListener('DOMContentLoaded', function() {
         resetButton.addEventListener('click', function() {
             if (confirm('Reset all settings to default values?')) {
                 // Reset Hard Constraints
-                document.getElementById('class-size').value = 25;
-                document.getElementById('max-classes').value = 4;
-                document.getElementById('min-friends').value = 1;
+                document.getElementById('class-size').value = 30;
+                document.getElementById('max-classes').value = 6;
+                document.getElementById('min-friends-required').value = 1;
                 
                 // Reset Criteria Sliders to default values
-                document.getElementById('grade-variance-slider').value = 34; 
-                document.getElementById('influential-threshold-slider').value = 60;
-                document.getElementById('isolated-threshold-slider').value = 60;
+                document.getElementById('gpa_penalty_weight').value = 30; 
+                document.getElementById('wellbeing_penalty_weight').value = 50;
+                document.getElementById('bully_penalty_weight').value = 60;
+                document.getElementById('influence_std_weight').value = 60;
+                document.getElementById('isolated_std_weight').value = 60;
+                document.getElementById('friend_inclusion_weight').value = 50;
+                document.getElementById('friend_balance_weight').value = 40;
                 
                 // Trigger input event to update display values
                 sliders.forEach(slider => {
