@@ -35,12 +35,12 @@ def students():
 # ─────────────  visualisation  ───────────
 @main.route("/visualization/overall")
 def overall():
-    # No get_recommendations() call - only rendering template
+    # Simply render the template without calling get_recommendations
     return render_template("Overall.html")
 
 @main.route("/visualization/individual")
 def individual():
-    # No get_recommendations() call - only rendering template
+    # Simply render the template without calling get_recommendations
     return render_template("studentindividual.html")   # ← file name
 
 # ─────────────  customisation section ────
@@ -166,7 +166,9 @@ def submit_customisation():
     
 @main.route("/customisation/loading")
 def customisation_loading():
-    return render_template("customisation_loading.html")
+    # Just render the loading template - don't automatically trigger allocation
+    # Add a flag to indicate this is coming from set priorities page not chatbot
+    return render_template("customisation_loading.html", from_set_priorities=True)
     
 @main.route("/run_allocation")
 def run_allocation():
@@ -286,6 +288,7 @@ def confirm_changes():
             if hasattr(assistant.chatbot, 'conversation_history'):
                 assistant.chatbot.conversation_history.append(conversation_entry)
             
+        # Just return success JSON - don't redirect to customisation_loading which would trigger allocation
         return jsonify({"success": True, "message": "Changes applied successfully", "config": updated_config})
     except Exception as e:
         print(f"Error applying changes: {e}")
