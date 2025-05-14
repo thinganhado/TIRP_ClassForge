@@ -15,6 +15,8 @@ import pandas as pd
 from sqlalchemy import text
 from app.models.assistant import AssistantModel
 from datetime import datetime
+import os
+import sys
 
 # Initialize the assistant model
 assistant = AssistantModel()
@@ -85,7 +87,7 @@ def history():
 def submit_customisation():
     try:
         # --- Extract form data ---
-        # Hard constraints
+        # Hard constraints (read but don't store in db for now)
         class_size = int(request.form.get("class-size", 30))
         max_classes = int(request.form.get("max-classes", 6))
         
@@ -117,8 +119,7 @@ def submit_customisation():
 
         # --- Store in SQL ---
         new_entry = SoftConstraint(
-            class_size=class_size,
-            max_classes=max_classes,
+            # Removed class_size and max_classes to avoid DB error
             gpa_penalty_weight=gpa_penalty_weight,
             wellbeing_penalty_weight=wellbeing_penalty_weight,
             bully_penalty_weight=bully_penalty_weight,
@@ -134,8 +135,8 @@ def submit_customisation():
 
         # --- Optional: Save JSON too ---
         constraints = {
-            "class_size": class_size,
-            "max_classes": max_classes,
+            "class_size": class_size,  # Still include in JSON file
+            "max_classes": max_classes, # Still include in JSON file
             "gpa_penalty_weight": gpa_penalty_weight,
             "wellbeing_penalty_weight": wellbeing_penalty_weight,
             "bully_penalty_weight": bully_penalty_weight,
@@ -158,6 +159,30 @@ def submit_customisation():
 @main.route("/customisation/loading")
 def customisation_loading():
     return render_template("customisation_loading.html")
+    
+@main.route("/run_allocation")
+def run_allocation():
+    """Run the allocation algorithm and redirect to Students page when complete"""
+    try:
+        # Get the absolute path to the finalallocation.py script
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "ml_models", "finalallocation.py"))
+        
+        # Run the allocation script
+        result = subprocess.run([sys.executable, script_path], 
+                                capture_output=True, 
+                                text=True,
+                                check=True)
+        
+        if result.returncode == 0:
+            # If successful, redirect to Students page
+            return redirect(url_for("main.students"))
+        else:
+            # If there was an error, show error page
+            flash(f"Allocation failed: {result.stderr}")
+            return redirect(url_for("main.set_priorities"))
+    except Exception as e:
+        flash(f"Error running allocation: {str(e)}")
+        return redirect(url_for("main.set_priorities"))
     
 # ─────────────  (placeholder) classes  ───
 @main.route("/classes")
@@ -218,8 +243,7 @@ def confirm_changes():
         
         # Store in database
         new_entry = SoftConstraint(
-            class_size=config.get("class_size", 30),
-            max_classes=config.get("max_classes", 6),
+            # Removed class_size and max_classes to avoid DB error
             gpa_penalty_weight=config.get("gpa_penalty_weight", 30),
             wellbeing_penalty_weight=config.get("wellbeing_penalty_weight", 50),
             bully_penalty_weight=config.get("bully_penalty_weight", 60),

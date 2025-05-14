@@ -8,6 +8,13 @@
     <h2>Running your classroom allocation...</h2>
     <p>Please wait while we process your customisation preferences.</p>
 </div>
+
+<script>
+    // Automatically redirect to the run_allocation route after a short delay
+    setTimeout(function() {
+        window.location.href = "{{ url_for('main.run_allocation') }}";
+    }, 1500);  // 1.5 second delay for visual feedback
+</script>
 {% endblock %}
 
 {% block extra_head %}

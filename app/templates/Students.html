@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="breadcrumb-bar">
-  <a href="#">Home</a> / <span>Management</span> / <span>Students</span>
+  <a href="{{ url_for('main.dashboard') }}">Home</a> / <span>Management</span> / <span>Students</span>
 </div>
 
 <!-- Page Intro -->
@@ -29,7 +29,7 @@
           <input type="text" id="search-input" placeholder="Search by name..." onkeyup="filterTable()" />
           <select id="class-filter" onchange="filterTable()">
             <option value="">All Classes</option>
-            <option value="7A">-</option>
+            <!-- Class options will be populated dynamically -->
           </select>
           <button class="action-button" onclick="exportTable()"><i class="fas fa-file-export"></i> Export</button>
           <button class="action-button" onclick="createStudent()"><i class="fas fa-user-plus"></i> Create</button>
@@ -70,5 +70,185 @@
   <a class="details-explore-btn" href="/visualization/individual">Go to Student Dashboard</a>
 
 </div> 
+
+<script>
+  // Global variables
+  let allStudents = [];
+  let classOptions = new Set();
+  
+  // Load students when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    loadStudents();
+    
+    // Set up select-all checkbox
+    document.getElementById('select-all').addEventListener('change', function() {
+      const checkboxes = document.querySelectorAll('.student-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+      });
+    });
+  });
+  
+  // Load students from API
+  function loadStudents() {
+    fetch('/api/students')
+      .then(response => response.json())
+      .then(data => {
+        allStudents = data;
+        
+        // Update student count
+        document.getElementById('student-count').textContent = `Total Students: ${allStudents.length}`;
+        
+        // Populate class filter
+        populateClassFilter(allStudents);
+        
+        // Display students
+        displayStudents(allStudents);
+      })
+      .catch(error => {
+        console.error('Error fetching students:', error);
+      });
+  }
+  
+  // Populate class filter dropdown
+  function populateClassFilter(students) {
+    const classFilter = document.getElementById('class-filter');
+    
+    // Clear existing options (except "All Classes")
+    while (classFilter.options.length > 1) {
+      classFilter.remove(1);
+    }
+    
+    // Get unique class values
+    students.forEach(student => {
+      if (student.class !== null && student.class !== undefined) {
+        classOptions.add(student.class);
+      }
+    });
+    
+    // Add options to dropdown
+    Array.from(classOptions).sort().forEach(className => {
+      const option = document.createElement('option');
+      option.value = className;
+      option.textContent = `Class ${className}`;
+      classFilter.appendChild(option);
+    });
+  }
+  
+  // Display students in table
+  function displayStudents(students) {
+    const tableBody = document.getElementById('students-table-body');
+    tableBody.innerHTML = '';
+    
+    students.forEach(student => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="checkbox" class="student-checkbox" data-id="${student.id}"></td>
+        <td>${student.id}</td>
+        <td>${student.first_name}</td>
+        <td>${student.last_name}</td>
+        <td>${student.email || ''}</td>
+        <td>${student.house || ''}</td>
+        <td>${student.class !== null ? student.class : '-'}</td>
+      `;
+      
+      // Add click event to show details
+      row.addEventListener('click', () => {
+        showStudentDetails(student.id);
+      });
+      
+      tableBody.appendChild(row);
+    });
+    
+    // Update range text
+    document.getElementById('student-range').textContent = 
+      `Showing 1–${students.length} of ${students.length} students`;
+  }
+  
+  // Filter table based on search and class filter
+  function filterTable() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const classFilter = document.getElementById('class-filter').value;
+    
+    const filteredStudents = allStudents.filter(student => {
+      // Check if student matches search term
+      const matchesSearch = 
+        student.first_name.toLowerCase().includes(searchTerm) ||
+        student.last_name.toLowerCase().includes(searchTerm) ||
+        (student.email && student.email.toLowerCase().includes(searchTerm));
+      
+      // Check if student matches class filter
+      const matchesClass = !classFilter || student.class == classFilter;
+      
+      return matchesSearch && matchesClass;
+    });
+    
+    displayStudents(filteredStudents);
+  }
+  
+  // Show student details
+  function showStudentDetails(studentId) {
+    fetch(`/api/students/${studentId}`)
+      .then(response => response.json())
+      .then(details => {
+        const placeholder = document.getElementById('detail-placeholder');
+        const detailTable = document.getElementById('detail-table');
+        const tbody = detailTable.querySelector('tbody');
+        
+        // If no details found, show placeholder
+        if (Object.keys(details).length === 0) {
+          placeholder.style.display = 'block';
+          detailTable.style.display = 'none';
+          return;
+        }
+        
+        // Otherwise, hide placeholder and show table
+        placeholder.style.display = 'none';
+        detailTable.style.display = 'table';
+        
+        // Clear existing rows
+        tbody.innerHTML = '';
+        
+        // Add rows for each detail
+        for (const [key, value] of Object.entries(details)) {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <th>${formatDetailLabel(key)}</th>
+            <td>${value !== null ? value : '-'}</td>
+          `;
+          tbody.appendChild(row);
+        }
+        
+        // Highlight the selected student in the table
+        const rows = document.querySelectorAll('#students-table-body tr');
+        rows.forEach(row => {
+          row.classList.remove('selected');
+          if (row.cells[1].textContent == studentId) {
+            row.classList.add('selected');
+          }
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching student details:', error);
+      });
+  }
+  
+  // Format detail label (convert snake_case to Title Case)
+  function formatDetailLabel(key) {
+    return key
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+  }
+  
+  // Export table (placeholder)
+  function exportTable() {
+    alert('Export functionality will be added soon.');
+  }
+  
+  // Create student (placeholder)
+  function createStudent() {
+    alert('Create student functionality will be added soon.');
+  }
+</script>
 
 {% endblock %}

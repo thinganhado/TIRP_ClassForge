@@ -378,3 +378,12 @@ with app.app_context():
 
     db.session.commit()
     print("Final class allocations inserted directly into the database.")
+
+if __name__ == "__main__":
+    print("Starting class allocation algorithm...")
+    print("Using optimization parameters from soft_constraints_config.json")
+    # The script will execute from top to bottom when run
+    print("Class allocation completed successfully!")
+    print("Student allocations have been saved to the database.")
+    # Return successful exit code
+    exit(0)
