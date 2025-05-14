@@ -191,7 +191,9 @@
 <div class="assistant-container">
     <!-- Removed the message-input-container -->
     
-    <div class="chat-container">
+    <div class="chat-container" id="chat-container">
+        <!-- Initial welcome message if no chat history -->
+        {% if not chat_history or chat_history|length == 0 %}
         <div class="assistant-message">
             <div class="assistant-avatar">
                 <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent">
@@ -208,6 +210,32 @@
                 <p>What would you like to focus on today?</p>
             </div>
         </div>
+        <div class="assistant-message">
+            <div class="assistant-avatar">
+                <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent">
+            </div>
+            <div class="message-content">
+                <p>If you'd like to make specific adjustments, you can visit the <a href="{{ url_for('main.set_priorities') }}">Set Priorities</a> page directly.</p>
+            </div>
+        </div>
+        {% else %}
+            {% for entry in chat_history %}
+                {% if entry.user_input %}
+                <div class="user-message">
+                    <div class="user-avatar">U</div>
+                    <div class="message-content">{{ entry.user_input }}</div>
+                </div>
+                {% endif %}
+                {% if entry.response %}
+                <div class="assistant-message">
+                    <div class="assistant-avatar">
+                        <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent">
+                    </div>
+                    <div class="message-content">{{ entry.response }}</div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     </div>
     
     <div class="action-buttons">
@@ -216,10 +244,189 @@
     
     <div class="message-input-footer">
         <input type="text" id="chat-message" class="message-input" placeholder="Send a message...">
-        <button class="send-button"><i class="fas fa-paper-plane"></i></button>
+        <button class="send-button" id="send-button"><i class="fas fa-paper-plane"></i></button>
     </div>
 </div>
 
-<!-- Load the assistant.js script -->
-<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chat-container');
+    const messageInput = document.getElementById('chat-message');
+    const sendButton = document.getElementById('send-button');
+    const confirmButton = document.querySelector('.confirm-button');
+    
+    // Session ID for tracking conversation
+    const sessionId = '{{ session_id }}';
+    
+    // Function to add a message to the chat
+    function addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `${sender}-message`;
+        
+        if (sender === 'assistant') {
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'assistant-avatar';
+            const avatarImg = document.createElement('img');
+            avatarImg.src = "{{ url_for('static', filename='images/chatbot_avatar.png') }}";
+            avatarImg.alt = "Assistant";
+            avatarDiv.appendChild(avatarImg);
+            messageDiv.appendChild(avatarDiv);
+        } else {
+            const userAvatar = document.createElement('div');
+            userAvatar.className = 'user-avatar';
+            userAvatar.textContent = 'U';
+            messageDiv.appendChild(userAvatar);
+        }
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.innerHTML = content.replace(/\n/g, '<br>');
+        
+        messageDiv.appendChild(messageContent);
+        chatContainer.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    // Function to add a confirm button for changes
+    function addConfirmButton(config) {
+        confirmButton.style.display = 'block';
+        confirmButton.onclick = function() {
+            // Send confirmation to backend
+            fetch('/api/assistant/confirm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    config: config
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addMessage("Changes applied successfully! The optimization will now use your customized settings.", 'assistant');
+                    confirmButton.style.display = 'none';
+                    
+                    // Add redirection button to set priorities page
+                    addRedirectButton();
+                } else {
+                    addMessage("Sorry, there was an error applying your changes.", 'assistant');
+                }
+            })
+            .catch(error => {
+                addMessage("Sorry, there was an error applying your changes.", 'assistant');
+                console.error('Error:', error);
+            });
+        };
+    }
+    
+    // Function to add a redirect button to set priorities page
+    function addRedirectButton() {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'assistant-message';
+        
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'assistant-avatar';
+        const avatarImg = document.createElement('img');
+        avatarImg.src = "{{ url_for('static', filename='images/chatbot_avatar.png') }}";
+        avatarImg.alt = "Assistant";
+        avatarDiv.appendChild(avatarImg);
+        messageDiv.appendChild(avatarDiv);
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        // Create button
+        const redirectButton = document.createElement('a');
+        redirectButton.href = "{{ url_for('main.set_priorities') }}";
+        redirectButton.className = 'confirm-button';
+        redirectButton.style.display = 'inline-block';
+        redirectButton.style.marginTop = '10px';
+        redirectButton.style.textDecoration = 'none';
+        redirectButton.style.textAlign = 'center';
+        redirectButton.style.padding = '8px 16px';
+        redirectButton.textContent = 'Go to Set Priorities Page';
+        
+        messageContent.innerHTML = "Would you like to go to the Set Priorities page to make these changes?<br>";
+        messageContent.appendChild(redirectButton);
+        
+        messageDiv.appendChild(messageContent);
+        chatContainer.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    // Function to send a message
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        addMessage(message, 'user');
+        
+        // Clear input
+        messageInput.value = '';
+        
+        // Show typing indicator
+        addMessage('<em>Thinking...</em>', 'assistant');
+        const typingIndicator = chatContainer.lastChild;
+        
+        // Send to backend
+        fetch('/api/assistant/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                input: message,
+                session_id: sessionId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove typing indicator
+            chatContainer.removeChild(typingIndicator);
+            
+            // Add response
+            if (data.success) {
+                addMessage(data.message, 'assistant');
+                
+                // If there are config changes, add a confirm button
+                if (data.is_modified) {
+                    addConfirmButton(data.modified_config);
+                }
+                
+                // If the message contains reference to "Set Priorities", add redirection button
+                if (data.message.includes("Set Priorities") || data.message.includes("set priorities")) {
+                    addRedirectButton();
+                }
+            } else {
+                addMessage("Sorry, I couldn't process your request. Please try again.", 'assistant');
+            }
+        })
+        .catch(error => {
+            // Remove typing indicator
+            chatContainer.removeChild(typingIndicator);
+            
+            console.error('Error:', error);
+            addMessage("Sorry, there was an error processing your request. Please try again.", 'assistant');
+        });
+    }
+    
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    // Scroll to bottom of chat on page load
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+});
+</script>
 {% endblock %} 

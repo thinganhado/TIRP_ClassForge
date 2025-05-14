@@ -430,6 +430,13 @@
             <div class="message-timestamp">Just now</div>
         </div>
         {% endif %}
+        
+        <div class="message assistant-message">
+            <div class="message-content">
+                You can ask me about optimization settings or tell me what factors are most important for your class allocation. Any changes I suggest can be applied directly on this page.
+            </div>
+            <div class="message-timestamp">Just now</div>
+        </div>
     </div>
     <div class="chat-input">
         <input type="text" id="chat-input-field" placeholder="Ask about class allocation..." />
@@ -552,14 +559,16 @@
                         addConfirmButton(data.modified_config);
                     }
                 } else {
-                    addMessage("Sorry, I couldn't process your request: " + data.message, 'assistant');
+                    addMessage("Sorry, I couldn't process your request. Please try again.", 'assistant');
                 }
             })
             .catch(error => {
                 // Remove typing indicator
-                chatMessages.removeChild(typingIndicator);
-                addMessage("Sorry, there was an error processing your request.", 'assistant');
+                if (chatMessages.contains(typingIndicator)) {
+                    chatMessages.removeChild(typingIndicator);
+                }
                 console.error('Error:', error);
+                addMessage("Sorry, there was an error processing your request. Please try again.", 'assistant');
             });
         }
         
@@ -611,9 +620,37 @@
                 .then(data => {
                     if (data.success) {
                         addMessage("Changes applied successfully! The optimization will now use your customized settings.", 'assistant');
+                        addMessage("Refresh the page to see your updated settings.", 'assistant');
                         buttonDiv.remove();  // Remove the confirmation button
+                        
+                        // Add refresh button
+                        const refreshDiv = document.createElement('div');
+                        refreshDiv.className = 'message assistant-message';
+                        
+                        const refreshContent = document.createElement('div');
+                        refreshContent.className = 'message-content';
+                        
+                        const refreshButton = document.createElement('button');
+                        refreshButton.style.backgroundColor = '#4CAF50';
+                        refreshButton.style.color = 'white';
+                        refreshButton.style.border = 'none';
+                        refreshButton.style.padding = '8px 15px';
+                        refreshButton.style.borderRadius = '4px';
+                        refreshButton.style.cursor = 'pointer';
+                        refreshButton.textContent = 'Refresh Page';
+                        refreshButton.onclick = function() {
+                            window.location.reload();
+                        };
+                        
+                        refreshContent.appendChild(document.createTextNode('Click to see your changes: '));
+                        refreshContent.appendChild(refreshButton);
+                        refreshDiv.appendChild(refreshContent);
+                        chatMessages.appendChild(refreshDiv);
+                        
+                        // Scroll to bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
                     } else {
-                        addMessage("Sorry, there was an error applying your changes: " + data.message, 'assistant');
+                        addMessage("Sorry, there was an error applying your changes.", 'assistant');
                     }
                 })
                 .catch(error => {
@@ -640,9 +677,9 @@
             }
         });
         
-        // Initialize session ID for the chatbot
-        if (!sessionStorage.getItem('session_id')) {
-            sessionStorage.setItem('session_id', '{{ session_id if session_id else "" }}' || Math.random().toString(36).substring(2, 15));
+        // Initialize session ID for the chatbot if not already set
+        if (!sessionStorage.getItem('chatbot_session_id')) {
+            sessionStorage.setItem('chatbot_session_id', sessionId || Math.random().toString(36).substring(2, 15));
         }
     });
 </script>

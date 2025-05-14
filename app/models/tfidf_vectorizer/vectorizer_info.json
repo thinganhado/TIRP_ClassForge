@@ -1,0 +1,17 @@
+{
+  "vocab_size": 238,
+  "stop_words": [
+    "put",
+    "those",
+    "who",
+    "being",
+    "along",
+    "themselves",
+    "myself",
+    "ie",
+    "perhaps",
+    "nowhere",
+    "..."
+  ],
+  "timestamp": "2025-05-15 03:25:02"
+}

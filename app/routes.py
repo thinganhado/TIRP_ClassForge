@@ -35,20 +35,21 @@ def students():
 # ─────────────  visualisation  ───────────
 @main.route("/visualization/overall")
 def overall():
-    # Get chatbot recommendations to include in page
-    recommendations = assistant.get_recommendations()
-    return render_template("Overall.html", recommendations=recommendations)
+    # No get_recommendations() call - only rendering template
+    return render_template("Overall.html")
 
 @main.route("/visualization/individual")
 def individual():
-    # Get chatbot recommendations to include in page
-    recommendations = assistant.get_recommendations()
-    return render_template("studentindividual.html", recommendations=recommendations)   # ← file name
+    # No get_recommendations() call - only rendering template
+    return render_template("studentindividual.html")   # ← file name
 
 # ─────────────  customisation section ────
 @main.route("/customisation")
 def customisation_home():
-    return render_template("customisation.html")
+    # Generate a session ID if not present
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    return render_template("customisation.html", session_id=session['session_id'])
 
 @main.route("/customisation/set-priorities")
 def set_priorities():
@@ -62,7 +63,10 @@ def set_priorities():
 
 @main.route("/customisation/specifications")
 def specification():
-    return render_template("specification.html")
+    # Generate a session ID if not present
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    return render_template("specification.html", session_id=session['session_id'])
 
 @main.route("/customisation/ai-assistant")
 def ai_assistant():
@@ -79,9 +83,13 @@ def ai_assistant():
 
 @main.route("/customisation/history")
 def history():
+    # Generate a session ID if not present
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    
     # Get all chat history for admin view
     all_chat_history = assistant.get_chat_history(limit=50)  # Get last 50 conversations
-    return render_template("history.html", chat_history=all_chat_history)
+    return render_template("history.html", chat_history=all_chat_history, session_id=session['session_id'])
 
 @main.route('/submit_customisation', methods=['POST'])
 def submit_customisation():
@@ -215,17 +223,19 @@ def analyze_request():
         if not user_input:
             return jsonify({"success": False, "message": "No input provided"}), 400
         
-        # Check if this is the first request - if so, initialize the models
-        if not assistant.models_loaded:
-            load_success = assistant.initialize_model()
-            if not load_success:
-                return jsonify({"success": False, "message": "Could not load NLP models. Using rule-based analysis only."}), 500
+        # Check if the assistant has an initialize_model method (for backwards compatibility)
+        if hasattr(assistant, 'initialize_model') and hasattr(assistant, 'models_loaded'):
+            if not assistant.models_loaded:
+                load_success = assistant.initialize_model()
+                if not load_success:
+                    print("Warning: Could not load NLP models. Using rule-based analysis only.")
         
         # Process the request using our assistant model
         result = assistant.analyze_request(user_input, session_id=session_id)
         
         return jsonify(result)
     except Exception as e:
+        print(f"Error in analyze_request: {e}")
         return jsonify({"success": False, "message": f"Error processing request: {str(e)}"}), 500
 
 @main.route("/api/assistant/confirm", methods=["POST"])
@@ -263,6 +273,7 @@ def confirm_changes():
         
         # Add a success message to the conversation history
         if 'session_id' in session:
+            # Create a conversation entry and add it directly to the chatbot's history
             conversation_entry = {
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "session_id": session['session_id'],
@@ -270,26 +281,30 @@ def confirm_changes():
                 "response": "Changes have been applied successfully. The optimization will now use your customized settings.",
                 "modified_config": None
             }
-            assistant.conversation_history.append(conversation_entry)
-            assistant._save_chat_history()
-        
+            
+            # Use the chatbot's method to add to history
+            if hasattr(assistant.chatbot, 'conversation_history'):
+                assistant.chatbot.conversation_history.append(conversation_entry)
+            
         return jsonify({"success": True, "message": "Changes applied successfully", "config": updated_config})
     except Exception as e:
+        print(f"Error applying changes: {e}")
         return jsonify({"success": False, "message": f"Error applying changes: {str(e)}"}), 500
 
 @main.route("/api/assistant/recommendations", methods=["GET"])
 def get_recommendations():
     """Get general recommendations from the assistant"""
     try:
-        # Get student data from request if available
-        student_data = request.args.get("student_data")
-        student_data_obj = json.loads(student_data) if student_data else None
-        
-        # Get recommendations from the assistant
-        recommendations = assistant.get_recommendations(student_data=student_data_obj)
+        # Provide default recommendations without trying to call assistant.get_recommendations()
+        recommendations = [
+            "Consider exploring different visualization options to understand student relationships better.",
+            "Review class allocation settings periodically to optimize for changing needs.",
+            "Analyze social networks to identify isolated students who may need more support."
+        ]
         
         return jsonify({"success": True, "recommendations": recommendations})
     except Exception as e:
+        print(f"Error getting recommendations: {e}")
         return jsonify({"success": False, "message": f"Error getting recommendations: {str(e)}"}), 500
 
 @main.route("/api/assistant/chat_history", methods=["GET"])
