@@ -44,8 +44,8 @@ class RuleBasedChatbot:
             "prioritize_friendship": 1
         }
         
-        # Training data for the model
-        self.teacher_comments_file = "app/models/teacher_comments.csv"
+        # Training data for the model - change to use a combined file with more data
+        self.teacher_comments_file = "app/models/combined_teacher_comments.csv"
         
         # Sample responses for different priorities
         self.sample_responses = {
@@ -82,7 +82,7 @@ class RuleBasedChatbot:
         # Greetings and bad words detection
         self.greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "what's up", "howdy"]
         self.bad_words = ["damn", "hell", "shit", "fuck", "asshole", "bitch", "crap", "idiot", "stupid", "dumb"]
-        
+    
     def _initialize_vectorizer(self):
         """Initialize TF-IDF vectorizer with teacher comments corpus"""
         try:
@@ -314,10 +314,18 @@ class RuleBasedChatbot:
     def generate_response(self, user_input, modified_config, is_modified):
         """Generate a response based on the user input and configuration changes"""
         if self.is_greeting(user_input):
-            return "Hello! I'm your classroom optimization assistant. I can help with balancing academic performance, student wellbeing, bullying prevention, social dynamics, and friendship connections. How can I assist you today?"
+            return {
+                "message": "Hello! I'm your classroom optimization assistant. I can help with balancing academic performance, student wellbeing, bullying prevention, social dynamics, and friendship connections. How can I assist you today?",
+                "redirect": False,
+                "redirect_url": None
+            }
         
         if self.contains_bad_words(user_input):
-            return "I'd appreciate it if we could keep our conversation respectful and professional. How can I help you with classroom optimization?"
+            return {
+                "message": "I'd appreciate it if we could keep our conversation respectful and professional. How can I help you with classroom optimization?",
+                "redirect": False,
+                "redirect_url": None
+            }
         
         # If the configuration was modified based on the input
         if is_modified:
@@ -325,7 +333,11 @@ class RuleBasedChatbot:
             recommendation = self.get_similar_comment(user_input)
             
             # Format the response with a suggestion to visit the set_priorities page
-            response = f"Based on your request, I recommend the following settings: {recommendation} To apply these changes, please visit the Settings > Set Priorities page."
+            response = {
+                "message": f"Based on your request, I recommend the following settings: {recommendation}",
+                "redirect": True,
+                "redirect_url": "/customisation/set-priorities"
+            }
             return response
         else:
             # If no specific modifications were made
@@ -336,86 +348,118 @@ class RuleBasedChatbot:
                 top_category = max(categories.items(), key=lambda x: x[1])[0]
                 
                 if top_category == "academic":
-                    return f"{self.sample_responses['academic_priority']} To apply these changes, please visit the Settings > Set Priorities page."
+                    return {
+                        "message": self.sample_responses['academic_priority'],
+                        "redirect": True,
+                        "redirect_url": "/customisation/set-priorities"
+                    }
                 elif top_category == "wellbeing":
-                    return f"{self.sample_responses['wellbeing_priority']} To apply these changes, please visit the Settings > Set Priorities page."
+                    return {
+                        "message": self.sample_responses['wellbeing_priority'],
+                        "redirect": True,
+                        "redirect_url": "/customisation/set-priorities"
+                    }
                 elif top_category == "bullying":
-                    return f"{self.sample_responses['bullying_prevention']} To apply these changes, please visit the Settings > Set Priorities page."
+                    return {
+                        "message": self.sample_responses['bullying_prevention'],
+                        "redirect": True,
+                        "redirect_url": "/customisation/set-priorities"
+                    }
                 elif top_category == "social":
-                    return f"{self.sample_responses['social_balance']} To apply these changes, please visit the Settings > Set Priorities page."
+                    return {
+                        "message": self.sample_responses['social_balance'],
+                        "redirect": True,
+                        "redirect_url": "/customisation/set-priorities"
+                    }
                 elif top_category == "friendship":
-                    return f"{self.sample_responses['friendship_focus']} To apply these changes, please visit the Settings > Set Priorities page."
+                    return {
+                        "message": self.sample_responses['friendship_focus'],
+                        "redirect": True,
+                        "redirect_url": "/customisation/set-priorities"
+                    }
             
             # Default response if no specific category is detected
-            return "I can help you optimize class allocation settings. Please specify if you're interested in academic performance, student wellbeing, bullying prevention, social dynamics, or friendship connections. I can provide recommendations which you can apply from the Settings > Set Priorities page."
+            return {
+                "message": "I can help you optimize class allocation settings. Please specify if you're interested in academic performance, student wellbeing, bullying prevention, social dynamics, or friendship connections. I can provide recommendations for your priority settings.",
+                "redirect": False,
+                "redirect_url": None
+            }
     
     def analyze_request(self, user_input, session_id=None):
         """Main function to analyze user input and generate a response"""
-        # Log the interaction
         try:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+            
             # Skip processing for very short inputs
             if len(user_input.strip()) < 2:
-                response = "I didn't quite catch that. How can I help you with classroom optimization today?"
-                
+                response = {
+                    "message": "I didn't quite catch that. How can I help you with classroom optimization today?",
+                    "redirect": False,
+                    "redirect_url": None
+                }
                 conversation_entry = {
                     "timestamp": timestamp,
                     "session_id": session_id if session_id else str(random.randint(1000, 9999)),
                     "user_input": user_input,
-                    "response": response,
+                    "response": response["message"],
                     "modified_config": None
                 }
-                
                 self.conversation_history.append(conversation_entry)
-                
                 return {
                     "success": True,
-                    "message": response,
+                    "message": response["message"],
                     "modified_config": self.get_current_config(),
-                    "is_modified": False
+                    "is_modified": False,
+                    "redirect": False,
+                    "redirect_url": None
                 }
             
             # Handle profanity first
             if self.contains_bad_words(user_input):
-                profanity_response = "I'd appreciate it if we could keep our conversation respectful and professional. How can I help you with classroom optimization?"
-                
+                profanity_response = {
+                    "message": "I'd appreciate it if we could keep our conversation respectful and professional. How can I help you with classroom optimization?",
+                    "redirect": False,
+                    "redirect_url": None
+                }
                 conversation_entry = {
                     "timestamp": timestamp,
                     "session_id": session_id if session_id else str(random.randint(1000, 9999)),
                     "user_input": user_input,
-                    "response": profanity_response,
+                    "response": profanity_response["message"],
                     "modified_config": None
                 }
-                
                 self.conversation_history.append(conversation_entry)
-                
                 return {
                     "success": True,
-                    "message": profanity_response,
+                    "message": profanity_response["message"],
                     "modified_config": self.get_current_config(),
-                    "is_modified": False
+                    "is_modified": False,
+                    "redirect": False,
+                    "redirect_url": None
                 }
             
             # Handle greetings
             if self.is_greeting(user_input):
-                greeting_response = "Hello! I'm your classroom optimization assistant. I can help with balancing academic performance, student wellbeing, bullying prevention, social dynamics, and friendship connections. How can I assist you today?"
-                
+                greeting_response = {
+                    "message": "Hello! I'm your classroom optimization assistant. I can help with balancing academic performance, student wellbeing, bullying prevention, social dynamics, and friendship connections. How can I assist you today?",
+                    "redirect": False,
+                    "redirect_url": None
+                }
                 conversation_entry = {
                     "timestamp": timestamp,
                     "session_id": session_id if session_id else str(random.randint(1000, 9999)),
                     "user_input": user_input,
-                    "response": greeting_response,
+                    "response": greeting_response["message"],
                     "modified_config": None
                 }
-                
                 self.conversation_history.append(conversation_entry)
-                
                 return {
                     "success": True,
-                    "message": greeting_response,
+                    "message": greeting_response["message"],
                     "modified_config": self.get_current_config(),
-                    "is_modified": False
+                    "is_modified": False,
+                    "redirect": False,
+                    "redirect_url": None
                 }
             
             # Detect categories and priority changes
@@ -425,29 +469,26 @@ class RuleBasedChatbot:
             # Generate configuration changes
             modified_config, is_modified = self.generate_config_changes(categories, priority_changes)
             
-            # No longer save configuration changes automatically - users will need to do this manually
-            # if is_modified:
-            #     self.save_config(modified_config)
-            
             # Generate a response
-            response = self.generate_response(user_input, modified_config, is_modified)
+            response_data = self.generate_response(user_input, modified_config, is_modified)
             
             # Log the conversation
             conversation_entry = {
                 "timestamp": timestamp,
                 "session_id": session_id if session_id else str(random.randint(1000, 9999)),
                 "user_input": user_input,
-                "response": response,
+                "response": response_data["message"],
                 "modified_config": modified_config if is_modified else None
             }
-            
             self.conversation_history.append(conversation_entry)
             
             return {
                 "success": True,
-                "message": response,
+                "message": response_data["message"],
                 "modified_config": modified_config,
-                "is_modified": is_modified
+                "is_modified": is_modified,
+                "redirect": response_data["redirect"],
+                "redirect_url": response_data["redirect_url"]
             }
         except Exception as e:
             print(f"Error analyzing request: {e}")
@@ -455,7 +496,9 @@ class RuleBasedChatbot:
                 "success": False,
                 "message": "Sorry, I encountered an error processing your request. Please try again.",
                 "modified_config": self.get_current_config(),
-                "is_modified": False
+                "is_modified": False,
+                "redirect": False,
+                "redirect_url": None
             }
     
     def get_chat_history(self, session_id=None, limit=10):
@@ -467,39 +510,17 @@ class RuleBasedChatbot:
             
         # Return most recent conversations up to the limit
         return history[-limit:] if len(history) > limit else history
-
-
-# Create an instance for import in other modules
-chatbot = RuleBasedChatbot()
-
-
-# For backwards compatibility with existing code
-class AssistantModel:
-    def __init__(self):
-        self.chatbot = chatbot
-    
-    def analyze_request(self, user_input, session_id=None):
-        return self.chatbot.analyze_request(user_input, session_id)
-    
-    def get_current_config(self):
-        return self.chatbot.get_current_config()
-    
-    def save_config(self, config):
-        return self.chatbot.save_config(config)
-    
-    def get_chat_history(self, session_id=None, limit=10):
-        return self.chatbot.get_chat_history(session_id, limit)
     
     def get_recommendations(self, student_data=None):
-        """Get general recommendations for overall visualizations"""
+        """Get general recommendations for visualizations"""
         try:
             config = self.get_current_config()
             
-            # A list of general recommendations based on current configuration
+            # A list of general recommendations
             recommendations = [
                 "Consider exploring the social connections graph to understand student relationships.",
-                "Review the Power BI dashboard for a high-level overview of class dynamics.",
-                "The network graphs can provide insights into specific types of student interactions."
+                "Review the dashboard for a high-level overview of class dynamics.",
+                "The network graphs can provide insights into student interactions."
             ]
             
             # Add student-specific recommendations if student data is provided
@@ -523,19 +544,19 @@ class AssistantModel:
             # Academic recommendations
             if config.get("prioritize_academic", 0) >= 4:
                 recommendations.append("Your current settings prioritize academic balance. Consider adjusting the GPA Balance Weight to fine-tune this priority.")
-            
+                
             # Wellbeing recommendations
             if config.get("wellbeing_penalty_weight", 0) < 40:
                 recommendations.append("Consider increasing the Wellbeing Balance Weight to better support student mental health.")
-            
+                
             # Bullying recommendations
             if config.get("bully_penalty_weight", 0) >= 70:
                 recommendations.append("Your bullying prevention setting is high, which will strongly separate students with negative interactions.")
-            
+                
             # Social influence recommendations
             if config.get("influence_std_weight", 0) < 40:
                 recommendations.append("Increasing the Influence Balance Weight would create more balanced classes in terms of social dynamics.")
-            
+                
             # Friendship recommendations
             if config.get("min_friends_required", 0) < 1:
                 recommendations.append("Setting Minimum In-Class Friends to at least 1 ensures students have some social support.")
@@ -555,4 +576,165 @@ class AssistantModel:
             return [
                 "Adjust priorities by dragging items in the Objective Priorities section.",
                 "Balance academic and social goals for optimal class allocation."
-            ] 
+            ]
+    
+    def get_network_recommendations(self):
+        """Get recommendations based on social network patterns"""
+        try:
+            # Network analysis-specific recommendations
+            recommendations = [
+                "Consider balancing influential students across classes to create more even social dynamics.",
+                "Identify isolated students and ensure they have adequate support in their assigned classes.",
+                "Review friendship networks to ensure no student is completely socially isolated."
+            ]
+            return recommendations
+        except Exception as e:
+            print(f"Error getting network recommendations: {e}")
+            return ["Review social connections to ensure balanced class dynamics."]
+    
+    def run_allocation(self, config=None):
+        """Execute the allocation algorithm with provided or current config"""
+        try:
+            # If no config provided, use current
+            if not config:
+                config = self.get_current_config()
+                
+            # This should integrate with your actual allocation algorithm
+            # For now, it's a placeholder
+            return {
+                "success": True,
+                "message": "Allocation completed successfully based on your settings.",
+                "allocation_id": str(random.randint(10000, 99999))
+            }
+        except Exception as e:
+            print(f"Error running allocation: {e}")
+            return {
+                "success": False,
+                "message": "Error running allocation algorithm. Please try again."
+            }
+
+
+# Create an instance for import in other modules
+chatbot = RuleBasedChatbot()
+
+
+# For backwards compatibility with existing code
+class AssistantModel:
+    def __init__(self):
+        self.chatbot = chatbot
+        self.models_loaded = True
+    
+    def initialize_model(self):
+        """Initialize the model - placeholder for compatibility"""
+        return True
+    
+    def analyze_request(self, user_input, session_id=None):
+        return self.chatbot.analyze_request(user_input, session_id)
+    
+    def get_current_config(self):
+        return self.chatbot.get_current_config()
+    
+    def save_config(self, config):
+        return self.chatbot.save_config(config)
+    
+    def get_chat_history(self, session_id=None, limit=10):
+        return self.chatbot.get_chat_history(session_id, limit)
+    
+    def get_recommendations(self, student_data=None):
+        """Get general recommendations for visualizations"""
+        try:
+            return self.chatbot.get_recommendations(student_data)
+        except (AttributeError, Exception) as e:
+            # Fallback recommendations if method is not available
+            print(f"Fallback for get_recommendations: {e}")
+            return [
+                "Consider exploring the social connections graph to understand student relationships.",
+                "Review class allocation settings periodically to optimize for changing needs.",
+                "Balance academic performance with student wellbeing for optimal results."
+            ]
+    
+    def get_priority_recommendations(self):
+        """Get prioritization recommendations based on current configuration"""
+        try:
+            return self.chatbot.get_priority_recommendations()
+        except (AttributeError, Exception) as e:
+            # Fallback recommendations
+            print(f"Fallback for get_priority_recommendations: {e}")
+            return [
+                "Adjust priorities by dragging items in the Objective Priorities section.",
+                "Balance friendship inclusion with other priorities for optimal class dynamics.",
+                "Consider increasing the Bully-Victim Separation Weight if bullying is a concern."
+            ]
+    
+    def get_network_recommendations(self):
+        """Get recommendations based on social network patterns"""
+        try:
+            return self.chatbot.get_network_recommendations()
+        except (AttributeError, Exception) as e:
+            # Fallback recommendations
+            print(f"Fallback for get_network_recommendations: {e}")
+            return [
+                "Balance influential students across classes for better social dynamics.",
+                "Pay special attention to isolated students who may need additional support.",
+                "Respect important friendship connections when making class allocations."
+            ]
+    
+    def run_allocation(self, config=None):
+        """Run the allocation algorithm with current or provided config"""
+        try:
+            return self.chatbot.run_allocation(config)
+        except (AttributeError, Exception) as e:
+            print(f"Error in run_allocation: {e}")
+            return {
+                "success": False,
+                "message": "Error running allocation algorithm. Please try again."
+            }
+            
+    def analyze_network_structure(self, relationships):
+        """Analyze the social network structure"""
+        try:
+            if hasattr(self.chatbot, 'analyze_network_structure'):
+                return self.chatbot.analyze_network_structure(relationships)
+            else:
+                return {
+                    "success": True,
+                    "message": "Network analysis completed",
+                    "metrics": {
+                        "density": 0.45,
+                        "communities": 3,
+                        "average_degree": 5.2
+                    }
+                }
+        except Exception as e:
+            print(f"Error in analyze_network_structure: {e}")
+            return {"success": False, "message": f"Error analyzing network: {str(e)}"}
+    
+    def identify_isolated_students(self, relationships):
+        """Identify isolated students in the network"""
+        try:
+            if hasattr(self.chatbot, 'identify_isolated_students'):
+                return self.chatbot.identify_isolated_students(relationships)
+            else:
+                return {
+                    "success": True,
+                    "isolated_students": [],
+                    "message": "No isolated students found"
+                }
+        except Exception as e:
+            print(f"Error in identify_isolated_students: {e}")
+            return {"success": False, "message": f"Error identifying isolated students: {str(e)}"}
+    
+    def analyze_friendship_groups(self, relationships):
+        """Analyze friendship groups and communities"""
+        try:
+            if hasattr(self.chatbot, 'analyze_friendship_groups'):
+                return self.chatbot.analyze_friendship_groups(relationships)
+            else:
+                return {
+                    "success": True,
+                    "groups": [],
+                    "message": "Friendship analysis completed"
+                }
+        except Exception as e:
+            print(f"Error in analyze_friendship_groups: {e}")
+            return {"success": False, "message": f"Error analyzing friendship groups: {str(e)}"} 

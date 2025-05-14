@@ -196,10 +196,10 @@
         {% if not chat_history or chat_history|length == 0 %}
         <div class="assistant-message">
             <div class="assistant-avatar">
-                <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent">
+                <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="AI Assistant">
             </div>
             <div class="message-content">
-                <p>Hello! I'm your Customisation Agent for class allocation.</p>
+                <p>Hello! I'm your classroom optimization assistant.</p>
                 <p>I can help you with:</p>
                 <ul>
                     <li>Setting priorities between academic, wellbeing, bullying prevention, social influence, and friendship goals</li>
@@ -212,7 +212,7 @@
         </div>
         <div class="assistant-message">
             <div class="assistant-avatar">
-                <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent">
+                <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="AI Assistant">
             </div>
             <div class="message-content">
                 <p>If you'd like to make specific adjustments, you can visit the <a href="{{ url_for('main.set_priorities') }}">Set Priorities</a> page directly.</p>
@@ -229,7 +229,7 @@
                 {% if entry.response %}
                 <div class="assistant-message">
                     <div class="assistant-avatar">
-                        <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent">
+                        <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="AI Assistant">
                     </div>
                     <div class="message-content">{{ entry.response }}</div>
                 </div>
@@ -239,7 +239,7 @@
     </div>
     
     <div class="action-buttons">
-        <button class="confirm-button" style="display: none;">Confirm changes</button>
+        <a href="{{ url_for('main.set_priorities') }}" class="confirm-button" style="display: none; text-decoration: none;">Go to Set Priorities</a>
     </div>
     
     <div class="message-input-footer">
@@ -292,34 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to add a confirm button for changes
     function addConfirmButton(config) {
         confirmButton.style.display = 'block';
-        confirmButton.onclick = function() {
-            // Send confirmation to backend
-            fetch('/api/assistant/confirm', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    config: config
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addMessage("Changes applied successfully! The optimization will now use your customized settings.", 'assistant');
-                    confirmButton.style.display = 'none';
-                    
-                    // Add redirection button to set priorities page
-                    addRedirectButton();
-                } else {
-                    addMessage("Sorry, there was an error applying your changes.", 'assistant');
-                }
-            })
-            .catch(error => {
-                addMessage("Sorry, there was an error applying your changes.", 'assistant');
-                console.error('Error:', error);
-            });
-        };
+        // No need for click handler as the button is now an anchor tag with href
     }
     
     // Function to add a redirect button to set priorities page

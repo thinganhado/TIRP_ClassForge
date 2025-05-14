@@ -119,6 +119,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.is_modified) {
                     currentRecommendedConfig = data.modified_config;
                     confirmButton.style.display = 'block';
+                    
+                    // Check if redirect is needed
+                    if (data.redirect && data.redirect_url) {
+                        // Add a small delay before redirecting
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                    }
                 } else {
                     currentRecommendedConfig = null;
                     confirmButton.style.display = 'none';
@@ -154,10 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentRecommendedConfig) {
             // User is responding to recommendation
             if (messageHasConfirmation(message)) {
-                confirmChanges(currentRecommendedConfig);
-                // Re-enable input after handling confirmation
-                messageInput.disabled = false;
-                sendButton.disabled = false;
+                // Redirect to Set Priorities page instead of confirming changes
+                window.location.href = '/customisation/set-priorities';
                 return; // Prevent further processing
             } else if (messageHasRejection(message)) {
                 addAssistantMessage("I've discarded the proposed changes. How else can I help you?");
@@ -191,6 +197,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.is_modified) {
                     currentRecommendedConfig = data.modified_config;
                     confirmButton.style.display = 'block';
+                    
+                    // Check if redirect is needed
+                    if (data.redirect && data.redirect_url) {
+                        // Add a small delay before redirecting
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                    }
                 } else {
                     currentRecommendedConfig = null;
                     confirmButton.style.display = 'none';
@@ -277,36 +291,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Confirm and apply changes
     function confirmChanges(config) {
-        // Disable confirm button while processing
-        confirmButton.disabled = true;
-        
-        // Send confirmation to server
-        fetch('/api/assistant/confirm', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ config: config }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                addAssistantMessage("Changes have been applied successfully. The optimization algorithm will use these settings for the next class allocation.");
-                
-                // Clear current recommendation
-                currentRecommendedConfig = null;
-                confirmButton.style.display = 'none';
-            } else {
-                addAssistantMessage(`Sorry, there was an error applying the changes: ${data.message}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error confirming changes:', error);
-            addAssistantMessage("Sorry, there was an error applying the changes. Please try again.");
-        })
-        .finally(() => {
-            confirmButton.disabled = false;
-        });
+        // Redirect directly to set-priorities page without applying changes
+        window.location.href = '/customisation/set-priorities';
     }
     
     // Check if message contains confirmation language
