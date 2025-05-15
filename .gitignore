@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+.env/
+env.bak/
+venv.bak/
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ML model files
+*.pt
+*.pkl
+*.h5
+*.model
+*.joblib
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.json
+*.parquet
+*.feather
+
+# Logs
+logs/
+*.log
+
+# Local development configuration
+config.py
+local_settings.py
+
+# Cache
+.cache/
+.pytest_cache/
+# Allow cache directory structure but not the files
+app/cache/*
+!app/cache/.gitkeep
+
+# Output directories
+/data/
+/output/
+/results/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Project specific
+TIRP/app/ml_models/R-GCN_files/
+TIRP/app/ml_models/Clustering/output/
+TIRP/app/ml_models/ha_outputs/
+soft_constraints_config.json
