@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sendAssistantMessage(messageInput.value, chatContainer, messageInput, sessionId, confirmButton);
             }
         });
-        
+    
         if (refreshButton) {
             refreshButton.addEventListener('click', function() {
                 if (confirm('Are you sure you want to reset the conversation? This will clear all chat history.')) {
@@ -120,10 +120,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     .catch(error => {
                         console.error('Error resetting chat:', error);
                     });
-                }
-            });
-        }
-        
+            }
+        });
+    }
+    
         // Load chat history if available
         if (sessionId) {
             fetch(`/api/assistant/chat_history?session_id=${sessionId}&limit=5`)
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.is_modified && confirmButton) {
                     confirmButton.style.display = 'block';
                 }
-                
+                    
                 // If the message contains reference to "Set Priorities", add redirection button
                 if (data.message.includes("Set Priorities") || data.message.includes("set priorities")) {
                     addRedirectButton(chatContainer);

@@ -7,18 +7,18 @@
     
     <!-- Full chatbot interface (hidden initially) -->
     <div class="chatbot-full" id="chatbot-full" style="display: none;">
-        <div class="chatbot-header">
+    <div class="chatbot-header">
             <h3><img src="{{ url_for('static', filename='images/chatbot_avatar.png', _external=False) }}" alt="Customisation Agent" class="chatbot-avatar"> Customisation Agent</h3>
-            <button class="chatbot-toggle" id="chatbot-toggle">
+        <button class="chatbot-toggle" id="chatbot-toggle">
                 <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
+        </button>
+    </div>
+    
         <div id="chatbot-container" class="chatbot-container">
-            <div class="chatbot-messages" id="chatbot-messages">
+        <div class="chatbot-messages" id="chatbot-messages">
                 <!-- Initial welcome message -->
-                <div class="message assistant-message">
-                    <div class="message-content">
+            <div class="message assistant-message">
+                <div class="message-content">
                         <p>Hello! I'm your classroom optimization assistant.</p>
                         <p>I can help you with:</p>
                         <ul class="assistant-list">
@@ -26,27 +26,27 @@
                             <li>Fine-tuning weights for optimization parameters</li>
                             <li>Generating recommendations for class allocation</li>
                         </ul>
-                    </div>
-                    <div class="message-timestamp">Just now</div>
                 </div>
-                
-                <!-- Recommendations section -->
-                {% if recommendations and recommendations|length > 0 %}
-                <div class="message assistant-message recommendations">
-                    <div class="message-content">
-                        <strong>Recommendations for this page:</strong>
-                        <ul>
-                            {% for recommendation in recommendations %}
-                            <li>{{ recommendation }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div class="message-timestamp">Just now</div>
-                </div>
-                {% endif %}
-                
-                <!-- Messages will be added here dynamically -->
+                <div class="message-timestamp">Just now</div>
             </div>
+            
+            <!-- Recommendations section -->
+            {% if recommendations and recommendations|length > 0 %}
+            <div class="message assistant-message recommendations">
+                <div class="message-content">
+                    <strong>Recommendations for this page:</strong>
+                    <ul>
+                        {% for recommendation in recommendations %}
+                        <li>{{ recommendation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="message-timestamp">Just now</div>
+            </div>
+            {% endif %}
+            
+            <!-- Messages will be added here dynamically -->
+        </div>
             
             <div class="chatbot-actions">
                 <button id="refresh-chat" class="chat-action-button" title="Reset conversation">
@@ -56,15 +56,15 @@
                     <i class="fas fa-expand-alt"></i>
                 </a>
             </div>
-            
-            <div class="chatbot-input-container">
-                <input type="text" id="chatbot-input" placeholder="Ask about class allocation..." />
-                <button id="chatbot-send">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
+        
+        <div class="chatbot-input-container">
+            <input type="text" id="chatbot-input" placeholder="Ask about class allocation..." />
+            <button id="chatbot-send">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
+</div>
 </div>
 
 <style>
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chatbotToggle.addEventListener('click', function() {
             chatbotFull.style.display = 'none';
             chatbotIcon.style.display = 'flex';
-        });
-    }
-});
+            });
+        }
+    });
 </script> 
