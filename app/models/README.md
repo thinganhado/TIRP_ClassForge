@@ -1,22 +1,52 @@
-# Rule-Based Classroom Optimization Chatbot
+# Classroom Optimization Assistant Models
 
-This folder contains the implementation of a rule-based chatbot designed to help optimize classroom settings based on various educational priorities.
+This folder contains the implementation of both rule-based and machine learning models designed to help optimize classroom settings based on various educational priorities.
 
 ## Overview
 
-The `assistant.py` module implements a rule-based chatbot that uses scikit-learn's TF-IDF vectorizer for natural language processing. The chatbot can:
+The `assistant.py` module implements:
 
+1. A rule-based chatbot that uses scikit-learn's TF-IDF vectorizer for natural language processing
+2. A machine learning-based recommendation system using LogisticRegression with TF-IDF features
+
+The assistant can:
 - Understand and respond to queries about different educational priorities
 - Make recommendations for configuration settings based on user input
 - Detect and respond appropriately to greetings and inappropriate language
-- Provide context-aware responses using similarity matching with teacher comments
+- Provide context-aware responses using ML prediction and similarity matching with teacher comments
 
 ## Core Components
 
-- **RuleBasedChatbot**: The main chatbot class with all functionality
+- **RuleBasedChatbot**: The main chatbot class with both rule-based and ML functionality
 - **AssistantModel**: A wrapper class for backward compatibility with existing code
 
-## Features
+## Machine Learning Features
+
+### ML Pipeline
+The system implements a scikit-learn pipeline for query classification:
+```python
+ml_model = Pipeline([
+    ("tfidf", TfidfVectorizer(stop_words="english")),
+    ("clf", LogisticRegression(max_iter=1000))
+])
+```
+
+This pipeline:
+1. Converts text input into TF-IDF features (Term Frequency-Inverse Document Frequency)
+2. Uses LogisticRegression to classify the query into the most appropriate recommendation category
+
+### Training Data
+The model is trained on teacher comments and recommendations from `cleaned_teacher_comments (1).csv`, which provides paired examples of:
+- Student situations/challenges (input)
+- Appropriate optimization recommendations (output)
+
+### Advantages Over Rule-Based Approach
+- Better handles misspellings and variations in wording
+- Can generalize to new queries not explicitly defined in rules
+- Improves response relevance through statistical learning
+- Adapts to the specific language patterns used in educational contexts
+
+## Rule-Based Features
 
 1. **Priority-Based Configuration**
    - Academic performance
@@ -37,7 +67,7 @@ The `assistant.py` module implements a rule-based chatbot that uses scikit-learn
 
 ## Data Files
 
-- `teacher_comments.csv`: Contains teacher comments and corresponding recommendations used for similarity matching
+- `cleaned_teacher_comments (1).csv`: Contains teacher comments and corresponding recommendations used for both ML training and similarity matching
 
 ## How to Use
 
@@ -46,9 +76,13 @@ The `assistant.py` module implements a rule-based chatbot that uses scikit-learn
 ```python
 from app.models.assistant import chatbot
 
-# Get a response to a user query
+# Get a response using the ML model
 response = chatbot.analyze_request("I need help with improving student wellbeing")
 print(response["message"])
+
+# Get a direct ML recommendation
+recommendation = chatbot.get_recommendation_ml("prioritize friendship and social connections")
+print(recommendation)
 
 # Get the current configuration
 config = chatbot.get_current_config()
@@ -58,6 +92,9 @@ chatbot.save_config(config)
 
 # Get chat history
 history = chatbot.get_chat_history(limit=5)
+
+# Clear chat history
+chatbot.clear_chat_history()
 ```
 
 ### Example Queries
@@ -94,5 +131,5 @@ The chatbot manages the following configuration parameters:
 
 - pandas
 - numpy
-- scikit-learn (for TF-IDF vectorization and similarity metrics)
+- scikit-learn (for TF-IDF vectorization, LogisticRegression, and similarity metrics)
 - NetworkX (optional, for social network analysis) 
