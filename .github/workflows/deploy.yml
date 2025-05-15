@@ -44,7 +44,8 @@ jobs:
           ssh "${VM_USER}@${VM_IP}" <<'EOF'
             set -e
             cd ~/TIRP
-            git pull --ff-only
+            git fetch origin main
+            git reset --hard origin/main
             source venv/bin/activate
             pip install -r requirements.txt
             sudo systemctl restart flaskapp
