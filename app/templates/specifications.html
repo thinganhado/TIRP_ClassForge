@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Customisation - Specification{% endblock %}
+
+{% block extra_head %}
+{% raw %}
+<style>
+/* ─── Wizard container ─── */
+#wizard{max-width:1200px;margin:40px auto;font-family:sans-serif}
+.step{border:1px solid #ddd;border-radius:6px;padding:24px;margin-bottom:24px}
+.step h2{margin-top:0;border-bottom:1px solid #eee;padding-bottom:8px}
+
+/* Step-1 controls + list */
+.controls{display:flex;gap:12px;margin:16px 0}
+.controls input,.controls select{flex:1;padding:8px;font-size:.95rem}
+.controls .btn{padding:8px 16px}
+.student-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;max-height:300px;overflow-y:auto}
+.student{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #ccc;border-radius:4px;cursor:pointer}
+.student.selected{background:#e0f7fa;border-color:#26c6da}
+.student-checkbox{width:16px;height:16px;border:1px solid #666;border-radius:3px}
+.student.selected .student-checkbox{background:#26c6da}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.chip{background:#eceff1;padding:6px 12px;border-radius:16px;font-size:.9rem}
+
+/* Panels (step 2) */
+.actions{display:flex;gap:24px;margin-bottom:16px}
+.panel{flex:1;border:1px solid #ddd;border-radius:4px;padding:16px;position:relative}
+.panel h3{margin-top:0}
+.drop-zones{display:flex;flex-direction:column;gap:12px}
+.zone{border:2px dashed #aaa;border-radius:4px;padding:16px;min-height:60px;display:flex;align-items:center;justify-content:center;color:#777;position:relative}
+.panel .btn-sm{position:absolute;bottom:12px;right:12px;background:#4a63a9;color:#fff;border:none;width:28px;height:28px;border-radius:50%;font-size:1.25rem;line-height:1;cursor:pointer}
+.panel-move .class-select{position:absolute;bottom:12px;left:16px;padding:4px;border:1px solid #ccc;border-radius:4px}
+
+/* Step-3 summary */
+.summary{font-size:1rem;line-height:1.5;margin-bottom:16px}
+.bars{display:flex;gap:16px}
+.bar{flex:1}
+.bar-label{font-size:.9rem;margin-bottom:4px}
+.capacity{width:100%;height:12px;background:#eee;border-radius:6px;overflow:hidden}
+.fill{height:100%;background:#4a63a9}
+
+/* Footer buttons */
+.footer{text-align:right;margin-top:16px}
+.btn{border:none;border-radius:4px;cursor:pointer;padding:8px 16px}
+.primary{background:#4a63a9;color:#fff}
+</style>
+{% endraw %}
+{% endblock %}
+
+{% block content %}
+<div id="wizard"
+     data-students='{{ students|tojson|safe }}'
+     data-classes='{{ classes_summary|tojson|safe }}'>
+
+  <!-- STEP 1 -->
+  <section class="step" data-step="1">
+    <h2>Step 1: Select Student(s)</h2>
+    <div class="controls">
+      <input id="search" placeholder="🔍 Search by name or ID…">
+      <select id="filter-class">
+        <option value="">All classes</option>
+        {% for c in classes_summary %}
+          <option value="{{ c.class_id }}">Class {{ c.class_id }}</option>
+        {% endfor %}
+      </select>
+      <button id="clear" class="btn">Clear All</button>
+    </div>
+    <div id="student-list" class="student-list"></div>
+    <div class="footer">
+      <button id="to2" class="btn primary">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step" data-step="2" hidden>
+    <h2>Step 2: Choose Action</h2>
+    <div id="chips" class="chips"></div>
+    <div class="actions">
+      <div class="panel">
+        <h3>Separate groups</h3>
+        <div id="groups" class="drop-zones"></div>
+        <button class="btn-sm" data-add="group">+</button>
+      </div>
+      <div class="panel panel-move">
+        <h3>Move to specific class</h3>
+        <div id="moves" class="drop-zones"></div>
+        <button class="btn-sm" data-add="move">+</button>
+      </div>
+    </div>
+    <div class="footer">
+      <button id="back1" class="btn">← Back</button>
+      <button id="to3" class="btn primary">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step" data-step="3" hidden>
+    <h2>Step 3: Review & Confirm</h2>
+    <div id="summary" class="summary"></div>
+    <div id="bars" class="bars"></div>
+    <div class="footer">
+      <button id="cancel" class="btn">Cancel</button>
+      <button id="confirm" class="btn primary">Confirm</button>
+    </div>
+  </section>
+</div>
+
+{% raw %}
+<script>
+/* ===== All JS inside raw, so VS Code sees valid code ===== */
+
+const wizard   = document.getElementById('wizard');
+const STUDENTS = JSON.parse(wizard.dataset.students);
+const CLASSES  = JSON.parse(wizard.dataset.classes);
+const CAP = 30;
+
+/* ---------- state ---------- */
+let currentStep = 1;
+const selected  = new Set();
+const groups    = [];      // array of [studentId,…]
+const moves     = [];      // array of {sid, cls}
+
+/* ---------- element refs ---------- */
+const steps     = [...document.querySelectorAll('.step')];
+const listEl    = document.getElementById('student-list');
+const filterEl  = document.getElementById('filter-class');
+const searchEl  = document.getElementById('search');
+const clearBtn  = document.getElementById('clear');
+const to2Btn    = document.getElementById('to2');
+const backBtn   = document.getElementById('back1');
+const to3Btn    = document.getElementById('to3');
+const cancelBtn = document.getElementById('cancel');
+const confirmBtn= document.getElementById('confirm');
+const chipsEl   = document.getElementById('chips');
+const groupsEl  = document.getElementById('groups');
+const movesEl   = document.getElementById('moves');
+const addBtns   = document.querySelectorAll('[data-add]');
+const summaryEl = document.getElementById('summary');
+const barsEl    = document.getElementById('bars');
+
+/* ---------- navigation ---------- */
+function showStep(n){
+  currentStep = n;
+  steps.forEach(s=>s.hidden = +s.dataset.step!==n);
+  if(n===2) renderChips();
+  if(n===3) renderSummary();
+}
+
+/* ---------- step 1 list ---------- */
+function renderStudents(){
+  listEl.innerHTML='';
+  const q = searchEl.value.toLowerCase();
+  STUDENTS
+    .filter(s =>
+       (!filterEl.value || s.class_id===filterEl.value) &&
+       (s.name.toLowerCase().includes(q) || s.id.includes(q))
+    )
+    .forEach(s=>{
+      const card=document.createElement('div');
+      card.className='student'+(selected.has(s.id)?' selected':'');
+      card.innerHTML=`<span class="student-checkbox"></span><div>${s.id} · ${s.name}</div>`;
+      card.onclick = ()=>{ selected.has(s.id)?selected.delete(s.id):selected.add(s.id); renderStudents(); };
+      card.draggable=true;
+      card.ondragstart=e=>e.dataTransfer.setData('text/plain',s.id);
+      listEl.appendChild(card);
+    });
+}
+
+/* ---------- step 2 chips ---------- */
+function renderChips(){
+  chipsEl.innerHTML='';
+  selected.forEach(id=>{
+    const s=STUDENTS.find(x=>x.id===id);
+    const chip=document.createElement('div');
+    chip.className='chip';
+    chip.textContent=s.name;
+    chipsEl.appendChild(chip);
+  });
+}
+
+/* ---------- create drop zone ---------- */
+function makeZone(type, idx){
+  const z=document.createElement('div');
+  z.className='zone';
+  if(type==='group'){
+    z.textContent='Drag students here';
+    z.ondragover=e=>e.preventDefault();
+    z.ondrop=e=>{
+      e.preventDefault();
+      const sid=e.dataTransfer.getData('text/plain');
+      if(!groups[idx].includes(sid)) groups[idx].push(sid);
+      z.textContent=groups[idx].join(', ');
+    };
+  }else{
+    z.textContent='Drag student here';
+    const sel=document.createElement('select');
+    sel.className='class-select';
+    sel.innerHTML='<option value="">Select class</option>'+CLASSES.map(c=>`<option>${c.class_id}</option>`).join('');
+    sel.onchange=()=>moves[idx].cls=sel.value;
+    z.ondragover=e=>e.preventDefault();
+    z.ondrop=e=>{
+      e.preventDefault();
+      const sid=e.dataTransfer.getData('text/plain');
+      moves[idx].sid=sid;
+      z.textContent=sid;
+      z.appendChild(sel);
+    };
+    z.appendChild(sel);
+  }
+  return z;
+}
+
+/* ---------- add buttons ---------- */
+addBtns.forEach(btn=>{
+  btn.onclick=()=>{
+    if(btn.dataset.add==='group'){
+      groups.push([]);
+      groupsEl.appendChild(makeZone('group',groups.length-1));
+    }else{
+      moves.push({sid:null,cls:null});
+      movesEl.appendChild(makeZone('move',moves.length-1));
+    }
+  };
+});
+
+/* ---------- summary ---------- */
+function renderSummary(){
+  summaryEl.innerHTML='<p>You’re about to:</p><ul>';
+  groups.forEach((g,i)=>{
+    if(g.length){
+      const names=g.map(id=>STUDENTS.find(s=>s.id===id).name).join(', ');
+      summaryEl.innerHTML+=`<li>Separate “${names}” into Group ${i+1}</li>`;
+    }
+  });
+  moves.forEach(m=>{
+    if(m.sid && m.cls){
+      const nm=STUDENTS.find(s=>s.id===m.sid).name;
+      summaryEl.innerHTML+=`<li>Move “${nm}” → Class ${m.cls}</li>`;
+    }
+  });
+  summaryEl.innerHTML+='</ul>';
+
+  barsEl.innerHTML='';
+  CLASSES.forEach(c=>{
+    const used=c.count + moves.filter(m=>m.cls===c.class_id).length;
+    const pct = Math.min(used/CAP,1)*100;
+    const bar=document.createElement('div');
+    bar.className='bar';
+    bar.innerHTML=`
+      <div class="bar-label">Class ${c.class_id}: ${used}/${CAP}</div>
+      <div class="capacity"><div class="fill" style="width:${pct}%"></div></div>`;
+    barsEl.appendChild(bar);
+  });
+}
+
+/* ---------- wiring ---------- */
+searchEl.oninput =
+filterEl.onchange = renderStudents;
+clearBtn.onclick  = ()=>{selected.clear();renderStudents();};
+to2Btn.onclick    = ()=>selected.size && showStep(2);
+backBtn.onclick   = ()=>showStep(1);
+to3Btn.onclick    = ()=>showStep(3);
+cancelBtn.onclick = ()=>showStep(1);
+confirmBtn.onclick= ()=>alert('Now POST groups & moves to backend');
+
+/* ---------- init ---------- */
+renderStudents();
+showStep(1);
+</script>
+{% endraw %}
+{% endblock %}

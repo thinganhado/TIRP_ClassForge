@@ -131,3 +131,17 @@ def get_class_metrics(class_id):
         "avg_well":       float(r_well.avg_well     or 0.0),
         "num_conflicts":  int(r_conf.num_conflicts or 0)
     }
+
+def fetch_classes_summary():
+    sql = text("""
+      SELECT a.class_id, COUNT(*) AS count
+      FROM allocations a
+      WHERE a.class_id IS NOT NULL
+      GROUP BY a.class_id
+      ORDER BY a.class_id
+    """)
+    rows = db.session.execute(sql).fetchall()
+    return [
+      {'class_id': r.class_id, 'count': int(r.count)}
+      for r in rows
+    ]

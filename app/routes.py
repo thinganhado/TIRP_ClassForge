@@ -11,6 +11,7 @@ from sqlalchemy import text
 from app.database.student_queries import (
     fetch_all_students,
     fetch_student_details,
+    fetch_students,
 )
 from app.database.class_queries import (
     fetch_unique_classes,
@@ -18,6 +19,7 @@ from app.database.class_queries import (
     fetch_disrespect_for_class,
     get_cohort_averages,
     get_class_metrics,
+    fetch_classes_summary,
 )
 from app.database.softcons_queries import SoftConstraint
 from app.models.assistant import AssistantModel
@@ -112,11 +114,17 @@ def set_priorities():
                            recommendations=priority_recs,
                            session_id=session["session_id"])
 
-@main.route("/customisation/specifications")
+@main.route("/customisation/specification")
 def specification():
-    if "session_id" not in session:
-        session["session_id"] = str(uuid.uuid4())
-    return render_template("specification.html", session_id=session["session_id"])
+    # students: [{id, name, class_id}, …]
+    students = fetch_students()
+    # classes_summary: [{class_id, count}, …]
+    classes_summary = fetch_classes_summary()
+    return render_template(
+        "specifications.html",
+        students=students,
+        classes_summary=classes_summary
+    )
 
 @main.route("/customisation/ai-assistant")
 def ai_assistant():
