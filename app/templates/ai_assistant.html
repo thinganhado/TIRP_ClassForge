@@ -179,6 +179,22 @@
     .send-button:hover {
         background-color: #003d82;
     }
+    
+    .refresh-button {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-right: 10px;
+    }
+    
+    .refresh-button:hover {
+        background-color: #5a6268;
+    }
 </style>
 {% endblock %}
 
@@ -240,6 +256,7 @@
     
     <div class="action-buttons">
         <a href="{{ url_for('main.set_priorities') }}" class="confirm-button" style="display: none; text-decoration: none;">Go to Set Priorities</a>
+        <button id="refresh-button" class="refresh-button" title="Refresh Assistant"><i class="fas fa-sync-alt"></i> Reset Conversation</button>
     </div>
     
     <div class="message-input-footer">
@@ -395,6 +412,16 @@ document.addEventListener('DOMContentLoaded', function() {
     messageInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             sendMessage();
+        }
+    });
+    
+    // Add event listener for refresh button
+    const refreshButton = document.getElementById('refresh-button');
+    refreshButton.addEventListener('click', function() {
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to reset the conversation? This will clear all chat history.')) {
+            // Reset by reloading the page with a reset parameter
+            window.location.href = "{{ url_for('main.ai_assistant') }}?reset=true";
         }
     });
     

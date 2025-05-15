@@ -94,6 +94,11 @@ def ai_assistant():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
     
+    # Check if reset parameter is present
+    if request.args.get('reset') == 'true':
+        # Clear chat history for current session
+        assistant.clear_chat_history(session_id=session['session_id'])
+    
     # Get chat history for current session
     chat_history = assistant.get_chat_history(session_id=session['session_id'])
     
