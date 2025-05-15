@@ -1,17 +1,17 @@
 {
   "vocab_size": 261,
   "stop_words": [
-    "he",
-    "because",
-    "as",
-    "beforehand",
-    "every",
-    "perhaps",
-    "though",
-    "other",
-    "yourself",
-    "elsewhere",
+    "am",
+    "keep",
+    "side",
+    "themselves",
+    "give",
+    "she",
+    "at",
+    "but",
+    "interest",
+    "whom",
     "..."
   ],
-  "timestamp": "2025-05-15 05:17:46"
+  "timestamp": "2025-05-15 18:34:41"
 }
