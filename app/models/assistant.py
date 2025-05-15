@@ -294,13 +294,13 @@ chatbot = RuleBasedChatbot()
 # For backwards compatibility with existing code
 class AssistantModel:
     def __init__(self):
-        self.chatbot = chatbot
-        self.models_loaded = True
-    
+        self.chatbot = RuleBasedChatbot()
+        self.initialize_model()
+        
     def initialize_model(self):
-        """Initialize the model - placeholder for compatibility"""
-        return True
-    
+        # Any additional initialization can go here
+        pass
+        
     def analyze_request(self, user_input, session_id=None):
         return self.chatbot.analyze_request(user_input, session_id)
     
@@ -314,6 +314,10 @@ class AssistantModel:
         return self.chatbot.get_chat_history(session_id, limit)
     
     def clear_chat_history(self, session_id=None):
+        return self.chatbot.clear_chat_history(session_id)
+    
+    def reset_chat_history(self, session_id=None):
+        """Reset the chat history for a specific session"""
         return self.chatbot.clear_chat_history(session_id)
     
     def get_priority_recommendations(self):

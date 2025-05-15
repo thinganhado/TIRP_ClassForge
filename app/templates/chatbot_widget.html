@@ -1,64 +1,116 @@
-<!-- Chatbot Widget - Include this in any page with {% include 'chatbot_widget.html' %} -->
-{% if 'customisation' in request.path and 'set-priorities' not in request.path %}
-<div class="chatbot-widget" id="chatbot-widget">
-    <div class="chatbot-header">
-        <h3><img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent" class="chatbot-avatar"> Customisation Agent</h3>
-        <button class="chatbot-toggle" id="chatbot-toggle">
-            <i class="fas fa-chevron-down" id="toggle-icon"></i>
-        </button>
+<!-- Customisation Agent Widget -->
+<div class="chatbot-widget" id="chatbot-widget" data-session-id="{{ session_id|default('') }}">
+    <!-- Minimized chatbot icon -->
+    <div class="chatbot-icon" id="chatbot-icon">
+        <img src="{{ url_for('static', filename='images/chatbot_avatar.png', _external=False) }}" alt="Customisation Agent">
     </div>
     
-    <div class="chatbot-container" id="chatbot-container">
-        <div class="chatbot-messages" id="chatbot-messages">
-            <div class="message assistant-message">
-                <div class="message-content">
-                    Hello! I'm your Customisation Agent. How can I help you with class allocation today?
-                </div>
-                <div class="message-timestamp">Just now</div>
-            </div>
-            
-            <!-- Recommendations section -->
-            {% if recommendations and recommendations|length > 0 %}
-            <div class="message assistant-message recommendations">
-                <div class="message-content">
-                    <strong>Recommendations for this page:</strong>
-                    <ul>
-                        {% for recommendation in recommendations %}
-                        <li>{{ recommendation }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div class="message-timestamp">Just now</div>
-            </div>
-            {% endif %}
-            
-            <!-- Messages will be added here dynamically -->
+    <!-- Full chatbot interface (hidden initially) -->
+    <div class="chatbot-full" id="chatbot-full" style="display: none;">
+        <div class="chatbot-header">
+            <h3><img src="{{ url_for('static', filename='images/chatbot_avatar.png', _external=False) }}" alt="Customisation Agent" class="chatbot-avatar"> Customisation Agent</h3>
+            <button class="chatbot-toggle" id="chatbot-toggle">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         
-        <div class="chatbot-input-container">
-            <input type="text" id="chatbot-input" placeholder="Ask about class allocation..." />
-            <button id="chatbot-send">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+        <div id="chatbot-container" class="chatbot-container">
+            <div class="chatbot-messages" id="chatbot-messages">
+                <!-- Initial welcome message -->
+                <div class="message assistant-message">
+                    <div class="message-content">
+                        <p>Hello! I'm your classroom optimization assistant.</p>
+                        <p>I can help you with:</p>
+                        <ul class="assistant-list">
+                            <li>Setting priorities between academic, wellbeing, and social factors</li>
+                            <li>Fine-tuning weights for optimization parameters</li>
+                            <li>Generating recommendations for class allocation</li>
+                        </ul>
+                    </div>
+                    <div class="message-timestamp">Just now</div>
+                </div>
+                
+                <!-- Recommendations section -->
+                {% if recommendations and recommendations|length > 0 %}
+                <div class="message assistant-message recommendations">
+                    <div class="message-content">
+                        <strong>Recommendations for this page:</strong>
+                        <ul>
+                            {% for recommendation in recommendations %}
+                            <li>{{ recommendation }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="message-timestamp">Just now</div>
+                </div>
+                {% endif %}
+                
+                <!-- Messages will be added here dynamically -->
+            </div>
+            
+            <div class="chatbot-actions">
+                <button id="refresh-chat" class="chat-action-button" title="Reset conversation">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <a href="{{ url_for('main.ai_assistant') }}" class="chat-action-button" title="Full assistant view">
+                    <i class="fas fa-expand-alt"></i>
+                </a>
+            </div>
+            
+            <div class="chatbot-input-container">
+                <input type="text" id="chatbot-input" placeholder="Ask about class allocation..." />
+                <button id="chatbot-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
-{% endif %}
 
 <style>
     .chatbot-widget {
         position: fixed;
-        bottom: 20px;
+        bottom: 100px; /* Lifted higher above the support button */
         right: 20px;
+        z-index: 999; /* Below 1000 to avoid conflicts with other fixed elements */
+        transition: all 0.3s ease;
+    }
+    
+    /* Chatbot icon style (minimized state) */
+    .chatbot-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: transparent; /* Removed blue background */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .chatbot-icon:hover {
+        transform: scale(1.05);
+    }
+    
+    .chatbot-icon img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    /* Full chatbot style (expanded state) */
+    .chatbot-full {
         width: 350px;
         background-color: #fff;
         border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        transition: height 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
     
     .chatbot-header {
@@ -69,11 +121,15 @@
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
     
     .chatbot-header h3 {
         margin: 0;
         font-size: 16px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
     }
     
     .chatbot-toggle {
@@ -82,17 +138,14 @@
         color: white;
         cursor: pointer;
         font-size: 14px;
+        padding: 5px;
     }
     
     .chatbot-container {
         display: flex;
         flex-direction: column;
-        height: 350px;
+        height: 400px;
         transition: height 0.3s ease;
-    }
-    
-    .chatbot-container.collapsed {
-        height: 0;
     }
     
     .chatbot-messages {
@@ -102,6 +155,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        background-color: #f9f9f9;
     }
     
     .message {
@@ -110,21 +164,25 @@
         max-width: 85%;
         border-radius: 10px;
         padding: 10px 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
     
     .user-message {
         align-self: flex-end;
         background-color: #e3f0ff;
+        border-bottom-right-radius: 4px;
     }
     
     .assistant-message {
         align-self: flex-start;
-        background-color: #f5f5f5;
+        background-color: #fff;
+        border-bottom-left-radius: 4px;
     }
     
     .recommendations {
         background-color: #f0f9ff;
         border-left: 3px solid #4a63a9;
+        width: 95%;
     }
     
     .recommendations ul {
@@ -137,6 +195,25 @@
         line-height: 1.4;
     }
     
+    .message-content p {
+        margin: 0 0 8px 0;
+    }
+    
+    .message-content p:last-child {
+        margin-bottom: 0;
+    }
+    
+    .assistant-list {
+        margin: 5px 0;
+        padding-left: 20px;
+    }
+    
+    .assistant-list li {
+        margin-bottom: 5px;
+        line-height: 1.3;
+        font-size: 13px;
+    }
+    
     .message-timestamp {
         font-size: 10px;
         color: #888;
@@ -144,18 +221,53 @@
         margin-top: 4px;
     }
     
+    .chatbot-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding: 5px 10px;
+        background-color: #f5f5f5;
+        border-top: 1px solid #eee;
+    }
+    
+    .chat-action-button {
+        background: none;
+        border: none;
+        color: #0056b3;
+        font-size: 14px;
+        margin-left: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+    }
+    
+    .chat-action-button i {
+        margin-right: 2px;
+    }
+    
+    .chat-action-button:hover {
+        color: #003d82;
+    }
+    
     .chatbot-input-container {
         display: flex;
         border-top: 1px solid #eee;
         padding: 10px;
+        background-color: #fff;
     }
     
     #chatbot-input {
         flex: 1;
-        padding: 8px 12px;
+        padding: 10px 15px;
         border: 1px solid #ddd;
         border-radius: 20px;
         outline: none;
+        font-size: 14px;
+    }
+    
+    #chatbot-input:focus {
+        border-color: #0056b3;
+        box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.15);
     }
     
     #chatbot-send {
@@ -170,6 +282,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: background-color 0.2s;
+    }
+    
+    #chatbot-send:hover {
+        background-color: #004494;
     }
     
     .chatbot-avatar {
@@ -178,179 +295,76 @@
         margin-right: 8px;
         border-radius: 50%;
     }
+    
+    /* Widget buttons styles */
+    .widget-confirm-button, 
+    .widget-link-button {
+        display: inline-block;
+        padding: 8px 12px;
+        background: #0056b3;
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        margin: 5px 0;
+        transition: background-color 0.2s;
+    }
+    
+    .widget-confirm-button:hover, 
+    .widget-link-button:hover {
+        background: #004494;
+    }
+    
+    /* Notification indicator */
+    .notification-dot {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 10px;
+        height: 10px;
+        background-color: #ff4757;
+        border-radius: 50%;
+        border: 2px solid #0056b3;
+    }
+    
+    /* Ensure widget displays properly on smaller screens */
+    @media (max-width: 768px) {
+        .chatbot-full {
+            width: 300px;
+        }
+        
+        .chatbot-widget {
+            bottom: 60px;
+            right: 10px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .chatbot-full {
+            width: calc(100% - 40px);
+        }
+    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatbotToggle = document.getElementById('chatbot-toggle');
-        const chatbotContainer = document.getElementById('chatbot-container');
-        const toggleIcon = document.getElementById('toggle-icon');
-        const chatbotInput = document.getElementById('chatbot-input');
-        const chatbotSend = document.getElementById('chatbot-send');
-        const chatbotMessages = document.getElementById('chatbot-messages');
-        
-        // Session ID for tracking conversation
-        const sessionId = '{{ session_id if session_id else "" }}';
-        
-        // Toggle chatbot visibility
+document.addEventListener('DOMContentLoaded', function() {
+    const chatbotIcon = document.getElementById('chatbot-icon');
+    const chatbotFull = document.getElementById('chatbot-full');
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    
+    // Show full chatbot when icon is clicked
+    if (chatbotIcon) {
+        chatbotIcon.addEventListener('click', function() {
+            chatbotIcon.style.display = 'none';
+            chatbotFull.style.display = 'flex';
+        });
+    }
+    
+    // Hide full chatbot when toggle button is clicked
+    if (chatbotToggle) {
         chatbotToggle.addEventListener('click', function() {
-            chatbotContainer.classList.toggle('collapsed');
-            toggleIcon.classList.toggle('fa-chevron-down');
-            toggleIcon.classList.toggle('fa-chevron-up');
+            chatbotFull.style.display = 'none';
+            chatbotIcon.style.display = 'flex';
         });
-        
-        // Handle send message
-        function sendMessage() {
-            const message = chatbotInput.value.trim();
-            if (!message) return;
-            
-            // Add user message to chat
-            addMessage(message, 'user');
-            
-            // Clear input
-            chatbotInput.value = '';
-            
-            // Show typing indicator
-            const typingIndicator = document.createElement('div');
-            typingIndicator.className = 'message assistant-message typing';
-            typingIndicator.innerHTML = '<div class="message-content">Thinking...</div>';
-            chatbotMessages.appendChild(typingIndicator);
-            
-            // Scroll to bottom
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-            
-            // Send to backend
-            fetch('/api/assistant/analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    input: message,
-                    session_id: sessionId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Remove typing indicator
-                chatbotMessages.removeChild(typingIndicator);
-                
-                // Add response
-                if (data.success) {
-                    addMessage(data.message, 'assistant');
-                    
-                    // If there are config changes, add a confirm button
-                    if (data.is_modified) {
-                        addConfirmButton(data.modified_config);
-                    }
-                } else {
-                    addMessage("Sorry, I couldn't process your request: " + data.message, 'assistant');
-                }
-            })
-            .catch(error => {
-                // Remove typing indicator
-                chatbotMessages.removeChild(typingIndicator);
-                addMessage("Sorry, there was an error processing your request.", 'assistant');
-                console.error('Error:', error);
-            });
-        }
-        
-        // Add message to chat
-        function addMessage(content, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-            messageContent.innerHTML = content.replace(/\n/g, '<br>');
-            
-            const timestamp = document.createElement('div');
-            timestamp.className = 'message-timestamp';
-            timestamp.textContent = 'Just now';
-            
-            messageDiv.appendChild(messageContent);
-            messageDiv.appendChild(timestamp);
-            
-            chatbotMessages.appendChild(messageDiv);
-            
-            // Scroll to bottom
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-        }
-        
-        // Add confirm button for changes
-        function addConfirmButton(config) {
-            const buttonDiv = document.createElement('div');
-            buttonDiv.className = 'message assistant-message confirmation';
-            
-            const buttonContent = document.createElement('div');
-            buttonContent.className = 'message-content';
-            
-            const confirmButton = document.createElement('button');
-            confirmButton.className = 'confirm-button';
-            confirmButton.textContent = 'Apply Changes';
-            confirmButton.onclick = function() {
-                // Send confirmation to backend
-                fetch('/api/assistant/confirm', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        config: config
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        addMessage("Changes applied successfully! The optimization will now use your customized settings.", 'assistant');
-                        buttonDiv.remove();  // Remove the confirmation button
-                    } else {
-                        addMessage("Sorry, there was an error applying your changes: " + data.message, 'assistant');
-                    }
-                })
-                .catch(error => {
-                    addMessage("Sorry, there was an error applying your changes.", 'assistant');
-                    console.error('Error:', error);
-                });
-            };
-            
-            buttonContent.appendChild(confirmButton);
-            buttonDiv.appendChild(buttonContent);
-            
-            chatbotMessages.appendChild(buttonDiv);
-            
-            // Scroll to bottom
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-        }
-        
-        // Event listeners
-        chatbotSend.addEventListener('click', sendMessage);
-        
-        chatbotInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        
-        // Load chat history if available
-        if (sessionId) {
-            fetch(`/api/assistant/chat_history?session_id=${sessionId}&limit=5`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.history && data.history.length > 0) {
-                    // Clear the default welcome message
-                    chatbotMessages.innerHTML = '';
-                    
-                    // Add history messages (in reverse to show oldest first)
-                    data.history.reverse().forEach(entry => {
-                        addMessage(entry.user_input, 'user');
-                        addMessage(entry.response, 'assistant');
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error loading chat history:', error);
-            });
-        }
-    });
+    }
+});
 </script> 

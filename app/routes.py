@@ -343,18 +343,29 @@ def get_recommendations():
 
 @main.route("/api/assistant/chat_history", methods=["GET"])
 def get_chat_history():
-    """Get chat history for the current session or all sessions"""
-    try:
-        # Get session_id from request
-        session_id = request.args.get("session_id") or session.get('session_id')
-        limit = int(request.args.get("limit", 10))
-        
-        # Get history from the assistant
-        history = assistant.get_chat_history(session_id=session_id, limit=limit)
-        
-        return jsonify({"success": True, "history": history})
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Error getting chat history: {str(e)}"}), 500
+    session_id = request.args.get("session_id")
+    limit = request.args.get("limit", 50, type=int)
+    
+    if not session_id:
+        return jsonify({"success": False, "message": "Session ID required"}), 400
+    
+    history = assistant.get_chat_history(session_id=session_id, limit=limit)
+    return jsonify({"success": True, "history": history})
+
+@main.route("/api/assistant/reset", methods=["GET"])
+def reset_chat():
+    session_id = request.args.get("session_id")
+    
+    if not session_id:
+        return jsonify({"success": False, "message": "Session ID required"}), 400
+    
+    # Reset the chat history for the session
+    success = assistant.reset_chat_history(session_id=session_id)
+    
+    if success:
+        return jsonify({"success": True, "message": "Chat history reset successfully"})
+    else:
+        return jsonify({"success": False, "message": "Failed to reset chat history"}), 500
 
 @main.route("/api/assistant/priority_recommendations", methods=["GET"])
 def get_priority_recommendations():
