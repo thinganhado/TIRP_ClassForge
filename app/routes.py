@@ -137,8 +137,84 @@ def history():
                            session_id=session["session_id"])
 
 # ---------------- submit_customisation (unchanged) ----------------
-# **identical in both versions – kept as-is**
-# … (same code as before) …
+@main.route('/submit_customisation', methods=['POST'])
+def submit_customisation():
+    try:
+        # --- Extract form data ---
+        gpa_penalty_weight = int(request.form.get("gpa_penalty_weight", 30))
+        wellbeing_penalty_weight = int(request.form.get("wellbeing_penalty_weight", 50))
+        bully_penalty_weight = int(request.form.get("bully_penalty_weight", 60))
+        influence_std_weight = int(request.form.get("influence_std_weight", 60))
+        isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
+        min_friends_required = int(request.form.get("min_friends_required", 1))
+        friend_inclusion_weight = int(request.form.get("friend_inclusion_weight", 60))
+        friendship_balance_weight = int(request.form.get("friend_balance_weight", 60))
+
+        priority_csv = request.form.get("priority_order", "")
+        priority_list = priority_csv.split(",") if priority_csv else []
+
+        # --- Map priority list to weights ---
+        priority_mapping = {
+            "academic_performance": "prioritize_academic",
+            "student_wellbeing": "prioritize_wellbeing",
+            "bullying_prevention": "prioritize_bullying",
+            "social_influence": "prioritize_social_influence",
+            "friendship_connections": "prioritize_friendship"
+        }
+        priority_weights = {v: 0 for v in priority_mapping.values()}
+        for rank, key in enumerate(priority_list[::-1], start=1):  # Higher rank = higher weight
+            if key in priority_mapping:
+                priority_weights[priority_mapping[key]] = rank
+
+        # --- Store in SQL ---
+        new_entry = SoftConstraint(
+            gpa_penalty_weight=gpa_penalty_weight,
+            wellbeing_penalty_weight=wellbeing_penalty_weight,
+            bully_penalty_weight=bully_penalty_weight,
+            influence_std_weight=influence_std_weight,
+            isolated_std_weight=isolated_std_weight,
+            min_friends_required=min_friends_required,
+            friend_inclusion_weight=friend_inclusion_weight,
+            friendship_balance_weight=friendship_balance_weight,
+            **priority_weights
+        )
+        db.session.add(new_entry)
+        db.session.commit()
+
+        # --- Save JSON config for GA ---
+        constraints = {
+            "gpa_penalty_weight": gpa_penalty_weight,
+            "wellbeing_penalty_weight": wellbeing_penalty_weight,
+            "bully_penalty_weight": bully_penalty_weight,
+            "influence_std_weight": influence_std_weight,
+            "isolated_std_weight": isolated_std_weight,
+            "min_friends_required": min_friends_required,
+            "friend_inclusion_weight": friend_inclusion_weight,
+            "friendship_balance_weight": friendship_balance_weight,
+            **priority_weights
+        }
+        with open("app/ml_models/soft_constraints_config.json", "w") as f:
+            json.dump(constraints, f, indent=2)
+
+        # --- Run GA script (which handles DB insertion itself) ---
+        result = subprocess.run(
+            ["python", "finalallocation.py"],
+            capture_output=True,
+            text=True,
+            cwd="app/ml_models"
+        )
+
+        if result.returncode != 0:
+            print("GA Script Error Output:\n", result.stderr)
+            flash(f"GA Allocation failed. Error:\n{result.stderr}")
+            return redirect(url_for("main.set_priorities"))
+
+        # --- Success ---
+        return redirect(url_for("main.overall"))
+
+    except Exception as e:
+        flash(f"Submission error: {e}")
+        return redirect(url_for("main.set_priorities"))
 
 @main.route("/customisation/loading")
 def customisation_loading():
@@ -146,7 +222,29 @@ def customisation_loading():
                            from_set_priorities=True)   # keep v1 flag
 
 # run_allocation unchanged
-# … (same code as before) …
+@main.route("/run_allocation")
+def run_allocation():
+    """Run the allocation algorithm and redirect to Students page when complete"""
+    try:
+        # Get the absolute path to the finalallocation.py script
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "ml_models", "finalallocation.py"))
+        
+        # Run the allocation script
+        result = subprocess.run([sys.executable, script_path], 
+                                capture_output=True, 
+                                text=True,
+                                check=True)
+        
+        if result.returncode == 0:
+            # If successful, redirect to Students page
+            return redirect(url_for("main.students"))
+        else:
+            # If there was an error, show error page
+            flash(f"Allocation failed: {result.stderr}")
+            return redirect(url_for("main.set_priorities"))
+    except Exception as e:
+        flash(f"Error running allocation: {str(e)}")
+        return redirect(url_for("main.set_priorities"))
 
 # ╭────────  JSON APIs  ─────────╮
 @main.route("/api/students")

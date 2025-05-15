@@ -79,7 +79,7 @@
     }
     .details-container.details-card .detail {
       display:flex; justify-content:space-between;
-      margin-bottom:12px; font-size:.95rem;
+      margin-bottom:8px; font-size:.95rem;
     }
     .details-container.details-card .label {
       font-weight:600; color:#333;
@@ -93,8 +93,15 @@
     .details-container.details-card .value.bad {
       color:#dc3545;
     }
+    .details-container.details-card p {
+      margin-top:16px; color:#555; line-height:1.4;
+    }
+    /* UPDATED: center & widen button */
     .details-container.details-card .details-explore-btn {
-      display:inline-block; margin-top:16px;
+      display: block;
+      width: 90%;
+      margin: 16px auto 0;
+      text-align: center;
     }
   </style>
 {% endblock %}
@@ -185,22 +192,27 @@
         <span class="label">Number of Conflicts</span>
         <span id="numConflicts" class="value">–</span>
       </div>
+
+      <p>
+        For targeted reassignments or splitting a subset of students based on your observations,
+        go to the <strong>Specifications</strong> page.
+      </p>
       <a class="details-explore-btn"
-         href="{{ url_for('main.students') }}">
-        Go to Manage Students
+         href="{{ url_for('main.specification') }}">
+        Go to Specifications
       </a>
     </div>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const tabs  = [...document.querySelectorAll("#classTabs li")],
-            panes = [...document.querySelectorAll(".class-pane")],
+      const tabs     = [...document.querySelectorAll("#classTabs li")],
+            panes    = [...document.querySelectorAll(".class-pane")],
             avgGpaEl = document.getElementById("avgGpa"),
-            avgWellEl = document.getElementById("avgWell"),
-            numConfEl = document.getElementById("numConflicts");
+            avgWellEl= document.getElementById("avgWell"),
+            numConfEl= document.getElementById("numConflicts");
 
-      // get cohort averages from Python context
+      // cohort averages from Python
       const cohortAvgGpa  = parseFloat("{{ cohort_avg_gpa }}"),
             cohortAvgWell = parseFloat("{{ cohort_avg_well }}");
 
@@ -240,54 +252,54 @@
       function reorderAndDraw(p) {
         const roster = p.querySelector(".class-roster"),
               svg    = roster.querySelector("svg"),
-              edges  = JSON.parse(p.dataset.edges || "[]"),
+              edges  = JSON.parse(p.dataset.edges||"[]"),
               BB     = roster.getBoundingClientRect(),
               leftTbl  = roster.querySelector("table.left"),
               rightTbl = roster.querySelector("table.right");
 
         // group bullies first
         const bullyIds = [...new Set(edges.map(e=>e.target))];
-        const leftRows = [...leftTbl.rows].sort((a,b) => {
-          const ia = bullyIds.indexOf(a.dataset.student),
-                ib = bullyIds.indexOf(b.dataset.student);
-          return (ia<0)+(ib<0)|| ia-ib;
-        });
-        leftRows.forEach(r => leftTbl.tBodies[0].appendChild(r));
+        Array.from(leftTbl.rows)
+             .sort((a,b)=>{
+               const ia=bullyIds.indexOf(a.dataset.student),
+                     ib=bullyIds.indexOf(b.dataset.student);
+               return (ia<0)+(ib<0)||ia-ib;
+             })
+             .forEach(r=> leftTbl.tBodies[0].appendChild(r));
 
         // group victims per bully
-        const rightOrder = [];
-        bullyIds.forEach(b => {
-          edges.filter(e=>e.target===b)
-               .forEach(e=> rightOrder.push(e.source));
-        });
-        [...rightTbl.rows].forEach(r => {
-          if (!rightOrder.includes(r.dataset.student)) rightOrder.push(r.dataset.student);
-        });
-        rightOrder.forEach(id => {
-          const row = rightTbl.querySelector(`tr[data-student='${id}']`);
+        const rightOrder=[];
+        bullyIds.forEach(b=> edges.filter(e=>e.target===b)
+                                 .forEach(e=> rightOrder.push(e.source)));
+        Array.from(rightTbl.rows)
+             .forEach(r=> {
+               if (!rightOrder.includes(r.dataset.student))
+                 rightOrder.push(r.dataset.student);
+             });
+        rightOrder.forEach(id=>{
+          const row=rightTbl.querySelector(`tr[data-student='${id}']`);
           if (row) rightTbl.tBodies[0].appendChild(row);
         });
 
-        // clear + draw
-        svg.innerHTML = "";
-        edges.forEach(e => {
-          const t = leftTbl.querySelector(`tr[data-student='${e.target}']`),
-                s = rightTbl.querySelector(`tr[data-student='${e.source}']`);
+        // draw lines
+        svg.innerHTML="";
+        edges.forEach(e=>{
+          const t=leftTbl.querySelector(`tr[data-student='${e.target}']`),
+                s=rightTbl.querySelector(`tr[data-student='${e.source}']`);
           if (!t||!s) return;
-          const tBB = t.getBoundingClientRect(),
-                sBB = s.getBoundingClientRect(),
-                x1  = tBB.right - BB.left,
-                y1  = tBB.top + tBB.height/2 - BB.top,
-                x2  = sBB.left  - BB.left,
-                y2  = sBB.top + sBB.height/2 - BB.top,
-                line = document.createElementNS(svg.namespaceURI, "line");
+          const tBB=t.getBoundingClientRect(), sBB=s.getBoundingClientRect(),
+                x1=tBB.right - BB.left,
+                y1=tBB.top + tBB.height/2 - BB.top,
+                x2=sBB.left  - BB.left,
+                y2=sBB.top + sBB.height/2 - BB.top,
+                line=document.createElementNS(svg.namespaceURI,"line");
           line.setAttribute("x1",x1);
           line.setAttribute("y1",y1);
           line.setAttribute("x2",x2);
           line.setAttribute("y2",y2);
-          line.dataset.source = e.source;
-          line.dataset.target = e.target;
-          line.style.cursor = "pointer";
+          line.dataset.source=e.source;
+          line.dataset.target=e.target;
+          line.style.cursor="pointer";
           line.addEventListener("click", ()=> {
             clearAll();
             highlightGroup([e.source,e.target]);
@@ -298,48 +310,40 @@
         // row clicks
         roster.querySelectorAll("tr").forEach(r=>{
           r.addEventListener("click", ()=>{
-            const id = r.dataset.student;
-            const grp = edges
-              .filter(e=> e.source===id || e.target===id)
-              .flatMap(e=>[e.source,e.target]);
+            const id=r.dataset.student;
+            const grp=edges.filter(e=>e.source===id||e.target===id)
+                           .flatMap(e=>[e.source,e.target]);
             if (!grp.length) return;
             clearAll();
             highlightGroup([...new Set(grp)]);
           });
         });
 
-        // details
+        // update details
         updateClassDetails(p);
       }
 
-      // initialization
-      function drawAll() {
-        panes.forEach(p => {
-          if (!p.classList.contains("active")) return;
-          reorderAndDraw(p);
-        });
+      // draw active pane
+      function drawAll(){
+        panes.forEach(p=> p.classList.contains("active") && reorderAndDraw(p));
       }
 
-      // click-away
-      document.addEventListener("click", e => {
+      // click-away clears highlight
+      document.addEventListener("click", e=>{
         if (!e.target.closest(".class-roster") && !e.target.closest("line")) {
           clearAll();
         }
       });
 
       // tab switching
-      tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-          tabs.forEach(t=>t.classList.toggle("active", t===tab));
-          panes.forEach(p=>p.classList.toggle(
-            "active", p.dataset.class===tab.dataset.class
-          ));
-          clearAll();
-          drawAll();
-        });
-      });
+      tabs.forEach(tab=> tab.addEventListener("click", ()=>{
+        tabs.forEach(t=>t.classList.toggle("active", t===tab));
+        panes.forEach(p=>p.classList.toggle("active",
+          p.dataset.class===tab.dataset.class));
+        clearAll();
+        drawAll();
+      }));
 
-      // initial + resize
       drawAll();
       window.addEventListener("resize", ()=>{
         clearAll();
