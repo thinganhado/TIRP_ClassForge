@@ -1,5 +1,5 @@
 <!-- Chatbot Widget - Include this in any page with {% include 'chatbot_widget.html' %} -->
-{% if 'customisation' in request.path %}
+{% if 'customisation' in request.path and 'set-priorities' not in request.path %}
 <div class="chatbot-widget" id="chatbot-widget">
     <div class="chatbot-header">
         <h3><img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent" class="chatbot-avatar"> Customisation Agent</h3>

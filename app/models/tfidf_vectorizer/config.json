@@ -1,0 +1,20 @@
+{
+    "model_type": "tfidf_vectorizer",
+    "description": "TF-IDF vectorizer for text similarity in the classroom optimization chatbot",
+    "version": "1.0.0",
+    "parameters": {
+        "stop_words": "english",
+        "max_features": null,
+        "ngram_range": [1, 1],
+        "norm": "l2"
+    },
+    "usage": {
+        "text_similarity": "Used for finding similar teacher comments based on user queries",
+        "category_detection": "Used in conjunction with keyword matching for determining educational priorities"
+    },
+    "dependencies": {
+        "scikit-learn": ">=1.4.0",
+        "numpy": ">=1.26.0",
+        "pandas": ">=2.2.0"
+    }
+} 

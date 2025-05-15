@@ -5,15 +5,24 @@
 {% block content %}
 <div class="loading-container">
     <div class="spinner"></div>
-    <h2>Running your classroom allocation...</h2>
-    <p>Please wait while we process your customisation preferences.</p>
+    <h2>Customisation Settings Saved</h2>
+    <p>Your customisation preferences have been processed.</p>
+    
+    {% if from_set_priorities %}
+    <div class="action-buttons">
+        <a href="{{ url_for('main.run_allocation') }}" class="run-allocation-button">Run Allocation Now</a>
+        <a href="{{ url_for('main.customisation_home') }}" class="return-button">Return to Customisation</a>
+    </div>
+    {% else %}
+    <p>Your settings have been saved. You can now continue configuring or run allocation.</p>
+    <div class="action-buttons">
+        <a href="{{ url_for('main.customisation_home') }}" class="return-button">Return to Customisation</a>
+    </div>
+    {% endif %}
 </div>
 
 <script>
-    // Automatically redirect to the run_allocation route after a short delay
-    setTimeout(function() {
-        window.location.href = "{{ url_for('main.run_allocation') }}";
-    }, 1500);  // 1.5 second delay for visual feedback
+    // No automatic redirect - wait for user action
 </script>
 {% endblock %}
 
@@ -41,6 +50,29 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.action-buttons {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+}
+
+.run-allocation-button {
+    background-color: #0067B3;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.return-button {
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
 }
 </style>
 {% endblock %}

@@ -1,0 +1,17 @@
+{
+  "class_size": 30,
+  "max_classes": 6,
+  "gpa_penalty_weight": 80,
+  "wellbeing_penalty_weight": 80,
+  "bully_penalty_weight": 90,
+  "influence_std_weight": 80,
+  "isolated_std_weight": 80,
+  "min_friends_required": 3,
+  "friend_inclusion_weight": 70,
+  "friendship_balance_weight": 60,
+  "prioritize_academic": 5,
+  "prioritize_wellbeing": 5,
+  "prioritize_bullying": 5,
+  "prioritize_social_influence": 4,
+  "prioritize_friendship": 4
+}
