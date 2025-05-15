@@ -75,6 +75,7 @@ local_settings.py
 # Allow cache directory structure but not the files
 app/cache/*
 !app/cache/.gitkeep
+!app/cache/README.md
 
 # Output directories
 /data/
