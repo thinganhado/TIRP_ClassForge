@@ -18,61 +18,82 @@
         padding-top: 110px;
     }
     
-    /* Recommendations styles */
-    .recommendations-panel {
-        background-color: #f8f9fa;
-        border: 1px solid #e3e6f0;
-        border-radius: 8px;
+    /* AI Recommendations Styles */
+    .ai-recommendations {
+        background-color: #f0f9ff;
+        border-left: 3px solid #4a63a9;
         padding: 15px;
         margin-bottom: 20px;
+        border-radius: 5px;
     }
     
-    .recommendations-title {
+    .ai-recommendations h3 {
+        color: #4a63a9;
+        margin-top: 0;
         font-size: 16px;
-        font-weight: 600;
-        color: #0056b3;
-        margin-bottom: 10px;
     }
     
-    .recommendations-list {
-        list-style-type: none;
-        padding-left: 0;
-    }
-    
-    .recommendations-list li {
-        position: relative;
+    .ai-recommendations ul {
+        margin-top: 10px;
+        margin-bottom: 0;
         padding-left: 20px;
+    }
+    
+    .ai-recommendations li {
         margin-bottom: 8px;
-        line-height: 1.4;
+        font-size: 14px;
     }
     
-    .recommendations-list li:before {
-        content: "•";
-        position: absolute;
-        left: 0;
-        color: #0056b3;
-        font-weight: bold;
-    }
-    
-    /* Slider and Input Styles - Kept for regular page functionality */
-    .slider-container {
+    /* Chat Icon Styles */
+    .chat-icon {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background-color: #0056b3;
+        border-radius: 50%;
+        color: white;
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
+        transition: transform 0.3s ease;
+        overflow: hidden;
     }
     
-    .criteria-slider {
-        flex-grow: 1;
+    .chat-icon:hover {
+        transform: scale(1.1);
     }
     
-    .slider-value {
-        min-width: 30px;
-        text-align: right;
+    .chat-avatar {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     
-    /* Constraint Styles */
-    .constraint-section {
-        margin-bottom: 30px;
+    .chat-header-avatar {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+        border-radius: 50%;
+    }
+    
+    /* Chat Panel Styles */
+    .chat-panel {
+        position: fixed;
+        bottom: 160px;
+        right: 20px;
+        width: 350px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
     }
     
     .chat-panel.active {
@@ -168,27 +189,29 @@
     }
 </style>
 <script src="{{ url_for('static', filename='js/customisation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+
 
 <!-- Breadcrumb -->
 <div class="breadcrumb-bar">
     <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation_home') }}">Customisation</a> / <span>Set priorities</span>
 </div>
 
-<!-- Recommendations Panel - Removing this section -->
-<!-- {% if recommendations and recommendations|length > 0 %}
-<div class="recommendations-panel">
-    <div class="recommendations-title">Recommendations</div>
-    <ul class="recommendations-list">
-        {% for recommendation in recommendations %}
-        <li>{{ recommendation }}</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %} -->
-
 <form action="{{ url_for('main.submit_customisation') }}" method="POST">
 <div class="customisation-container">
     <h2 class="section-title">Optimization Settings</h2>
+    
+    <!-- AI Assistant Recommendations -->
+    {% if recommendations and recommendations|length > 0 %}
+    <div class="ai-recommendations">
+        <h3><i class="fas fa-robot"></i> AI Assistant Recommendations</h3>
+        <ul>
+            {% for recommendation in recommendations %}
+            <li>{{ recommendation }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     
 <!-- Hard Constraints Section -->
 <div class="constraint-section">
@@ -364,13 +387,64 @@
                     </div>
                 </div>
             </div>
-            <input type="hidden" id="priority_order" name="priority_order" value="">        </div>
+            <input type="hidden" id="priority_order" name="priority_order" value="">
+        </div>
     </div>
     <div class="submit-section" style="margin-top: 30px; text-align: right;">
     <button type="submit" class="configure-button">Run Allocation</button>
     </div>
 </div>
-</form>
+
+<!-- Chat Icon (instead of full widget) -->
+<div class="chat-icon" id="chat-icon">
+    <img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent" class="chat-avatar">
+</div>
+
+<!-- Chat Panel (hidden by default) -->
+<div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+        <h3><img src="{{ url_for('static', filename='images/chatbot_avatar.png') }}" alt="Customisation Agent" class="chat-header-avatar"> Customisation Agent</h3>
+        <button id="close-chat">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <div class="message assistant-message">
+            <div class="message-content">
+                Hello! I'm your Customisation Agent. How can I help you with class allocation today?
+            </div>
+            <div class="message-timestamp">Just now</div>
+        </div>
+        
+        <!-- Recommendations section -->
+        {% if recommendations and recommendations|length > 0 %}
+        <div class="message assistant-message">
+            <div class="message-content">
+                <strong>Recommendations for this page:</strong>
+                <ul>
+                    {% for recommendation in recommendations %}
+                    <li>{{ recommendation }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="message-timestamp">Just now</div>
+        </div>
+        {% endif %}
+        
+        <div class="message assistant-message">
+            <div class="message-content">
+                You can ask me about optimization settings or tell me what factors are most important for your class allocation. Any changes I suggest can be applied directly on this page.
+            </div>
+            <div class="message-timestamp">Just now</div>
+        </div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="chat-input-field" placeholder="Ask about class allocation..." />
+        <button id="chat-send">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
 
 <script>
     // === Slider Display Logic ===
@@ -419,7 +493,220 @@
         if (form) {
             form.addEventListener('submit', updatePriorityOrder);
         }
+        
+        // Chat Icon Functionality
+        const chatIcon = document.getElementById('chat-icon');
+        const chatPanel = document.getElementById('chat-panel');
+        const closeChat = document.getElementById('close-chat');
+        const chatInputField = document.getElementById('chat-input-field');
+        const chatSend = document.getElementById('chat-send');
+        const chatMessages = document.getElementById('chat-messages');
+        
+        // Session ID for tracking conversation
+        const sessionId = '{{ session_id if session_id else "" }}';
+        
+        // Toggle chat panel
+        chatIcon.addEventListener('click', function() {
+            chatPanel.classList.add('active');
+        });
+        
+        closeChat.addEventListener('click', function() {
+            chatPanel.classList.remove('active');
+        });
+        
+        // Handle send message
+        function sendMessage() {
+            const message = chatInputField.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input
+            chatInputField.value = '';
+            
+            // Show typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'message assistant-message typing';
+            typingIndicator.innerHTML = '<div class="message-content">Thinking...</div>';
+            chatMessages.appendChild(typingIndicator);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Send to backend
+            fetch('/api/assistant/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    input: message,
+                    session_id: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove typing indicator
+                chatMessages.removeChild(typingIndicator);
+                
+                // Add response
+                if (data.success) {
+                    addMessage(data.message, 'assistant');
+                    
+                    // If there are config changes, add a confirm button
+                    if (data.is_modified) {
+                        addConfirmButton(data.modified_config);
+                    }
+                } else {
+                    addMessage("Sorry, I couldn't process your request. Please try again.", 'assistant');
+                }
+            })
+            .catch(error => {
+                // Remove typing indicator
+                if (chatMessages.contains(typingIndicator)) {
+                    chatMessages.removeChild(typingIndicator);
+                }
+                console.error('Error:', error);
+                addMessage("Sorry, there was an error processing your request. Please try again.", 'assistant');
+            });
+        }
+        
+        // Add message to chat
+        function addMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.innerHTML = content.replace(/\n/g, '<br>');
+            
+            const timestamp = document.createElement('div');
+            timestamp.className = 'message-timestamp';
+            timestamp.textContent = 'Just now';
+            
+            messageDiv.appendChild(messageContent);
+            messageDiv.appendChild(timestamp);
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Add confirm button for changes
+        function addConfirmButton(config) {
+            const buttonDiv = document.createElement('div');
+            buttonDiv.className = 'message assistant-message confirmation';
+            
+            const buttonContent = document.createElement('div');
+            buttonContent.className = 'message-content';
+            
+            const confirmButton = document.createElement('button');
+            confirmButton.className = 'confirm-button';
+            confirmButton.textContent = 'Apply Changes';
+            confirmButton.onclick = function() {
+                // Send confirmation to backend
+                fetch('/api/assistant/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        config: config
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        addMessage("Changes applied successfully! The optimization settings have been updated with your preferences.", 'assistant');
+                        addMessage("You can continue using the chat assistant or make further adjustments to the settings on this page.", 'assistant');
+                        buttonDiv.remove();  // Remove the confirmation button
+                        
+                        // Add options div
+                        const optionsDiv = document.createElement('div');
+                        optionsDiv.className = 'message assistant-message';
+                        
+                        const optionsContent = document.createElement('div');
+                        optionsContent.className = 'message-content';
+                        optionsContent.innerHTML = '<strong>What would you like to do next?</strong>';
+                        
+                        // Create Set Priorities button
+                        const setPrioritiesButton = document.createElement('button');
+                        setPrioritiesButton.style.backgroundColor = '#4CAF50';
+                        setPrioritiesButton.style.color = 'white';
+                        setPrioritiesButton.style.border = 'none';
+                        setPrioritiesButton.style.padding = '8px 15px';
+                        setPrioritiesButton.style.marginRight = '10px';
+                        setPrioritiesButton.style.borderRadius = '4px';
+                        setPrioritiesButton.style.cursor = 'pointer';
+                        setPrioritiesButton.textContent = 'Visit Set Priorities Page';
+                        setPrioritiesButton.onclick = function() {
+                            window.location.href = '/customisation/set-priorities';
+                        };
+                        
+                        // Create continue chatting button
+                        const continueButton = document.createElement('button');
+                        continueButton.style.backgroundColor = '#0056b3';
+                        continueButton.style.color = 'white';
+                        continueButton.style.border = 'none';
+                        continueButton.style.padding = '8px 15px';
+                        continueButton.style.borderRadius = '4px';
+                        continueButton.style.cursor = 'pointer';
+                        continueButton.textContent = 'Continue Chatting';
+                        continueButton.onclick = function() {
+                            optionsDiv.remove();
+                            addMessage("What else would you like to know about class allocation settings?", 'assistant');
+                        };
+                        
+                        // Add the buttons to options content
+                        optionsContent.appendChild(document.createElement('br'));
+                        optionsContent.appendChild(document.createElement('br'));
+                        optionsContent.appendChild(setPrioritiesButton);
+                        optionsContent.appendChild(continueButton);
+                        
+                        optionsDiv.appendChild(optionsContent);
+                        chatMessages.appendChild(optionsDiv);
+                        
+                        // Scroll to bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        
+                        // Notify the user their changes are applied
+                        const event = new CustomEvent('settingsUpdated', { detail: config });
+                        document.dispatchEvent(event);
+                    } else {
+                        addMessage("Sorry, there was an error applying your changes.", 'assistant');
+                    }
+                })
+                .catch(error => {
+                    addMessage("Sorry, there was an error applying your changes.", 'assistant');
+                    console.error('Error:', error);
+                });
+            };
+            
+            buttonContent.appendChild(confirmButton);
+            buttonDiv.appendChild(buttonContent);
+            
+            chatMessages.appendChild(buttonDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Event listeners
+        chatSend.addEventListener('click', sendMessage);
+        
+        chatInputField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Initialize session ID for the chatbot if not already set
+        if (!sessionStorage.getItem('chatbot_session_id')) {
+            sessionStorage.setItem('chatbot_session_id', sessionId || Math.random().toString(36).substring(2, 15));
+        }
     });
 </script>
     
-{% endblock %}
+{% endblock %} 
