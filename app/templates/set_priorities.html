@@ -174,8 +174,8 @@
     <a href="{{ url_for('main.dashboard') }}">Home</a> / <a href="{{ url_for('main.customisation_home') }}">Customisation</a> / <span>Set priorities</span>
 </div>
 
-<!-- Recommendations Panel -->
-{% if recommendations and recommendations|length > 0 %}
+<!-- Recommendations Panel - Removing this section -->
+<!-- {% if recommendations and recommendations|length > 0 %}
 <div class="recommendations-panel">
     <div class="recommendations-title">Recommendations</div>
     <ul class="recommendations-list">
@@ -184,7 +184,7 @@
         {% endfor %}
     </ul>
 </div>
-{% endif %}
+{% endif %} -->
 
 <form action="{{ url_for('main.submit_customisation') }}" method="POST">
 <div class="customisation-container">

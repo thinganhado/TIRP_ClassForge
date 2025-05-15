@@ -79,9 +79,8 @@ def set_priorities():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
         
-    # Get priority recommendations from the assistant
-    priority_recommendations = assistant.get_priority_recommendations()
-    return render_template("set_priorities.html", recommendations=priority_recommendations, session_id=session['session_id'])
+    # Don't pass recommendations to the template
+    return render_template("set_priorities.html", session_id=session['session_id'])
 
 @main.route("/customisation/specifications")
 def specification():

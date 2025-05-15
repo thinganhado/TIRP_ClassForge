@@ -160,6 +160,21 @@ class RuleBasedChatbot:
             # Clear all conversation history
             self.conversation_history = []
         return True
+    
+    def get_priority_recommendations(self):
+        """Get recommendations for setting priorities on the set-priorities page"""
+        try:
+            # Return a list of recommendations for setting priorities
+            return [
+                "Consider prioritizing bullying prevention to foster a safe learning environment.",
+                "Balance academic performance with student wellbeing for optimal outcomes.",
+                "Social dynamics can significantly impact student learning - consider adjusting influence weights.",
+                "For students with social challenges, increase the minimum friends required setting.",
+                "If academic achievement is your focus, increase the GPA penalty weight and academic priority."
+            ]
+        except Exception as e:
+            print(f"Error getting priority recommendations: {e}")
+            return []
         
     def get_recommendations(self, student_data=None):
         """Get general recommendations for visualizations"""
@@ -300,6 +315,9 @@ class AssistantModel:
     
     def clear_chat_history(self, session_id=None):
         return self.chatbot.clear_chat_history(session_id)
+    
+    def get_priority_recommendations(self):
+        return self.chatbot.get_priority_recommendations()
     
     def get_recommendations(self, student_data=None):
         return self.chatbot.get_recommendations(student_data)
