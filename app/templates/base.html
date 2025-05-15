@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}ClassForge{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css', _external=False) }}">
     {% if 'customisation' in request.path %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/customisation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customisation.css', _external=False) }}">
     {% endif %}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -19,13 +20,24 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Only include the widget on the specified pages -->
+    {% if request.endpoint in ['main.specification', 'main.history', 'main.customisation_home'] %}
+        {% include 'chatbot_widget.html' %}
+    {% endif %}
+
     <button class="support-button">
         <i class="fas fa-headset"></i> Support
     </button>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js', _external=False) }}"></script>
+    
+    <!-- Only load assistant.js on pages that need it (the 3 specified pages) -->
+    {% if request.endpoint in ['main.specification', 'main.history', 'main.customisation_home', 'main.ai_assistant'] %}
+        <script src="{{ url_for('static', filename='js/assistant.js', _external=False) }}"></script>
+    {% endif %}
+    
     {% if 'customisation' in request.path %}
-    <script src="{{ url_for('static', filename='js/customisation.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/customisation.js', _external=False) }}"></script>
     {% endif %}
 </body>
 </html>
