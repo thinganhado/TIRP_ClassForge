@@ -79,7 +79,9 @@ def set_priorities():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
         
-    return render_template("set_priorities.html", session_id=session['session_id'])
+    # Get priority recommendations from the assistant
+    priority_recommendations = assistant.get_priority_recommendations()
+    return render_template("set_priorities.html", recommendations=priority_recommendations, session_id=session['session_id'])
 
 @main.route("/customisation/specifications")
 def specification():
@@ -93,11 +95,6 @@ def ai_assistant():
     # Generate a session ID if not present
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
-    
-    # Check if reset parameter is present
-    if request.args.get('reset') == 'true':
-        # Clear chat history for current session
-        assistant.clear_chat_history(session_id=session['session_id'])
     
     # Get chat history for current session
     chat_history = assistant.get_chat_history(session_id=session['session_id'])
