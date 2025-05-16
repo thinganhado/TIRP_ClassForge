@@ -342,39 +342,34 @@ document.querySelectorAll('.plus').forEach(btn=>{
 });
 
 /* dropdowns respect capacity + forbid original class */
-function refreshDropdowns() {
+function refreshDropdowns(){
   document.querySelectorAll('.class-sel').forEach((sel, idx) => {
 
-    const sid        = moves[idx]?.sid;
-    const original   = sid ? String(byId(sid).class_id) : null;   // class in DB
-    const currentSel = String(moves[idx]?.cls || sel.value || ''); // user pick
+    /* student’s original class so we can hide it */
+    const sid  = moves[idx]?.sid;
+    const orig = sid ? String(byId(sid).class_id) : null;
 
-    /* work out live size for every class, WITHOUT double–counting “this” select */
-    const liveCounts = {...counts};
-    moves.forEach((m, i) => {
-      if (m.sid && m.cls && i !== idx) liveCounts[m.cls] = (liveCounts[m.cls]||0)+1;
-    });
+    /* what is currently selected for THIS <select>? */
+    const cur  = String(moves[idx]?.cls || sel.value || '');
 
+    /* rebuild the option list */
     sel.innerHTML =
-      '<option value="">class</option>' +
-      CLS.filter(c => {
+        '<option value="">class</option>' +
+        CLS.filter(c => {
+               /* don’t list student’s current class               (1)
+                  and obey capacity when projecting this move      */
+               const projected = counts[c.class_id] +
+                                 moves.filter(m => m.cls === c.class_id).length +
+                                 (cur === String(c.class_id) ? 1 : 0);
+               return projected < CAP && String(c.class_id) !== orig;
+             })
+           .map(c => `<option value="${c.class_id}"
+                             ${String(c.class_id) === cur ? 'selected' : ''}>
+                          Class ${c.class_id}
+                      </option>`).join('');
 
-        /* 1. never list the student’s original class */
-        if (String(c.class_id) === original) return false;
-
-        /* 2. capacity check (allow the already-chosen one even if now full) */
-        const projected = liveCounts[c.class_id] + (String(c.class_id) === currentSel ? 1 : 0);
-        if (projected > CAP) return false;
-
-        return true;
-      })
-      .map(c => `<option value="${c.class_id}"
-                       ${String(c.class_id) === currentSel ? 'selected' : ''}>
-                   Class ${c.class_id}
-                 </option>`).join('');
-
-    /* make sure the control shows the value we think is selected */
-    sel.value = currentSel;
+    /* make sure the control actually shows the selection (2) */
+    sel.value = cur;
   });
 }
 
