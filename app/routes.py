@@ -21,6 +21,8 @@ from app.database.class_queries import (
     get_class_metrics,
     fetch_classes_summary,
 )
+
+from app.database.friend_queries import build_friendship_graph_json
 from app.database.softcons_queries import SoftConstraint
 from app.models.assistant import AssistantModel
 from app import db
@@ -92,6 +94,11 @@ def _safe_recommendations():
 @main.route("/visualization/overall")
 def overall():
     return render_template("Overall.html", recommendations=_safe_recommendations())
+
+@main.route("/visualization/friendship")
+def friendship_graph():
+    graph_data = build_friendship_graph_json()
+    return render_template("CSfriendship_embed.html", graph_data=graph_data)
 
 @main.route("/visualization/individual")
 def individual():

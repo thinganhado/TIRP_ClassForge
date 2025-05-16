@@ -76,8 +76,9 @@
 
 <div id="net_friend" class="tab-pane">
   <div class="embed-wrapper">
-    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F4264166867944c5cd4ffb7333074286d%2Fraw%2F6ee930f0932ae6c5fef1d43ca745ab77a011e0d0%2Fnetwork-4d8d0707-4a0.gexf"
-            title="Friendship graph">
+    <iframe src="{{ url_for('main.friendship_graph') }}"
+            title="Friendship graph"
+            width="100%" height="600" frameborder="0">
     </iframe>
   </div>
 </div>
