@@ -20,6 +20,7 @@ from app.database.class_queries import (
     get_cohort_averages,
     get_class_metrics,
     fetch_classes_summary,
+    fetch_conflict_pairs_per_class,
 )
 from app.database.softcons_queries import SoftConstraint
 from app.models.assistant import AssistantModel
@@ -114,17 +115,15 @@ def set_priorities():
                            recommendations=priority_recs,
                            session_id=session["session_id"])
 
-@main.route("/customisation/specification")
+@main.route('/customisation/specification')
 def specification():
-    # students: [{id, name, class_id}, …]
-    students = fetch_students()
-    # classes_summary: [{class_id, count}, …]
-    classes_summary = fetch_classes_summary()
-    return render_template(
-        "specifications.html",
-        students=students,
-        classes_summary=classes_summary
-    )
+    students   = fetch_students()
+    classes    = fetch_classes_summary()
+    conflicts  = fetch_conflict_pairs_per_class()     # use pairs
+    return render_template('specifications.html',
+                           students=students,
+                           classes_summary=classes,
+                           conflict_by_class=conflicts)
 
 @main.route("/customisation/ai-assistant")
 def ai_assistant():
