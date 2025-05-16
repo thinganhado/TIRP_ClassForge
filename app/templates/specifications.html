@@ -1,272 +1,411 @@
+{#  templates/specifications.html  #}
 {% extends "base.html" %}
-{% block title %}Customisation - Specification{% endblock %}
+{% block title %}Customisation – Specification{% endblock %}
 
+{# ---------------- page-specific CSS ---------------- #}
 {% block extra_head %}
 {% raw %}
 <style>
-/* ─── Wizard container ─── */
-#wizard{max-width:1200px;margin:40px auto;font-family:sans-serif}
-.step{border:1px solid #ddd;border-radius:6px;padding:24px;margin-bottom:24px}
-.step h2{margin-top:0;border-bottom:1px solid #eee;padding-bottom:8px}
+/* ───────────────────────────  layout & cards  ─────────────────────────── */
+#wizard           {max-width:1200px;margin:0 auto;font-family:'Outfit',sans-serif}
+.step             {border:1px solid #d7e1ea;border-radius:8px;
+                   margin-bottom:36px;padding:32px 40px}
+.step h2          {background:#d5f4f6;padding:16px 24px;border-radius:8px 8px 0 0;
+                   margin:-32px -40px 24px;font-size:24px;font-weight:600;color:#152259}
 
-/* Step-1 controls + list */
-.controls{display:flex;gap:12px;margin:16px 0}
-.controls input,.controls select{flex:1;padding:8px;font-size:.95rem}
-.controls .btn{padding:8px 16px}
-.student-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;max-height:300px;overflow-y:auto}
-.student{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #ccc;border-radius:4px;cursor:pointer}
-.student.selected{background:#e0f7fa;border-color:#26c6da}
-.student-checkbox{width:16px;height:16px;border:1px solid #666;border-radius:3px}
-.student.selected .student-checkbox{background:#26c6da}
+/* ────────── STEP-1 toolbar  (aligned right like Students page) ────────── */
+.controls         {display:flex;justify-content:flex-end;align-items:center;
+                   flex-wrap:wrap;gap:14px;margin:16px 0}
+.controls input   {width:260px;padding:10px 12px;font-size:1rem}
+.controls select  {width:160px;padding:10px 8px;font-size:1rem}
+.controls button  {width:80px;font-size:.9rem}
 
-/* Chips */
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
-.chip{background:#eceff1;padding:6px 12px;border-radius:16px;font-size:.9rem}
+/* type-ahead list */
+#typeahead        {position:relative;flex:0 0 260px}
+.ta-list          {position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;
+                   border:1px solid #ccc;border-top:none;max-height:220px;overflow-y:auto;
+                   font-size:.85rem}
+.ta-item          {padding:6px 10px;cursor:pointer}
+.ta-item:hover,
+.ta-item.ta-active{background:#eef5ff}
 
-/* Panels (step 2) */
-.actions{display:flex;gap:24px;margin-bottom:16px}
-.panel{flex:1;border:1px solid #ddd;border-radius:4px;padding:16px;position:relative}
-.panel h3{margin-top:0}
-.drop-zones{display:flex;flex-direction:column;gap:12px}
-.zone{border:2px dashed #aaa;border-radius:4px;padding:16px;min-height:60px;display:flex;align-items:center;justify-content:center;color:#777;position:relative}
-.panel .btn-sm{position:absolute;bottom:12px;right:12px;background:#4a63a9;color:#fff;border:none;width:28px;height:28px;border-radius:50%;font-size:1.25rem;line-height:1;cursor:pointer}
-.panel-move .class-select{position:absolute;bottom:12px;left:16px;padding:4px;border:1px solid #ccc;border-radius:4px}
+/* ────────── conflict tables (narrow & centred) ────────── */
+.conf-table-wrap  {max-width:85%;margin:0 auto 24px}
+.conf-table       {width:100%;border-collapse:collapse;font-size:.85rem}
+.conf-table th,
+.conf-table td    {border:1px solid #d7d9e3;padding:6px 8px}
+.conf-table th    {background:#eef1ff;text-align:left;font-weight:600;color:#152259}
+.conf-table td:last-child{text-align:center}
+.conf-table tr:nth-child(even) td{background:#fafbff}
+.btn-small        {padding:4px 14px;font-size:.75rem;border:none;border-radius:4px;
+                   cursor:pointer;background:#152259;color:#fff}
 
-/* Step-3 summary */
-.summary{font-size:1rem;line-height:1.5;margin-bottom:16px}
-.bars{display:flex;gap:16px}
-.bar{flex:1}
-.bar-label{font-size:.9rem;margin-bottom:4px}
-.capacity{width:100%;height:12px;background:#eee;border-radius:6px;overflow:hidden}
-.fill{height:100%;background:#4a63a9}
+/* chips */
+.chips            {display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 6px}
+.chip             {background:#e8f0fe;padding:6px 12px;border-radius:16px;
+                   font-size:.85rem;cursor:grab}
 
-/* Footer buttons */
-.footer{text-align:right;margin-top:16px}
-.btn{border:none;border-radius:4px;cursor:pointer;padding:8px 16px}
-.primary{background:#4a63a9;color:#fff}
+/* action panels */
+.actions          {display:flex;gap:24px}
+.panel            {flex:1;border:1px dashed #bbb;border-radius:6px;
+                   padding:20px 16px 52px;position:relative;min-height:170px}
+.panel h3         {margin:0 0 14px;font-size:1.15rem;color:#152259}
+.plus             {position:absolute;bottom:16px;right:16px;background:#152259;color:#fff;
+                   width:32px;height:32px;border:none;border-radius:50%;font-size:1.3rem;
+                   cursor:pointer}
+
+/* zones */
+.zone             {border:2px dashed #aaa;border-radius:6px;padding:16px;min-height:68px;
+                   display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+                   justify-content:center;color:#777}
+.zone-chip        {background:#f5f7ff;border:1px solid #aac;border-radius:14px;
+                   padding:4px 12px;display:flex;align-items:center;gap:4px;
+                   font-size:.8rem;cursor:grab}
+.xbtn             {background:none;border:none;color:#dc3545;font-weight:700;
+                   cursor:pointer;font-size:1rem;line-height:1}
+.class-sel        {padding:6px 8px;border:1px solid #888;border-radius:4px;
+                   font-size:.85rem;font-family:inherit;min-width:78px}
+
+/* summary & capacity bars */
+.summary ul       {margin:0 0 18px 20px;padding:0;list-style-type:disc}
+.bars             {display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}
+.bar              {flex:1;min-width:140px}
+.bar-label        {font-size:.85rem;margin-bottom:4px}
+.cap-wrap         {width:100%;height:12px;background:#eee;border-radius:6px;overflow:hidden}
+.fill             {height:100%}                 /* <<< ADDED (makes bars visible) */
+.fill.green       {background:#28a745}
+.fill.orange      {background:#ff9220}
+.fill.red         {background:#dc3545}
+
+/* confirm button */
+#confirm          {margin-top:12px;float:right}
+.btn              {border:none;border-radius:4px;padding:10px 22px;cursor:pointer;
+                   font-size:.9rem;font-family:inherit}
+.primary          {background:#152259;color:#fff}
 </style>
 {% endraw %}
 {% endblock %}
 
+{# ---------------- page body ---------------- #}
 {% block content %}
+<div class="breadcrumb-bar">
+  <a href="{{ url_for('main.dashboard') }}">Home</a> /
+  <a href="{{ url_for('main.customisation_home') }}">Customisation</a> /
+  <span>Specification</span>
+</div>
+
+<section class="page-intro">
+  <h2>Resolve conflicts & fine-tune allocations</h2>
+  <p>
+    Separate conflict pairs or move individual students. Capacity bars update
+    instantly, so you can confirm changes with confidence.
+  </p>
+</section>
+
 <div id="wizard"
      data-students='{{ students|tojson|safe }}'
-     data-classes='{{ classes_summary|tojson|safe }}'>
+     data-classes='{{ classes_summary|tojson|safe }}'
+     data-conflicts='{{ conflict_by_class|tojson|safe }}'>
 
-  <!-- STEP 1 -->
-  <section class="step" data-step="1">
-    <h2>Step 1: Select Student(s)</h2>
+  <!-- STEP 1 ------------------------------------------------------------ -->
+  <section class="step">
+    <h2>1  Select student(s)</h2>
+
     <div class="controls">
-      <input id="search" placeholder="🔍 Search by name or ID…">
-      <select id="filter-class">
+      <div id="typeahead" style="flex:1">
+        <input id="search" placeholder="Search by name or ID…" autocomplete="off">
+        <div id="ta-list" class="ta-list" hidden></div>
+      </div>
+
+      <select id="filter-class" style="flex:0 0 220px">
         <option value="">All classes</option>
         {% for c in classes_summary %}
           <option value="{{ c.class_id }}">Class {{ c.class_id }}</option>
         {% endfor %}
       </select>
-      <button id="clear" class="btn">Clear All</button>
+
+      <button id="clear" class="btn" style="flex:0 0 90px">Clear</button>
     </div>
-    <div id="student-list" class="student-list"></div>
-    <div class="footer">
-      <button id="to2" class="btn primary">Next →</button>
-    </div>
+
+    <div id="confWrap"></div>
+    <div id="chips" class="chips"></div>
   </section>
 
-  <!-- STEP 2 -->
-  <section class="step" data-step="2" hidden>
-    <h2>Step 2: Choose Action</h2>
-    <div id="chips" class="chips"></div>
+  <!-- STEP 2 ------------------------------------------------------------ -->
+  <section class="step">
+    <h2>2  Choose action</h2>
+
     <div class="actions">
       <div class="panel">
         <h3>Separate groups</h3>
-        <div id="groups" class="drop-zones"></div>
-        <button class="btn-sm" data-add="group">+</button>
+        <div id="groups"></div>
+        <button class="plus" data-add="group">＋</button>
       </div>
-      <div class="panel panel-move">
+
+      <div class="panel">
         <h3>Move to specific class</h3>
-        <div id="moves" class="drop-zones"></div>
-        <button class="btn-sm" data-add="move">+</button>
+        <div id="moves"></div>
+        <button class="plus" data-add="move">＋</button>
       </div>
-    </div>
-    <div class="footer">
-      <button id="back1" class="btn">← Back</button>
-      <button id="to3" class="btn primary">Next →</button>
     </div>
   </section>
 
-  <!-- STEP 3 -->
-  <section class="step" data-step="3" hidden>
-    <h2>Step 3: Review & Confirm</h2>
+  <!-- STEP 3 ------------------------------------------------------------ -->
+  <section class="step">
+    <h2>3  Review & confirm</h2>
     <div id="summary" class="summary"></div>
-    <div id="bars" class="bars"></div>
-    <div class="footer">
-      <button id="cancel" class="btn">Cancel</button>
-      <button id="confirm" class="btn primary">Confirm</button>
-    </div>
+    <div id="bars"    class="bars"></div>
+    <button id="confirm" class="btn primary" style="margin-top:16px">Confirm</button>
   </section>
 </div>
 
+{# ---------------- full JS (wrapped in raw) ---------------- #}
 {% raw %}
 <script>
-/* ===== All JS inside raw, so VS Code sees valid code ===== */
+/* ===== data pulled from data-* attrs ===== */
+const wiz    = document.getElementById('wizard');
+const STUDS  = JSON.parse(wiz.dataset.students);
+const CLS    = JSON.parse(wiz.dataset.classes);
+const CONFS  = JSON.parse(wiz.dataset.conflicts);
+const CAP    = 30;
 
-const wizard   = document.getElementById('wizard');
-const STUDENTS = JSON.parse(wizard.dataset.students);
-const CLASSES  = JSON.parse(wizard.dataset.classes);
-const CAP = 30;
-
-/* ---------- state ---------- */
-let currentStep = 1;
-const selected  = new Set();
-const groups    = [];      // array of [studentId,…]
-const moves     = [];      // array of {sid, cls}
-
-/* ---------- element refs ---------- */
-const steps     = [...document.querySelectorAll('.step')];
-const listEl    = document.getElementById('student-list');
-const filterEl  = document.getElementById('filter-class');
-const searchEl  = document.getElementById('search');
-const clearBtn  = document.getElementById('clear');
-const to2Btn    = document.getElementById('to2');
-const backBtn   = document.getElementById('back1');
-const to3Btn    = document.getElementById('to3');
-const cancelBtn = document.getElementById('cancel');
-const confirmBtn= document.getElementById('confirm');
+/* ===== DOM refs ===== */
+const confWrap  = document.getElementById('confWrap');
 const chipsEl   = document.getElementById('chips');
-const groupsEl  = document.getElementById('groups');
-const movesEl   = document.getElementById('moves');
-const addBtns   = document.querySelectorAll('[data-add]');
+const searchEl  = document.getElementById('search');
+const taList    = document.getElementById('ta-list');
+const filtEl    = document.getElementById('filter-class');
+const clearBtn  = document.getElementById('clear');
+const grpWrap   = document.getElementById('groups');
+const movWrap   = document.getElementById('moves');
 const summaryEl = document.getElementById('summary');
 const barsEl    = document.getElementById('bars');
 
-/* ---------- navigation ---------- */
-function showStep(n){
-  currentStep = n;
-  steps.forEach(s=>s.hidden = +s.dataset.step!==n);
-  if(n===2) renderChips();
-  if(n===3) renderSummary();
-}
+/* ===== state ===== */
+const selected = new Set();
+const groups   = [];          // array<array<sid>>
+const moves    = [];          // array<{sid,cls}>
+const counts   = Object.fromEntries(CLS.map(c => [c.class_id, +c.count]));
 
-/* ---------- step 1 list ---------- */
-function renderStudents(){
-  listEl.innerHTML='';
-  const q = searchEl.value.toLowerCase();
-  STUDENTS
-    .filter(s =>
-       (!filterEl.value || s.class_id===filterEl.value) &&
-       (s.name.toLowerCase().includes(q) || s.id.includes(q))
-    )
-    .forEach(s=>{
-      const card=document.createElement('div');
-      card.className='student'+(selected.has(s.id)?' selected':'');
-      card.innerHTML=`<span class="student-checkbox"></span><div>${s.id} · ${s.name}</div>`;
-      card.onclick = ()=>{ selected.has(s.id)?selected.delete(s.id):selected.add(s.id); renderStudents(); };
-      card.draggable=true;
-      card.ondragstart=e=>e.dataTransfer.setData('text/plain',s.id);
-      listEl.appendChild(card);
+/* helper */
+const byId = id => STUDS.find(s => s.id === id);
+
+/* ───── type-ahead ───── */
+let taIndex = -1;
+function openTA(list){
+  taList.hidden = !list.length;
+  taList.innerHTML = list.map((s,i)=>`
+      <div class="ta-item${i===0?' ta-active':''}"
+           data-sid="${s.id}">${s.id} · ${s.name} (C${s.class_id})</div>`).join('');
+  taIndex = list.length ? 0 : -1;
+}
+function closeTA(){ taList.hidden = true; taIndex = -1; }
+function currentTA(){ return taList.querySelector('.ta-active'); }
+
+function searchStudents(q,cls){
+  q = q.toLowerCase();
+  return STUDS.filter(s => (!cls || s.class_id === cls) &&
+      (s.id.includes(q) || s.name.toLowerCase().includes(q))).slice(0,10);
+}
+searchEl.addEventListener('input',()=>{
+  const t = searchEl.value.trim();
+  if(!t){ closeTA(); return; }
+  openTA(searchStudents(t, filtEl.value));
+});
+searchEl.addEventListener('keydown',e=>{
+  if(taList.hidden) return;
+  const items=[...taList.children];
+  if(e.key==='ArrowDown' && taIndex<items.length-1){
+    items[taIndex].classList.remove('ta-active');
+    items[++taIndex].classList.add('ta-active');
+    e.preventDefault();
+  }else if(e.key==='ArrowUp' && taIndex>0){
+    items[taIndex].classList.remove('ta-active');
+    items[--taIndex].classList.add('ta-active');
+    e.preventDefault();
+  }else if(e.key==='Enter'){
+    const sid = currentTA()?.dataset.sid;
+    if(sid){ addChip(sid); closeTA(); searchEl.value=''; }
+    e.preventDefault();
+  }else if(e.key==='Escape'){ closeTA(); }
+});
+taList.onclick = e=>{
+  const item = e.target.closest('.ta-item');
+  if(item){ addChip(item.dataset.sid); closeTA(); searchEl.value=''; }
+};
+document.addEventListener('click',e=>{
+  if(!searchEl.contains(e.target) && !taList.contains(e.target)) closeTA();
+});
+
+/* ───── conflict table ───── */
+function drawConflictTables(){
+  confWrap.innerHTML='';
+  const filter = filtEl.value;
+  CONFS.filter(c=>!filter || c.class_id===filter).forEach(cls=>{
+    const tbl=document.createElement('table');
+    tbl.className='conf-table';
+    tbl.innerHTML=`
+      <thead><tr>
+        <th style="width:45%">Class ${cls.class_id} – Bully</th>
+        <th style="width:45%">Victim</th>
+        <th style="width:10%"></th>
+      </tr></thead>`;
+    const tb = tbl.createTBody();
+    cls.pairs.forEach(p=>{
+      const tr = tb.insertRow();
+      tr.insertCell().textContent = `${p.bully.id} · ${p.bully.name}`;
+      tr.insertCell().textContent = `${p.victim.id} · ${p.victim.name}`;
+      const btn = tr.insertCell(); btn.style.textAlign='center';
+      btn.innerHTML = '<button class="btn-small">Resolve</button>';
+      btn.firstChild.onclick = ()=>{
+        const idx = groups.push([p.bully.id,p.victim.id]) - 1;
+        grpWrap.appendChild(makeGroupZone(idx));
+        addChip(p.bully.id); addChip(p.victim.id);
+        tr.remove();
+      };
     });
-}
-
-/* ---------- step 2 chips ---------- */
-function renderChips(){
-  chipsEl.innerHTML='';
-  selected.forEach(id=>{
-    const s=STUDENTS.find(x=>x.id===id);
-    const chip=document.createElement('div');
-    chip.className='chip';
-    chip.textContent=s.name;
-    chipsEl.appendChild(chip);
+    const wrap=document.createElement('div');
+    wrap.className='conf-table-wrap';
+    wrap.appendChild(tbl);
+    confWrap.appendChild(wrap);
   });
 }
+filtEl.onchange = ()=>{ drawConflictTables(); searchEl.dispatchEvent(new Event('input')); };
 
-/* ---------- create drop zone ---------- */
-function makeZone(type, idx){
-  const z=document.createElement('div');
-  z.className='zone';
-  if(type==='group'){
-    z.textContent='Drag students here';
-    z.ondragover=e=>e.preventDefault();
-    z.ondrop=e=>{
-      e.preventDefault();
-      const sid=e.dataTransfer.getData('text/plain');
-      if(!groups[idx].includes(sid)) groups[idx].push(sid);
-      z.textContent=groups[idx].join(', ');
-    };
-  }else{
-    z.textContent='Drag student here';
-    const sel=document.createElement('select');
-    sel.className='class-select';
-    sel.innerHTML='<option value="">Select class</option>'+CLASSES.map(c=>`<option>${c.class_id}</option>`).join('');
-    sel.onchange=()=>moves[idx].cls=sel.value;
-    z.ondragover=e=>e.preventDefault();
-    z.ondrop=e=>{
-      e.preventDefault();
-      const sid=e.dataTransfer.getData('text/plain');
-      moves[idx].sid=sid;
-      z.textContent=sid;
-      z.appendChild(sel);
-    };
-    z.appendChild(sel);
-  }
-  return z;
+/* ───── chips row ───── */
+function addChip(id){
+  if(selected.has(id)) return;
+  selected.add(id);
+  renderChips(); renderSummary(); refreshDropdowns();
+}
+function renderChips(){
+  chipsEl.innerHTML=[...selected].map(sid=>`
+      <div class="chip" draggable="true"
+           ondragstart="event.dataTransfer.setData('text/plain','${sid}')">
+         ${byId(sid).name}
+      </div>`).join('');
 }
 
-/* ---------- add buttons ---------- */
-addBtns.forEach(btn=>{
+/* ───── group zone & move lane ───── */
+function makeZoneChip(sid,remove){
+  const c=document.createElement('div');
+  c.className='zone-chip'; c.textContent=byId(sid).name;
+  c.draggable=true;
+  c.ondragstart=e=>e.dataTransfer.setData('text/plain',sid);
+  const x=document.createElement('button');
+  x.className='xbtn'; x.textContent='×'; x.onclick=remove; c.appendChild(x);
+  return c;
+}
+function makeGroupZone(i){
+  const z=document.createElement('div'); z.className='zone';
+  const draw=()=>{
+    z.innerHTML='';
+    if(!groups[i].length){ z.textContent='Drag students here'; return; }
+    groups[i].forEach(sid=>z.appendChild(
+      makeZoneChip(sid,()=>{groups[i]=groups[i].filter(x=>x!==sid); draw(); renderSummary();})
+    ));
+  };
+  z.ondragover=e=>e.preventDefault();
+  z.ondrop=e=>{
+    const sid=e.dataTransfer.getData('text/plain');
+    if(!groups[i].includes(sid)){ groups[i].push(sid); draw(); addChip(sid); renderSummary(); }
+  };
+  draw(); return z;
+}
+function makeMoveLane(i){
+  const lane=document.createElement('div'); lane.className='zone';
+  const inner=document.createElement('div'); inner.className='lane-inner'; lane.appendChild(inner);
+  inner.innerHTML=`<span class="drop">Drag student</span><span class="arrow">→</span>`;
+  const drop=inner.querySelector('.drop');
+  const sel=document.createElement('select'); sel.className='class-sel'; inner.appendChild(sel); 
+  sel.onchange = () => {moves[i].cls = sel.value; renderSummary(); refreshDropdowns();};
+  const x=document.createElement('button'); x.className='xbtn'; x.textContent='×';
+  x.onclick=()=>{ moves[i]={sid:null,cls:null}; drop.textContent='Drag student'; sel.value=''; renderSummary(); refreshDropdowns(); };
+  inner.appendChild(x);
+  lane.ondragover=e=>e.preventDefault();
+  lane.ondrop=e=>{
+    const sid=e.dataTransfer.getData('text/plain');
+    moves[i].sid=sid; drop.textContent=byId(sid).name;
+    addChip(sid); renderSummary(); refreshDropdowns();
+  };
+  return lane;
+}
+document.querySelectorAll('.plus').forEach(btn=>{
   btn.onclick=()=>{
     if(btn.dataset.add==='group'){
-      groups.push([]);
-      groupsEl.appendChild(makeZone('group',groups.length-1));
+      groups.push([]); grpWrap.appendChild(makeGroupZone(groups.length-1));
     }else{
-      moves.push({sid:null,cls:null});
-      movesEl.appendChild(makeZone('move',moves.length-1));
+      moves.push({sid:null,cls:null}); movWrap.appendChild(makeMoveLane(moves.length-1));
+      refreshDropdowns();
     }
   };
 });
 
-/* ---------- summary ---------- */
-function renderSummary(){
-  summaryEl.innerHTML='<p>You’re about to:</p><ul>';
-  groups.forEach((g,i)=>{
-    if(g.length){
-      const names=g.map(id=>STUDENTS.find(s=>s.id===id).name).join(', ');
-      summaryEl.innerHTML+=`<li>Separate “${names}” into Group ${i+1}</li>`;
-    }
-  });
-  moves.forEach(m=>{
-    if(m.sid && m.cls){
-      const nm=STUDENTS.find(s=>s.id===m.sid).name;
-      summaryEl.innerHTML+=`<li>Move “${nm}” → Class ${m.cls}</li>`;
-    }
-  });
-  summaryEl.innerHTML+='</ul>';
+/* dropdowns respect capacity + forbid original class */
+function refreshDropdowns(){
+  document.querySelectorAll('.class-sel').forEach((sel, idx) => {
 
-  barsEl.innerHTML='';
-  CLASSES.forEach(c=>{
-    const used=c.count + moves.filter(m=>m.cls===c.class_id).length;
-    const pct = Math.min(used/CAP,1)*100;
-    const bar=document.createElement('div');
-    bar.className='bar';
-    bar.innerHTML=`
-      <div class="bar-label">Class ${c.class_id}: ${used}/${CAP}</div>
-      <div class="capacity"><div class="fill" style="width:${pct}%"></div></div>`;
-    barsEl.appendChild(bar);
+    /* student’s original class so we can hide it */
+    const sid  = moves[idx]?.sid;
+    const orig = sid ? String(byId(sid).class_id) : null;
+
+    /* what is currently selected for THIS <select>? */
+    const cur  = String(moves[idx]?.cls || sel.value || '');
+
+    /* rebuild the option list */
+    sel.innerHTML =
+        '<option value="">class</option>' +
+        CLS.filter(c => {
+               /* don’t list student’s current class               (1)
+                  and obey capacity when projecting this move      */
+               const projected = counts[c.class_id] +
+                                 moves.filter(m => m.cls === c.class_id).length +
+                                 (cur === String(c.class_id) ? 1 : 0);
+               return projected < CAP && String(c.class_id) !== orig;
+             })
+           .map(c => `<option value="${c.class_id}"
+                             ${String(c.class_id) === cur ? 'selected' : ''}>
+                          Class ${c.class_id}
+                      </option>`).join('');
+
+    /* make sure the control actually shows the selection (2) */
+    sel.value = cur;
   });
 }
 
-/* ---------- wiring ---------- */
-searchEl.oninput =
-filterEl.onchange = renderStudents;
-clearBtn.onclick  = ()=>{selected.clear();renderStudents();};
-to2Btn.onclick    = ()=>selected.size && showStep(2);
-backBtn.onclick   = ()=>showStep(1);
-to3Btn.onclick    = ()=>showStep(3);
-cancelBtn.onclick = ()=>showStep(1);
-confirmBtn.onclick= ()=>alert('Now POST groups & moves to backend');
+/* ───── summary & capacity bars ───── */
+function renderSummary(){
+  const live={...counts}; moves.forEach(m=>{ if(m.sid&&m.cls) live[m.cls]++; });
+  /* bullets */
+  summaryEl.innerHTML='<p>You’re about to:</p><ul>'+
+    groups.map(g=>g.length?`<li>Separate “${g.map(byId).map(s=>s.name).join(', ')}”</li>`:'').join('')+
+    moves.map(m=>m.sid&&m.cls?`<li>Move “${byId(m.sid).name}” → Class ${m.cls}</li>`:'').join('')+
+    '</ul>';
+  /* bars */
+  barsEl.innerHTML=CLS.map(c=>{
+    const used=live[c.class_id], pct=Math.min(used/CAP,1)*100,
+          col=used>=CAP?'red':used===CAP-1?'orange':'green';
+    return `<div class="bar">
+              <div class="bar-label">Class ${c.class_id}: ${used}/${CAP}</div>
+              <div class="cap-wrap"><div class="fill ${col}" style="width:${pct}%"></div></div>
+            </div>`;
+  }).join('');
+}
 
-/* ---------- init ---------- */
-renderStudents();
-showStep(1);
+/* drag-out on chips = undo everywhere */
+chipsEl.ondragover=e=>e.preventDefault();
+chipsEl.ondrop=e=>{
+  const sid=e.dataTransfer.getData('text/plain');
+  selected.delete(sid);
+  groups.forEach((g,i)=>{ const j=g.indexOf(sid); if(j>-1){ g.splice(j,1); grpWrap.children[i].replaceWith(makeGroupZone(i)); }});
+  moves.forEach((m,i)=>{ if(m.sid===sid){ m.sid=null; movWrap.children[i].replaceWith(makeMoveLane(i)); }});
+  renderChips(); renderSummary(); refreshDropdowns();
+};
+
+/* init */
+drawConflictTables(); renderChips(); renderSummary(); refreshDropdowns();
+clearBtn.onclick=()=>{ selected.clear(); renderChips(); renderSummary(); refreshDropdowns(); };
+document.getElementById('confirm').onclick=()=>console.log({groups, moves});
 </script>
 {% endraw %}
 {% endblock %}

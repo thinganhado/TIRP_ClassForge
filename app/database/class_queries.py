@@ -145,3 +145,48 @@ def fetch_classes_summary():
       {'class_id': r.class_id, 'count': int(r.count)}
       for r in rows
     ]
+
+def fetch_conflict_pairs_per_class() -> List[Dict[str, Any]]:
+    """
+    Return [{ class_id: '2',
+              pairs: [ {bully:{id,name}, victim:{id,name}}, … ] }, … ]
+
+    Only disrespect edges where bully *and* victim are in the same class
+    are included (same criterion used in Classes.html).
+    """
+    sql = text("""
+        WITH intra AS (
+            SELECT a1.class_id,
+                   d.source_student_id AS bully_id,
+                   d.target_student_id AS victim_id
+            FROM   net_disrespect d
+            JOIN   allocations a1 ON a1.student_id = d.source_student_id
+            JOIN   allocations a2 ON a2.student_id = d.target_student_id
+            WHERE  a1.class_id = a2.class_id           -- same class only
+        )
+        SELECT  i.class_id,
+                b.student_id  AS bully_id,
+                b.first_name  AS bully_fn,
+                b.last_name   AS bully_ln,
+                v.student_id  AS vict_id,
+                v.first_name  AS vict_fn,
+                v.last_name   AS vict_ln
+        FROM    intra i
+        JOIN    participants b ON b.student_id = i.bully_id
+        JOIN    participants v ON v.student_id = i.victim_id
+        ORDER   BY i.class_id, bully_ln, bully_fn
+    """)
+
+    rows = db.session.execute(sql).fetchall()
+
+    by_class: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        by_class[r.class_id].append({
+            "bully":  {"id": str(r.bully_id),
+                       "name": f"{r.bully_fn} {r.bully_ln}"},
+            "victim": {"id": str(r.vict_id),
+                       "name": f"{r.vict_fn} {r.vict_ln}"}
+        })
+
+    return [{"class_id": cid, "pairs": pairs}
+            for cid, pairs in sorted(by_class.items())]
