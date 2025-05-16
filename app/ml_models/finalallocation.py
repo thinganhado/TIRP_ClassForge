@@ -1,6 +1,7 @@
 """## Data Pre-Processing"""
 
 import random
+from random import randint
 import copy
 import numpy as np
 import pandas as pd
@@ -9,7 +10,7 @@ import os
 import json
 from sqlalchemy import create_engine, text
 import sys
-import os
+
 # Ensure parent dir is in path to allow app import
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from app import create_app, db
@@ -378,6 +379,30 @@ with app.app_context():
 
     db.session.commit()
     print("Final class allocations inserted directly into the database.")
+
+    # --- Generate and Insert Random Allocation ---
+    print("Generating random allocation for comparison...")
+
+    random_allocations = []
+
+    # Build a list of participant IDs from your GA allocation loop
+    participant_ids = [index_to_id[i] for i in range(len(best_individual))]
+
+    for pid in participant_ids:
+        random_class = randint(0, 5)  # 6 classes (0–5)
+        random_allocations.append((pid, random_class))
+
+    # Optional: Clear old random allocations
+    db.session.execute(text("DELETE FROM random_allo"))
+
+    for pid, class_id in random_allocations:
+        db.session.execute(
+            text("INSERT INTO random_allo (participant_id, class_id) VALUES (:pid, :cid)"),
+            {"pid": str(pid), "cid": int(class_id)}
+        )
+
+    db.session.commit()
+    print("Random allocation inserted into the random_allo table.")
 
 if __name__ == "__main__":
     print("Starting class allocation algorithm...")
