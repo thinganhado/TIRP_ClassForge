@@ -405,7 +405,31 @@ chipsEl.ondrop=e=>{
 /* init */
 drawConflictTables(); renderChips(); renderSummary(); refreshDropdowns();
 clearBtn.onclick=()=>{ selected.clear(); renderChips(); renderSummary(); refreshDropdowns(); };
-document.getElementById('confirm').onclick=()=>console.log({groups, moves});
+document.getElementById('confirm').onclick = async () => {
+  const payload = {
+    separate_pairs: groups.filter(g => g.length > 1),       // array<array<int>>
+    move_requests : moves.filter(m => m.sid && m.cls)       // [{sid, cls}, …]
+  };
+
+  try {
+    const r = await fetch("/api/hard_constraints", {
+      method : "POST",
+      headers: {"Content-Type": "application/json"},
+      body   : JSON.stringify(payload)
+    });
+    const resp = await r.json();
+    if (r.ok) {
+      alert("Constraints saved. ID = " + resp.id);
+      //  redirect or show success UI
+    } else {
+      alert("Error: " + resp.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Network / server error");
+  }
+};
+
 </script>
 {% endraw %}
 {% endblock %}

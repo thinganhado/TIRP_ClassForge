@@ -23,6 +23,7 @@ from app.database.class_queries import (
     fetch_conflict_pairs_per_class,
 )
 from app.database.softcons_queries import SoftConstraint
+from app.database.spec_endpoint import HardConstraint
 from app.models.assistant import AssistantModel
 from app import db
 
@@ -227,6 +228,25 @@ def submit_customisation():
 def customisation_loading():
     return render_template("customisation_loading.html",
                            from_set_priorities=True)   # keep v1 flag
+
+@main.route("/api/hard_constraints", methods=["POST"])
+def post_hard_constraints():
+    data = request.get_json(force=True)
+
+    # simple validation – expand as needed
+    required_keys = {"separate_pairs", "move_requests"}
+    if not required_keys.issubset(data):
+        return jsonify({"error": "Missing keys"}), 400
+
+    record = HardConstraint(
+        separate_pairs = data["separate_pairs"],
+        move_requests  = data["move_requests"],
+        note           = data.get("note")
+    )
+    db.session.add(record)
+    db.session.commit()
+
+    return jsonify({"status": "ok", "id": record.id}), 201
 
 # run_allocation unchanged
 @main.route("/run_allocation")
