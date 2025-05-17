@@ -122,13 +122,6 @@ def _idx_sets_from_db():
 
 SEPARATE_IDX, MOVE_IDX = _idx_sets_from_db()
 
-# ─── DEBUG 1 ───────────────────────────────────────────────
-print("DBG-1  separate_idx", SEPARATE_IDX[:3], "…", file=sys.stderr)
-print("DBG-1  move_idx     ", MOVE_IDX[:3],      file=sys.stderr)
-assert all(isinstance(i, int) for grp in SEPARATE_IDX for i in grp), "pair still str"
-assert all(isinstance(m[0], int) and isinstance(m[1], int) for m in MOVE_IDX), "move still str"
-# ──────────────────────────────────────────────────────────
-
 # ---------------------------------------------------------
 def _enforce_hard(individual, num_classes=6):
     """
@@ -196,23 +189,6 @@ friendship_df["Participant2-ID"] = friendship_df["student2"].map(index_to_id)
 # --- Build starting individual ---
 start_df = pd.read_excel("student_data/seed_allocations.xlsx")
 start_individual = start_df.sort_values("student_index")["class_assigned"].tolist()
-
-# ─── DEBUG 2  (put this **after** start_individual is defined) ─────────
-if SEPARATE_IDX or MOVE_IDX:
-    probe    = start_individual.copy()
-    enforced = _enforce_hard(probe)
-
-    # every forced-move still correct?
-    for sid, target in MOVE_IDX:
-        assert enforced[sid] == target, f"forced move NOT applied for {sid}"
-
-    # every separate group split?
-    for grp in SEPARATE_IDX:
-        assert len({enforced[s] for s in grp}) == len(grp), \
-               f"group still collides {grp}"
-
-    print("DBG-2  _enforce_hard OK", file=sys.stderr)
-# ───────────────────────────────────────────────────────────────
 
 # --- Build friendship lookup ---
 friendship_lookup = {}
@@ -338,17 +314,6 @@ def repair(individual, num_classes=6, max_size=30, max_diff=5):
     # --- hard rules first ---
     individual = _enforce_hard(individual, num_classes)
 
-        # ─── DEBUG 4 (post–hard) ──────────────────────────────
-    if SEPARATE_IDX or MOVE_IDX:
-        # stop immediately if something went wrong
-        for sid, target in MOVE_IDX:
-            if individual[sid] != target:
-                raise RuntimeError(f"DBG-4 forced move lost! sid {sid}")
-        for grp in SEPARATE_IDX:
-            if len({individual[s] for s in grp}) != len(grp):
-                raise RuntimeError(f"DBG-4 separation lost! grp {grp}")
-    # ───────────────────────────────────────────────────────
-
     # Step 1: Count students in each class
     class_to_students = {i: [] for i in range(num_classes)}
     for sid, cid in enumerate(individual):
@@ -431,11 +396,6 @@ def initialize_population(start_individual, population_size):
     seed = _enforce_hard(start_individual)
     population = [seed]
 
-        # ─── DEBUG 3 (first seed) ──────────────────────────────
-    if SEPARATE_IDX or MOVE_IDX:
-        print("DBG-3  seed sample", seed[:30], file=sys.stderr)
-    # ───────────────────────────────────────────────────────
-
     for _ in range(population_size - 1):
         child = mutate(seed, num_swaps=num_swaps_per_mutation)
         child = _enforce_hard(child)          # keep mutation legal
@@ -466,11 +426,6 @@ for generation in range(max_generations):
         parent2 = selected[i + 1]
         child = crossover(parent1, parent2)
         children.append(child)
-
-    if generation == 0:          # only once is enough
-        for child in children[:3]:
-            repair(child)        # will raise if broken
-        print("DBG-5  gen-0 children OK", file=sys.stderr)
 
     # 5. Mutation + Repair
     children = [mutate(child, num_swaps=num_swaps_per_mutation) for child in children]
