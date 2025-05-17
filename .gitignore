@@ -1,10 +1,19 @@
-# Python
+# Python cache files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# Virtual environments
+venv/
+.venv/
 env/
+ENV/
+virtualenv/
+
+# Distribution / packaging
+.Python
 build/
 develop-eggs/
 dist/
@@ -21,27 +30,39 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
-venv/
-ENV/
-env/
-.venv/
-.env/
-env.bak/
-venv.bak/
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
 
-# Flask
-instance/
-.webassets-cache
-
-# Database
+# Database files
 *.db
 *.sqlite
 *.sqlite3
 
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug.txt
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Local environment
+.env
+.flaskenv
+
+# Data files that shouldn't be tracked
+*.csv
+*.xlsx
+
 # Editor specific files
-.idea/
-.vscode/
 *.swp
 *.swo
 .DS_Store
@@ -54,20 +75,7 @@ instance/
 *.joblib
 
 # Data files
-*.csv
-*.xlsx
-*.xls
-*.json
-*.parquet
 *.feather
-
-# Logs
-logs/
-*.log
-
-# Local development configuration
-config.py
-local_settings.py
 
 # Cache
 .cache/

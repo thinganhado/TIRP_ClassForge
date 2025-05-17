@@ -17,6 +17,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 from app import create_app, db
 from app.database.spec_endpoint import HardConstraint
 
+app = create_app()
+
 # Load soft constraint config
 if os.path.exists("soft_constraints_config.json"):
     with open("soft_constraints_config.json", "r") as f:
@@ -26,19 +28,16 @@ else:
 
 weights = weights_config
 
-# Load hard constraint config
-def load_hard_constraints():
-    latest = HardConstraint.query.order_by(HardConstraint.id.desc()).first()
-    if not latest:
-        return [], []           # default: no hard constraints
-    return latest.separate_pairs, latest.move_requests
-
-separate_pairs, move_requests = load_hard_constraints()
-
 # Load student survey responses (features)
 student_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="responses")
 
 participant_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="participants")
+
+participant_data["Participant-ID"] = (
+        participant_data["Participant-ID"]
+        .astype(str)           # 32481  →  '32481'
+        .str.strip()           # drop accidental spaces
+)
 
 # Load student relationships (edges)
 friends = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_0_Friends")
@@ -88,18 +87,74 @@ index_to_id = {v: k for k, v in id_to_index.items()}
 
 # --- Convert hard_constraints to index ---
 def _idx_sets_from_db():
-    """Return hard-constraint data as index tuples the GA understands."""
-    sep_pairs_ids, move_reqs_ids = load_hard_constraints()
+    """Fetch latest hard-constraint record and convert the IDs to indices
+       understood by the GA.  Returns (pairs_idx, moves_idx).
+    """
+    with app.app_context():
+        latest = (
+            HardConstraint
+            .query
+            .order_by(HardConstraint.id.desc())
+            .first()
+        )
 
-    pairs_idx = [tuple(id_to_index[sid] for sid in grp)         
-                 for grp in sep_pairs_ids]
+    if not latest:                       # no constraints stored yet
+        return [], []
 
-    moves_idx = [(id_to_index[m["sid"]], m["cls"])             
-                 for m in move_reqs_ids]
+    separate_ids = [[str(s) for s in grp] for grp in latest.separate_pairs]
+    move_ids     = [{"sid": str(m["sid"]), "cls": int(m["cls"])}
+                    for m in latest.forced_moves]
+
+    # ---- convert to index space ----
+    pairs_idx = [tuple(id_to_index[sid] for sid in grp) for grp in separate_ids]
+    moves_idx = [(id_to_index[m["sid"]], m["cls"])       for m in move_ids]
 
     return pairs_idx, moves_idx
 
 SEPARATE_IDX, MOVE_IDX = _idx_sets_from_db()
+
+# ─── DEBUG 1 ───────────────────────────────────────────────
+print("DBG-1  separate_idx", SEPARATE_IDX[:3], "…", file=sys.stderr)
+print("DBG-1  move_idx     ", MOVE_IDX[:3],      file=sys.stderr)
+assert all(isinstance(i, int) for grp in SEPARATE_IDX for i in grp), "pair still str"
+assert all(isinstance(m[0], int) and isinstance(m[1], int) for m in MOVE_IDX), "move still str"
+# ──────────────────────────────────────────────────────────
+
+# ---------------------------------------------------------
+def _enforce_hard(individual, num_classes=6):
+    """
+    Return a *copy* of ``individual`` with
+    1. every move-request applied, and
+    2. every separate-group split across different classes.
+    Capacity is *not* handled here – size balancing is left to the
+    main `repair()` logic.
+    """
+    ind = individual.copy()
+
+    # ----- 1. force moves -----
+    for sid, target_cls in MOVE_IDX:
+        ind[sid] = target_cls
+
+    # build class → [students] dict once
+    bin_by_class = {c: [] for c in range(num_classes)}
+    for sid, cid in enumerate(ind):
+        bin_by_class[cid].append(sid)
+
+    # ----- 2. split separate groups -----
+    for group in SEPARATE_IDX:
+        for cid in range(num_classes):
+            members = [s for s in bin_by_class[cid] if s in group]
+            while len(members) > 1:             # clash found
+                sid = members.pop()             # take one of them
+                # pick the first class that has no other member of the group
+                dest = next(k for k in range(num_classes)
+                            if all(x not in group for x in bin_by_class[k]))
+                ind[sid] = dest
+                bin_by_class[cid].remove(sid)
+                bin_by_class[dest].append(sid)
+
+    return ind
+# ---------------------------------------------------------
 
 # Loading Community Detection Files
 # Re-load the community_bully_assignments file
@@ -132,6 +187,23 @@ friendship_df["Participant2-ID"] = friendship_df["student2"].map(index_to_id)
 # --- Build starting individual ---
 start_df = pd.read_excel("student_data/seed_allocations.xlsx")
 start_individual = start_df.sort_values("student_index")["class_assigned"].tolist()
+
+# ─── DEBUG 2  (put this **after** start_individual is defined) ─────────
+if SEPARATE_IDX or MOVE_IDX:
+    probe    = start_individual.copy()
+    enforced = _enforce_hard(probe)
+
+    # every forced-move still correct?
+    for sid, target in MOVE_IDX:
+        assert enforced[sid] == target, f"forced move NOT applied for {sid}"
+
+    # every separate group split?
+    for grp in SEPARATE_IDX:
+        assert len({enforced[s] for s in grp}) == len(grp), \
+               f"group still collides {grp}"
+
+    print("DBG-2  _enforce_hard OK", file=sys.stderr)
+# ───────────────────────────────────────────────────────────────
 
 # --- Build friendship lookup ---
 friendship_lookup = {}
@@ -255,6 +327,20 @@ def fitness(individual, weights=None):
 
 # --- Repair Function ---
 def repair(individual, num_classes=6, max_size=30, max_diff=5):
+    # --- hard rules first ---
+    individual = _enforce_hard(individual, num_classes)
+
+        # ─── DEBUG 4 (post–hard) ──────────────────────────────
+    if SEPARATE_IDX or MOVE_IDX:
+        # stop immediately if something went wrong
+        for sid, target in MOVE_IDX:
+            if individual[sid] != target:
+                raise RuntimeError(f"DBG-4 forced move lost! sid {sid}")
+        for grp in SEPARATE_IDX:
+            if len({individual[s] for s in grp}) != len(grp):
+                raise RuntimeError(f"DBG-4 separation lost! grp {grp}")
+    # ───────────────────────────────────────────────────────
+
     # Step 1: Count students in each class
     class_to_students = {i: [] for i in range(num_classes)}
     for sid, cid in enumerate(individual):
@@ -334,11 +420,18 @@ weights = None  # or a dictionary of custom weights
 
 # --- Initialize Population ---
 def initialize_population(start_individual, population_size):
-    population = [start_individual]  # Start with seed
+    seed = _enforce_hard(start_individual)
+    population = [seed]
+
+        # ─── DEBUG 3 (first seed) ──────────────────────────────
+    if SEPARATE_IDX or MOVE_IDX:
+        print("DBG-3  seed sample", seed[:30], file=sys.stderr)
+    # ───────────────────────────────────────────────────────
 
     for _ in range(population_size - 1):
-        new_individual = mutate(start_individual, num_swaps=num_swaps_per_mutation)
-        population.append(new_individual)
+        child = mutate(seed, num_swaps=num_swaps_per_mutation)
+        child = _enforce_hard(child)          # keep mutation legal
+        population.append(child)
 
     return population
 
@@ -365,6 +458,11 @@ for generation in range(max_generations):
         parent2 = selected[i + 1]
         child = crossover(parent1, parent2)
         children.append(child)
+
+    if generation == 0:          # only once is enough
+        for child in children[:3]:
+            repair(child)        # will raise if broken
+        print("DBG-5  gen-0 children OK", file=sys.stderr)
 
     # 5. Mutation + Repair
     children = [mutate(child, num_swaps=num_swaps_per_mutation) for child in children]
@@ -401,6 +499,7 @@ with app.app_context():
         )
 
     db.session.commit()
+    
     print("Final class allocations inserted directly into the database.")
 
     # --- Generate and Insert Random Allocation ---
