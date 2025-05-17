@@ -1,6 +1,7 @@
 """## Data Pre-Processing"""
 
 import random
+from random import randint
 import copy
 import numpy as np
 import pandas as pd
@@ -10,9 +11,11 @@ import json
 from sqlalchemy import create_engine, text
 import sys
 import os
+
 # Ensure parent dir is in path to allow app import
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from app import create_app, db
+from app.database.spec_endpoint import HardConstraint
 
 # Load soft constraint config
 if os.path.exists("soft_constraints_config.json"):
@@ -22,6 +25,15 @@ else:
     weights_config = {}  # Use defaults
 
 weights = weights_config
+
+# Load hard constraint config
+def load_hard_constraints():
+    latest = HardConstraint.query.order_by(HardConstraint.id.desc()).first()
+    if not latest:
+        return [], []           # default: no hard constraints
+    return latest.separate_pairs, latest.move_requests
+
+separate_pairs, move_requests = load_hard_constraints()
 
 # Load student survey responses (features)
 student_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="responses")
@@ -68,18 +80,33 @@ student_scores_df = pd.read_excel("R-GCN_files/student_scores.xlsx")
 # --- Load predicted GPA file (🆕)
 gpa_df = pd.read_csv("ha_outputs/gpa_predictions_with_bins.csv")  # Must include 'Participant-ID' and 'Predicted_GPA'
 gpa_df.rename(columns={"Student_ID": "Participant-ID"}, inplace=True)
-global_mean_gpa = gpa_df["Predicted_GPA"].mean()       # 🆕 Global mean GPA
+global_mean_gpa = gpa_df["Predicted_GPA"].mean()       # Global mean GPA
 
 # --- Create ID mappings ---
 id_to_index = {pid: idx for idx, pid in enumerate(participant_data["Participant-ID"])}
 index_to_id = {v: k for k, v in id_to_index.items()}
+
+# --- Convert hard_constraints to index ---
+def _idx_sets_from_db():
+    """Return hard-constraint data as index tuples the GA understands."""
+    sep_pairs_ids, move_reqs_ids = load_hard_constraints()
+
+    pairs_idx = [tuple(id_to_index[sid] for sid in grp)         
+                 for grp in sep_pairs_ids]
+
+    moves_idx = [(id_to_index[m["sid"]], m["cls"])             
+                 for m in move_reqs_ids]
+
+    return pairs_idx, moves_idx
+
+SEPARATE_IDX, MOVE_IDX = _idx_sets_from_db()
 
 # Loading Community Detection Files
 # Re-load the community_bully_assignments file
 bully_df = pd.read_csv("ha_outputs/community_bully_assignments.csv")
 bully_df.rename(columns={"Student_ID": "Participant-ID"}, inplace=True)
 
-# --- Load Wellbeing Classification Results (🆕)
+# --- Load Wellbeing Classification Results
 wellbeing_df = pd.read_csv("Clustering/output/wellbeing_classification_results.csv")
 
 # Map Participant-ID to student_index
@@ -97,9 +124,6 @@ for _, row in bully_df.iterrows():
     if row["Is_Bully"] == 0:  # Only victims
         bully_to_victims.setdefault(bully_id, []).append(student_id)
 
-# Display a few entries to confirm structure
-list(bully_to_victims.items())[:3]
-
 # --- Add Participant-ID columns to R-GCN Outputs ---
 student_scores_df["Participant-ID"] = student_scores_df["student_index"].map(index_to_id)
 friendship_df["Participant1-ID"] = friendship_df["student1"].map(index_to_id)
@@ -114,7 +138,7 @@ friendship_lookup = {}
 for _, row in friendship_df.iterrows():
     i, j, score = row['student1'], row['student2'], row['friendship_score']
     friendship_lookup[(i, j)] = score
-    friendship_lookup[(j, i)] = score  # Symmetric
+    friendship_lookup[(j, i)] = score 
 
 def fitness(individual, weights=None):
     # --- Default weights if none provided ---
@@ -378,6 +402,30 @@ with app.app_context():
 
     db.session.commit()
     print("Final class allocations inserted directly into the database.")
+
+    # --- Generate and Insert Random Allocation ---
+    print("Generating random allocation for comparison...")
+
+    random_allocations = []
+
+    # Build a list of participant IDs from your GA allocation loop
+    participant_ids = [index_to_id[i] for i in range(len(best_individual))]
+
+    for pid in participant_ids:
+        random_class = randint(0, 5)  # 6 classes (0–5)
+        random_allocations.append((pid, random_class))
+
+    # Optional: Clear old random allocations
+    db.session.execute(text("DELETE FROM random_allo"))
+
+    for pid, class_id in random_allocations:
+        db.session.execute(
+            text("INSERT INTO random_allo (participant_id, class_id) VALUES (:pid, :cid)"),
+            {"pid": str(pid), "cid": int(class_id)}
+        )
+
+    db.session.commit()
+    print("Random allocation inserted into the random_allo table.")
 
 if __name__ == "__main__":
     print("Starting class allocation algorithm...")

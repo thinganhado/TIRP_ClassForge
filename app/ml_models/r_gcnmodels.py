@@ -167,15 +167,18 @@ with torch.no_grad():
     out_influential = torch.sigmoid(model_influential(student_x, edge_index_combined, edge_type)).squeeze()
     out_isolated = torch.sigmoid(model_isolated(student_x, edge_index_combined, edge_type)).squeeze()
 
-# Create DataFrame
+# Create ID mapping
+index_to_id = {idx: pid for pid, idx in participant_id_to_idx.items()}
+
+# Create DataFrame with Participant IDs
 student_scores_df = pd.DataFrame({
-    "student_index": list(range(student_x.shape[0])),
+    "Participant-ID": [index_to_id[i] for i in range(student_x.shape[0])],
     "influential_score": out_influential.tolist(),
     "isolated_score": out_isolated.tolist()
 })
 
-# Display it
-student_scores_df.to_excel("R-GCN_files/student_scores.xlsx", index=False)
+# Save to Excel (new filename to preserve original)
+student_scores_df.to_excel("R-GCN_files/student_scores_with_ids.xlsx", index=False)
 
 model_friendship_link.eval()
 
@@ -205,8 +208,11 @@ friend_df = pd.DataFrame(friendship_scores, columns=["student_pair", "friendship
 friend_df[['student1', 'student2']] = pd.DataFrame(friend_df['student_pair'].tolist(), index=friend_df.index)
 friend_df.drop(columns=['student_pair'], inplace=True)
 
-# Optional: Sort by highest scores
-friend_df = friend_df.sort_values(by='friendship_score', ascending=False)
+# Map back to Participant IDs
+friend_df['Participant-ID 1'] = friend_df['student1'].map(index_to_id)
+friend_df['Participant-ID 2'] = friend_df['student2'].map(index_to_id)
+friend_df.drop(columns=['student1', 'student2'], inplace=True)
 
-# Show top scores
-friend_df.to_excel("R-GCN_files/friendship_scores.xlsx", index=False)
+# Sort and save
+friend_df = friend_df.sort_values(by='friendship_score', ascending=False)
+friend_df.to_excel("R-GCN_files/friendship_scores_with_ids.xlsx", index=False)
