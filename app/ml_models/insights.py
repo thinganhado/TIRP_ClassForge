@@ -123,7 +123,7 @@ with app.app_context():
         return overall_avg_friends, overall_std_dev_friends
 
     def compute_std_balance(df_alloc, score_df, score_column, label):
-        merged = pd.merge(df_alloc, score_df, on="Participant-ID")
+        merged = df_alloc
         avg_scores_per_class = merged.groupby("class_id")[score_column].mean()
         std_dev = avg_scores_per_class.std()
         print(f"{label} Std Dev of {score_column}: {std_dev:.4f}")
@@ -175,9 +175,9 @@ with app.app_context():
             friend_counts = []
             for student in class_ids:
                 is_friend = (
-                    (friendship_df["Participant1-ID"] == student) & (friendship_df["Participant2-ID"].isin(class_ids))
+                    (friendship_df["Participant-ID 1"] == student) & (friendship_df["Participant-ID 2"].isin(class_ids))
                 ) | (
-                    (friendship_df["Participant2-ID"] == student) & (friendship_df["Participant1-ID"].isin(class_ids))
+                    (friendship_df["Participant-ID 2"] == student) & (friendship_df["Participant-ID 1"].isin(class_ids))
                 )
                 friend_counts.append(len(friendship_df[is_friend]))
             avg_friends = sum(friend_counts) / len(friend_counts) if friend_counts else 0
