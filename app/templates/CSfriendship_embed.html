@@ -1,0 +1,100 @@
+<!-- _friendship_graph_embed.html -->
+<style>
+    #cy {
+        width: 100%;
+        height: 700px;
+        margin-top: 20px;
+    }
+</style>
+
+<script src="https://unpkg.com/cytoscape@3.21.1/dist/cytoscape.min.js"></script>
+
+<div class="filter-controls" style="margin-bottom: 15px;">
+  <button id="show-all" class="active">Show All</button>
+  {% for i in range(6) %}
+  <button class="filter-button" data-class="{{ i }}">Class {{ i }}</button>
+  {% endfor %}
+</div>
+
+<div id="cy"></div>
+
+<script id="graph-data" type="application/json">
+{{ graph_data | safe }}
+</script>
+
+<script>
+const graphData = JSON.parse(document.getElementById("graph-data").textContent);
+const cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: graphData,
+    style: [
+        {
+            selector: 'node',
+            style: {
+                'background-color': 'data(color)',
+                'label': 'data(label)',
+                'width': 'mapData(size, 1, 50, 10, 50)',
+                'height': 'mapData(size, 1, 50, 10, 50)',
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'font-size': '10px',
+                'color': '#333',
+                'font-family': 'Arial, sans-serif'
+            }
+        },
+        {
+            selector: 'edge',
+            style: {
+                'width': 1,
+                'opacity': 0.5,
+                'line-color': '#ccc',
+                'curve-style': 'bezier',
+                'target-arrow-shape': 'triangle',
+                'arrow-scale': 0.7,
+                'target-arrow-color': '#ccc'
+            }
+        },
+        {
+            selector: '.filtered',
+            style: { 'display': 'none' }
+        }
+    ],
+    layout: {
+        name: 'cose',
+        animate: true,
+        fit: true,
+        padding: 50
+    }
+});
+
+function filterByClass(classId) {
+    cy.nodes().forEach(node => {
+        if (node.data('class_id') == classId) node.removeClass('filtered');
+        else node.addClass('filtered');
+    });
+
+    cy.edges().forEach(edge => {
+        const src = edge.source(), tgt = edge.target();
+        if (src.hasClass('filtered') || tgt.hasClass('filtered'))
+            edge.addClass('filtered');
+        else
+            edge.removeClass('filtered');
+    });
+}
+
+document.getElementById('show-all').addEventListener('click', () => {
+    cy.elements().removeClass('filtered');
+    document.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+    document.getElementById('show-all').classList.add('active');
+});
+
+document.querySelectorAll('.filter-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const classId = btn.dataset.class;
+        filterByClass(classId);
+        document.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+        document.getElementById('show-all').classList.remove('active');
+        btn.classList.add('active');
+    });
+});
+</script>

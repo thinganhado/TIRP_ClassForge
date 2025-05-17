@@ -22,6 +22,8 @@ from app.database.class_queries import (
     fetch_classes_summary,
     fetch_conflict_pairs_per_class,
 )
+
+from app.database.friend_queries import build_friendship_graph_json
 from app.database.softcons_queries import SoftConstraint
 from app.database.spec_endpoint import HardConstraint
 from app.models.assistant import AssistantModel
@@ -95,6 +97,11 @@ def _safe_recommendations():
 def overall():
     return render_template("Overall.html", recommendations=_safe_recommendations())
 
+@main.route("/visualization/friendship")
+def friendship_graph():
+    graph_data = build_friendship_graph_json()
+    return render_template("CSfriendship_embed.html", graph_data=graph_data)
+
 @main.route("/visualization/individual")
 def individual():
     return render_template("studentindividual.html",
@@ -147,78 +154,69 @@ def history():
 # ---------------- submit_customisation (unchanged) ----------------
 @main.route('/submit_customisation', methods=['POST'])
 def submit_customisation():
+    """
+    Handles the “Set Priorities” form.
+    We **no longer** run the GA directly here – we just persist the row
+    then redirect to `/run_allocation`, the single GA trigger used by both pages.
+    """
     try:
-        # --- Extract form data ---
-        gpa_penalty_weight = int(request.form.get("gpa_penalty_weight", 30))
-        wellbeing_penalty_weight = int(request.form.get("wellbeing_penalty_weight", 50))
-        bully_penalty_weight = int(request.form.get("bully_penalty_weight", 60))
-        influence_std_weight = int(request.form.get("influence_std_weight", 60))
-        isolated_std_weight = int(request.form.get("isolated_std_weight", 60))
-        min_friends_required = int(request.form.get("min_friends_required", 1))
-        friend_inclusion_weight = int(request.form.get("friend_inclusion_weight", 60))
-        friendship_balance_weight = int(request.form.get("friend_balance_weight", 60))
+        # --- Extract sliders / priorities ----------------------------------
+        gpa_penalty_weight       = int(request.form.get("gpa_penalty_weight",        30))
+        wellbeing_penalty_weight = int(request.form.get("wellbeing_penalty_weight",  50))
+        bully_penalty_weight     = int(request.form.get("bully_penalty_weight",      60))
+        influence_std_weight     = int(request.form.get("influence_std_weight",      60))
+        isolated_std_weight      = int(request.form.get("isolated_std_weight",       60))
+        min_friends_required     = int(request.form.get("min_friends_required",       1))
+        friend_inclusion_weight  = int(request.form.get("friend_inclusion_weight",   60))
+        friendship_balance_weight= int(request.form.get("friend_balance_weight",     60))
 
-        priority_csv = request.form.get("priority_order", "")
-        priority_list = priority_csv.split(",") if priority_csv else []
+        priority_csv   = request.form.get("priority_order", "")
+        priority_list  = priority_csv.split(",") if priority_csv else []
 
-        # --- Map priority list to weights ---
+        # --- Map rank-order to columns -------------------------------------
         priority_mapping = {
-            "academic_performance": "prioritize_academic",
-            "student_wellbeing": "prioritize_wellbeing",
-            "bullying_prevention": "prioritize_bullying",
-            "social_influence": "prioritize_social_influence",
-            "friendship_connections": "prioritize_friendship"
+            "academic_performance":   "prioritize_academic",
+            "student_wellbeing":      "prioritize_wellbeing",
+            "bullying_prevention":    "prioritize_bullying",
+            "social_influence":       "prioritize_social_influence",
+            "friendship_connections": "prioritize_friendship",
         }
         priority_weights = {v: 0 for v in priority_mapping.values()}
-        for rank, key in enumerate(priority_list[::-1], start=1):  # Higher rank = higher weight
+        for rank, key in enumerate(priority_list[::-1], start=1):
             if key in priority_mapping:
                 priority_weights[priority_mapping[key]] = rank
 
-        # --- Store in SQL ---
+        # --- Persist to DB --------------------------------------------------
         new_entry = SoftConstraint(
-            gpa_penalty_weight=gpa_penalty_weight,
-            wellbeing_penalty_weight=wellbeing_penalty_weight,
-            bully_penalty_weight=bully_penalty_weight,
-            influence_std_weight=influence_std_weight,
-            isolated_std_weight=isolated_std_weight,
-            min_friends_required=min_friends_required,
-            friend_inclusion_weight=friend_inclusion_weight,
-            friendship_balance_weight=friendship_balance_weight,
+            gpa_penalty_weight          = gpa_penalty_weight,
+            wellbeing_penalty_weight    = wellbeing_penalty_weight,
+            bully_penalty_weight        = bully_penalty_weight,
+            influence_std_weight        = influence_std_weight,
+            isolated_std_weight         = isolated_std_weight,
+            min_friends_required        = min_friends_required,
+            friend_inclusion_weight     = friend_inclusion_weight,
+            friendship_balance_weight   = friendship_balance_weight,
             **priority_weights
         )
         db.session.add(new_entry)
         db.session.commit()
 
-        # --- Save JSON config for GA ---
-        constraints = {
-            "gpa_penalty_weight": gpa_penalty_weight,
-            "wellbeing_penalty_weight": wellbeing_penalty_weight,
-            "bully_penalty_weight": bully_penalty_weight,
-            "influence_std_weight": influence_std_weight,
-            "isolated_std_weight": isolated_std_weight,
-            "min_friends_required": min_friends_required,
-            "friend_inclusion_weight": friend_inclusion_weight,
-            "friendship_balance_weight": friendship_balance_weight,
-            **priority_weights
-        }
+        # --- Also keep the JSON copy read by GA ----------------------------
         with open("app/ml_models/soft_constraints_config.json", "w") as f:
-            json.dump(constraints, f, indent=2)
+            json.dump({
+                "gpa_penalty_weight"       : gpa_penalty_weight,
+                "wellbeing_penalty_weight" : wellbeing_penalty_weight,
+                "bully_penalty_weight"     : bully_penalty_weight,
+                "influence_std_weight"     : influence_std_weight,
+                "isolated_std_weight"      : isolated_std_weight,
+                "min_friends_required"     : min_friends_required,
+                "friend_inclusion_weight"  : friend_inclusion_weight,
+                "friendship_balance_weight": friendship_balance_weight,
+                **priority_weights
+            }, f, indent=2)
 
-        # --- Run GA script (which handles DB insertion itself) ---
-        result = subprocess.run(
-            ["python", "finalallocation.py"],
-            capture_output=True,
-            text=True,
-            cwd="app/ml_models"
-        )
-
-        if result.returncode != 0:
-            print("GA Script Error Output:\n", result.stderr)
-            flash(f"GA Allocation failed. Error:\n{result.stderr}")
-            return redirect(url_for("main.set_priorities"))
-
-        # --- Success ---
-        return redirect(url_for("main.overall"))
+        # --- All done – kick off GA by redirecting to one common route  <<< CHANGED
+        return redirect(url_for("main.run_allocation"))
 
     except Exception as e:
         flash(f"Submission error: {e}")
@@ -233,45 +231,50 @@ def customisation_loading():
 def post_hard_constraints():
     data = request.get_json(force=True)
 
-    # simple validation – expand as needed
-    required_keys = {"separate_pairs", "move_requests"}
+    required_keys = {"separate_pairs", "forced_moves"}
     if not required_keys.issubset(data):
         return jsonify({"error": "Missing keys"}), 400
 
     record = HardConstraint(
         separate_pairs = data["separate_pairs"],
-        move_requests  = data["move_requests"],
-        note           = data.get("note")
+        forced_moves   = data["forced_moves"]      # <─ use column name
     )
     db.session.add(record)
     db.session.commit()
-
     return jsonify({"status": "ok", "id": record.id}), 201
 
 # run_allocation unchanged
-@main.route("/run_allocation")
+@main.route("/run_allocation", methods=["GET", "POST"])      # <<< CHANGED
 def run_allocation():
-    """Run the allocation algorithm and redirect to Students page when complete"""
+    """
+    Single trigger endpoint used by *both* pages.
+    It simply shells out to finalallocation.py (which reads the
+    latest rows from BOTH tables) and then redirects the user.
+    """
     try:
-        # Get the absolute path to the finalallocation.py script
-        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "ml_models", "finalallocation.py"))
-        
-        # Run the allocation script
-        result = subprocess.run([sys.executable, script_path], 
-                                capture_output=True, 
-                                text=True,
-                                check=True)
-        
+        script_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "ml_models", "finalallocation.py")
+        )
+
+        # Run the GA (both POST & GET hit here)
+        result = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(script_path),
+            check=False           # we’ll inspect return-code
+        )
+
         if result.returncode == 0:
-            # If successful, redirect to Students page
+            flash("Allocation completed successfully", "success")
             return redirect(url_for("main.students"))
         else:
-            # If there was an error, show error page
-            flash(f"Allocation failed: {result.stderr}")
-            return redirect(url_for("main.set_priorities"))
+            flash(f"Allocation failed:\n{result.stderr}", "error")
+            return redirect(url_for("main.customisation_home"))
+
     except Exception as e:
-        flash(f"Error running allocation: {str(e)}")
-        return redirect(url_for("main.set_priorities"))
+        flash(f"Error running allocation: {e}", "error")
+        return redirect(url_for("main.customisation_home"))
 
 # ╭────────  JSON APIs  ─────────╮
 @main.route("/api/students")
