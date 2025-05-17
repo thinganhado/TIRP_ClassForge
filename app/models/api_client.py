@@ -384,21 +384,50 @@ class ApiClient:
         data = self._make_request('get', 'classes')
         if data:
             # Store class IDs
-            class_ids = [cls['id'] for cls in data]
-            self.cache['class_ids'] = class_ids
-            
-            # Convert to dataframe and cache it
-            df = pd.DataFrame(data)
-            self.cache[cache_key] = df
-            
-            # Save to cache file
             try:
-                df.to_parquet(cache_file, index=False)
-                self.logger.info(f"Saved {cache_key} to cache file")
+                # Check which key is used for class ID
+                if isinstance(data, list) and len(data) > 0:
+                    first_item = data[0]
+                    id_key = None
+                    
+                    # Try different possible ID keys
+                    for possible_key in ['id', 'class_id', 'ID', 'Id', 'class_ID', 'classID']:
+                        if possible_key in first_item:
+                            id_key = possible_key
+                            break
+                    
+                    if id_key:
+                        class_ids = [cls[id_key] for cls in data]
+                        self.cache['class_ids'] = class_ids
+                    else:
+                        # If no ID key found, create index-based IDs
+                        self.logger.warning("No ID key found in class data, using index-based IDs")
+                        class_ids = [f"C{i}" for i in range(len(data))]
+                        self.cache['class_ids'] = class_ids
+                        
+                        # Add IDs to the data
+                        for i, cls in enumerate(data):
+                            cls['id'] = class_ids[i]
             except Exception as e:
-                self.logger.error(f"Failed to save {cache_key} to cache: {e}")
+                self.logger.warning(f"Could not extract class IDs: {e}")
+                # Continue without storing class IDs
+            
+            # Convert to dataframe
+            try:
+                df = pd.DataFrame(data)
+                self.cache[cache_key] = df
                 
-            return df
+                # Save to cache file
+                try:
+                    df.to_parquet(cache_file, index=False)
+                    self.logger.info(f"Saved {cache_key} to cache file")
+                except Exception as e:
+                    self.logger.error(f"Failed to save {cache_key} to cache: {e}")
+                    
+                return df
+            except Exception as e:
+                self.logger.error(f"Failed to convert class data to DataFrame: {e}")
+                # Continue with fallback
         
         # If direct API and database fallbacks failed, try to create synthetic data
         if cache_key not in self.cache:
@@ -411,6 +440,11 @@ class ApiClient:
             df = pd.DataFrame(class_data)
             self.cache[cache_key] = df
             self.logger.info("Created synthetic class data")
+            
+            # Also store class IDs
+            class_ids = [cls['id'] for cls in class_data]
+            self.cache['class_ids'] = class_ids
+            
             return df
         
         return None
