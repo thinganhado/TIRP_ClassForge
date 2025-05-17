@@ -224,19 +224,16 @@ def customisation_loading():
 def post_hard_constraints():
     data = request.get_json(force=True)
 
-    # simple validation – expand as needed
-    required_keys = {"separate_pairs", "move_requests"}
+    required_keys = {"separate_pairs", "forced_moves"}
     if not required_keys.issubset(data):
         return jsonify({"error": "Missing keys"}), 400
 
     record = HardConstraint(
         separate_pairs = data["separate_pairs"],
-        move_requests  = data["move_requests"],
-        note           = data.get("note")
+        forced_moves   = data["forced_moves"]      # <─ use column name
     )
     db.session.add(record)
     db.session.commit()
-
     return jsonify({"status": "ok", "id": record.id}), 201
 
 # run_allocation unchanged
