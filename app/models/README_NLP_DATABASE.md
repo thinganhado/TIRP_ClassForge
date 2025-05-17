@@ -1,8 +1,8 @@
-# TIRP NLP Model and Database Integration
+# TIRP NLP Model and API Integration
 
 ## Overview
 
-This document provides information about the Natural Language Processing (NLP) models in the TIRP application and their integration with the database.
+This document provides information about the Natural Language Processing (NLP) models in the TIRP application and their integration with the API and database.
 
 ## NLP Models
 
@@ -30,101 +30,80 @@ The TIRP application uses multiple NLP techniques to understand and respond to u
    - Social network analysis
    - Correlations between various factors (e.g., wellbeing and social connections)
 
-## Database Integration
+## API and Database Integration
 
-### Direct Database Connection
+### API-First Architecture
 
-The application can now connect directly to the Amazon RDS MySQL database:
+The application follows an API-first architecture:
 
-```
-Host: database-tirp.c1gieoo4asys.us-east-1.rds.amazonaws.com
-Port: 3306
-User: admin
-Database: tirp
-```
+1. **Primary Access via API**: All data access attempts are made via API endpoints first
+2. **Database Module Fallback**: If API is unavailable, uses database query modules as fallback
+3. **File-Based Fallback**: If both API and database fail, falls back to local CSV/JSON files
 
-Key tables utilized:
-- `participants`: Student demographic and performance data (176 records)
-- `mental_wellbeing`: Mental wellbeing percentages (176 records)
-- `academic_wellbeing`: Academic performance metrics (176 records)
-- `social_wellbeing`: Social wellbeing metrics (176 records)
-- `net_friends`: Friendship network connections (1169 records)
-- `net_influential`: Influence network connections (276 records)
-- `net_disrespect`: Negative interactions for bullying detection
-- `soft_constraints`: Configuration parameters for optimization (126 records)
+This layered approach ensures robustness while maintaining separation of concerns.
 
-### Connection Methods
+### Key Database Query Modules
 
-The application supports two methods of database connectivity:
+The application leverages these existing query modules from the `/app/database` directory:
+- `class_queries.py`: Class-related database operations
+- `student_queries.py`: Student-related database operations
+- `softcons_queries.py`: Soft constraints configuration operations
+- `friends_queries.py`: Friendship network operations
 
-1. **Flask-SQLAlchemy Context**: Used when running within the Flask web application
-   - Requires Flask application context
-   - Managed through the standard Flask-SQLAlchemy session
+### Data Sources
 
-2. **Direct SQLAlchemy Connection**: Used for standalone scripts or testing
-   - Does not require Flask application context
-   - Uses SQLAlchemy engine with direct connection string
-   - Enables database access outside of the web application
+If API and database access fail, the system falls back to CSV files located in:
+- `app/ml_models/Clustering/output/cluster_assignments.csv`: Social wellbeing classifications with feature values
+- `app/ml_models/ha_outputs/community_bully_assignments.csv`: Bullying community assignments
+- `app/ml_models/ha_outputs/gpa_predictions_with_bins.csv`: GPA predictions and bins
 
-### Fallback Mechanism
+## Model Files in Output Directory
 
-If database connection fails, the system falls back to CSV files located in:
-- `app/ml_models/Clustering/output/wellbeing_classification_results.csv`
-- `app/ml_models/ha_outputs/community_bully_assignments.csv`
-- `app/ml_models/ha_outputs/gpa_predictions_with_bins.csv`
-- `app/ml_models/Clustering/output/social_wellbeing_predictions.csv`
+The `/app/ml_models/Clustering/output/` directory contains essential files for the NLP models:
 
-## Testing
+### Required for Production:
+- `cluster_assignments.csv`: Student wellbeing classifications with features (REQUIRED)
+- `rgcn_classification_model.pt`: Trained RGCN model for classification (REQUIRED)
+- `model_metadata.json`: Model metadata in JSON format (REQUIRED)
+- `model_metadata.pt`: Model metadata in PyTorch format (REQUIRED)
+- `cluster_profiles.csv`: Statistical profiles of each cluster (REQUIRED)
+- `wellbeing_labels.json`: Mapping of cluster numbers to wellbeing labels (REQUIRED)
 
-Two test scripts are available to verify NLP and database functionality:
-
-1. **test_nlp_models.py**: Tests the NLP models with database integration
-   - Verifies TF-IDF vectorizer training
-   - Tests ML model availability and type
-   - Validates recommendation system functionality
-   - Tests NLP response generation for various queries
-   - Supports both database and CSV data sources
-
-2. **direct_db_test.py**: Tests direct database connection
-   - Verifies RDS connectivity
-   - Queries data from all relevant tables
-   - Displays database schema information
+### Optional Analytics Files:
+- `cluster_centers.csv`: Coordinates of cluster centers
+- `k_evaluation_results.json`: Results of optimal k evaluation
+- `pca_loadings.csv`: PCA component loadings
+- `rgcn_training_losses.json`: Training loss history
+- `student_wellbeing_classifications.csv`: Simplified classification results (redundant with cluster_assignments.csv)
 
 ## Usage
 
-To use the NLP models with direct database connection:
+To use the NLP models with the API client:
 
 ```python
-from app.models.database_loader import DatabaseLoader
+from app.models.api_client import api_client
 from app.models.assistant import RuleBasedChatbot
 
-# Create database loader with direct connection
-db_loader = DatabaseLoader(direct_connect=True)
-
-# Load data (password can be provided here)
-db_loader.load_data(password='your_password')
-
-# Create chatbot with the database loader
-chatbot = RuleBasedChatbot(db_loader=db_loader)
+# Create chatbot with the API client
+chatbot = RuleBasedChatbot(api_client_instance=api_client)
 
 # Use the chatbot
 response = chatbot.analyze_request("How can I improve student wellbeing?")
 print(response['message'])
 ```
 
-## Known Issues
+## Caching
 
-1. The Flask-SQLAlchemy connection fails outside of Flask application context with error:
-   `No application found. Either work inside a view function or push an application context.`
+The system implements a caching mechanism to improve performance:
 
-2. Direct RDS connection requires password authentication, which should be handled securely.
-
-3. When database connection fails, the system falls back to CSV files, which may contain outdated data.
+1. API responses are cached in memory during runtime
+2. Data is also cached to disk as Parquet files in `app/cache/`
+3. Cache is used when API is unavailable or for repeated requests
 
 ## Future Improvements
 
-1. Implement secure password handling using environment variables or secure storage
-2. Add caching layer to reduce database queries
-3. Create synchronization mechanism between database and CSV files
-4. Enhance error handling for intermittent connection issues
+1. Add more comprehensive API endpoint coverage
+2. Enhance API client with retry logic for intermittent failures
+3. Improve caching strategy with TTL (Time To Live) for cached data
+4. Create synchronization mechanism between API, database and CSV files
 5. Implement connection pooling for better performance 

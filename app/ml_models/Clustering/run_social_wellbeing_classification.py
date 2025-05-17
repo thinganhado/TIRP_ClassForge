@@ -1,26 +1,33 @@
-import torch
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, accuracy_score, classification_report
-from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import RGCNConv
-from torch_geometric.transforms import RandomNodeSplit
 import os
+import argparse
+import logging
 import warnings
+import json
+from datetime import datetime
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('social_wellbeing')
+
+# Suppress warnings
 warnings.filterwarnings('ignore')
 
-# Set random seed for reproducibility
-torch.manual_seed(42)
-np.random.seed(42)
-
-# Create output directories
-os.makedirs("output", exist_ok=True)
-
+# RGCN Classification Model
 class HeteroRGCNClassifier(torch.nn.Module):
     """Heterogeneous Relational Graph Convolutional Network for social wellbeing classification"""
     def __init__(self, node_types, edge_types, num_classes, hidden_channels=128, num_layers=2, dropout=0.3):
@@ -35,7 +42,7 @@ class HeteroRGCNClassifier(torch.nn.Module):
         # Create embeddings for each node type
         self.embeddings = torch.nn.ModuleDict()
         for node_type in node_types:
-            num_features = 4  # Default for student nodes with our features
+            num_features = 3  # Use 3 PCA components as features
             self.embeddings[node_type] = torch.nn.Linear(num_features, hidden_channels)
         
         # Create convolutional layers
@@ -58,7 +65,7 @@ class HeteroRGCNClassifier(torch.nn.Module):
                 )
             self.convs.append(conv)
         
-        # Output layers for each node type (now outputs multiple classes)
+        # Output layers for each node type
         self.output = torch.nn.ModuleDict()
         for node_type in node_types:
             self.output[node_type] = torch.nn.Linear(hidden_channels, num_classes)
@@ -117,144 +124,18 @@ class HeteroRGCNClassifier(torch.nn.Module):
         
         return out_dict
 
-def check_data_distribution(df, feature_cols):
-    """Analyze data distribution for skewness and outliers"""
-    print("\nAnalyzing data distribution...")
-    
-    # Calculate summary statistics
-    summary = df[feature_cols].describe()
-    
-    # Check for skewness
-    skewness = df[feature_cols].skew()
-    
-    # Check for outliers using IQR method
-    outliers_summary = {}
-    
-    for col in feature_cols:
-        Q1 = df[col].quantile(0.25)
-        Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
-        
-        lower_bound = Q1 - 1.5 * IQR
-        upper_bound = Q3 + 1.5 * IQR
-        
-        outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)][col]
-        outliers_count = len(outliers)
-        outliers_pct = 100 * outliers_count / len(df)
-        
-        outliers_summary[col] = {
-            'count': outliers_count,
-            'percentage': outliers_pct,
-            'lower_bound': lower_bound,
-            'upper_bound': upper_bound
-        }
-    
-    return summary, skewness, outliers_summary
-
-def handle_missing_values(df, feature_cols, method='median'):
-    """Handle missing values in the dataset"""
-    print("\nHandling missing values...")
-    
-    # Count missing values
-    missing = df[feature_cols].isnull().sum()
-    
-    # Make a copy to avoid modifying the original
-    df_imputed = df.copy()
-    
-    # Apply imputation method
-    if method == 'median':
-        for col in feature_cols:
-            if missing[col] > 0:
-                median_val = df[col].median()
-                df_imputed[col] = df[col].fillna(median_val)
-    
-    elif method == 'mean':
-        for col in feature_cols:
-            if missing[col] > 0:
-                mean_val = df[col].mean()
-                df_imputed[col] = df[col].fillna(mean_val)
-    
-    elif method == 'knn':
-        from sklearn.impute import KNNImputer
-        imputer = KNNImputer(n_neighbors=5)
-        df_imputed[feature_cols] = pd.DataFrame(
-            imputer.fit_transform(df[feature_cols]), 
-            columns=feature_cols
-        )
-    
-    return df_imputed
-
-def handle_outliers(df, feature_cols, outliers_summary, method='winsorize'):
-    """Handle outliers in the dataset"""
-    print("\nHandling outliers...")
-    
-    # Make a copy to avoid modifying the original
-    df_cleaned = df.copy()
-    
-    if method == 'winsorize':
-        for col in feature_cols:
-            if outliers_summary[col]['count'] > 0:
-                lower = outliers_summary[col]['lower_bound']
-                upper = outliers_summary[col]['upper_bound']
-                
-                # Replace outliers with bounds
-                df_cleaned[col] = np.where(
-                    df[col] < lower,
-                    lower,
-                    np.where(df[col] > upper, upper, df[col])
-                )
-    
-    elif method == 'trim':
-        # Create a mask for non-outlier rows
-        mask = pd.Series(True, index=df.index)
-        
-        for col in feature_cols:
-            if outliers_summary[col]['count'] > 0:
-                lower = outliers_summary[col]['lower_bound']
-                upper = outliers_summary[col]['upper_bound']
-                
-                # Update mask to exclude outliers
-                col_mask = (df[col] >= lower) & (df[col] <= upper)
-                mask = mask & col_mask
-                
-        # Apply mask to get trimmed dataframe
-        df_cleaned = df[mask].copy()
-    
-    return df_cleaned
-
 def load_and_preprocess_data(excel_file):
-    """Load and preprocess survey data and relationship data"""
-    print("Step 1: Loading and preprocessing data...")
+    """Load and preprocess survey data"""
+    logger.info("Loading and preprocessing data")
     
     try:
         # Load data from Excel sheets
         responses_df = pd.read_excel(excel_file, sheet_name='responses')
         participants_df = pd.read_excel(excel_file, sheet_name='participants')
         
-        # Load relationship data
-        xl = pd.ExcelFile(excel_file)
-        sheets = xl.sheet_names
-        
-        has_friendship = 'net_0_Friends' in sheets
-        has_disrespect = 'net_5_Disrespect' in sheets
-        
-        if has_friendship:
-            friends_df = pd.read_excel(excel_file, sheet_name='net_0_Friends')
-            print(f"Loaded friendship network: {friends_df.shape[0]} connections")
-        else:
-            print("Warning: Friendship network sheet not found")
-            friends_df = pd.DataFrame(columns=['Source', 'Target'])
-            
-        if has_disrespect:
-            disrespect_df = pd.read_excel(excel_file, sheet_name='net_5_Disrespect')
-            print(f"Loaded disrespect network: {disrespect_df.shape[0]} connections")
-        else:
-            print("Warning: Disrespect network sheet not found")
-            disrespect_df = pd.DataFrame(columns=['Source', 'Target'])
-        
         # Merge participant information with responses
         merged_df = pd.merge(responses_df, participants_df, on='Participant-ID')
-        print(f"Initial data: {merged_df.shape[0]} rows, {merged_df.shape[1]} columns")
+        logger.info(f"Initial data: {merged_df.shape[0]} rows, {merged_df.shape[1]} columns")
         
         # Focus on the specified survey columns
         feature_cols = ['School_support_engage6', 'Manbox5_overall', 'Masculinity_contrained', 'GrowthMindset']
@@ -262,51 +143,78 @@ def load_and_preprocess_data(excel_file):
         # Check if all required columns exist
         for col in feature_cols:
             if col not in merged_df.columns:
-                print(f"Warning: Column '{col}' not found in dataset!")
+                logger.warning(f"Column '{col}' not found in dataset!")
                 if col == 'School_support_engage6':
                     # Try alternative column names
                     alt_cols = [c for c in merged_df.columns if 'school' in c.lower() and 'support' in c.lower()]
                     if alt_cols:
-                        print(f"Using alternative column: {alt_cols[0]}")
+                        logger.info(f"Using alternative column: {alt_cols[0]}")
                         merged_df['School_support_engage6'] = merged_df[alt_cols[0]]
                 if col == 'Manbox5_overall':
                     alt_cols = [c for c in merged_df.columns if 'manbox' in c.lower()]
                     if alt_cols:
-                        print(f"Using alternative column: {alt_cols[0]}")
+                        logger.info(f"Using alternative column: {alt_cols[0]}")
                         merged_df['Manbox5_overall'] = merged_df[alt_cols[0]]
                 if col == 'GrowthMindset':
                     alt_cols = [c for c in merged_df.columns if 'growth' in c.lower() and 'mind' in c.lower()]
                     if alt_cols:
-                        print(f"Using alternative column: {alt_cols[0]}")
+                        logger.info(f"Using alternative column: {alt_cols[0]}")
                         merged_df['GrowthMindset'] = merged_df[alt_cols[0]]
         
         # Check available columns after potential renaming
         available_cols = [col for col in feature_cols if col in merged_df.columns]
-        print(f"\nUsing {len(available_cols)} columns for analysis:")
-        for col in available_cols:
-            print(f"  - {col}")
-        
-        # Analyze data distribution before cleaning
-        _, skewness, outliers_summary = check_data_distribution(merged_df, available_cols)
+        logger.info(f"Using {len(available_cols)} columns for analysis: {', '.join(available_cols)}")
         
         # Handle missing values
-        print("\nStep 1a: Handling missing values...")
-        df_imputed = handle_missing_values(merged_df, available_cols, method='median')
+        df_imputed = merged_df.copy()
+        for col in available_cols:
+            missing_count = df_imputed[col].isnull().sum()
+            if missing_count > 0:
+                median_val = df_imputed[col].median()
+                df_imputed[col] = df_imputed[col].fillna(median_val)
+                logger.info(f"Filled {missing_count} missing values in {col} with median ({median_val})")
         
-        # Handle outliers
-        print("\nStep 1b: Handling outliers...")
-        df_cleaned = handle_outliers(df_imputed, available_cols, outliers_summary, method='winsorize')
+        # Scale the features
+        X = df_imputed[available_cols].values
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
         
-        # Extract features for clustering and PCA
-        X = df_cleaned[available_cols].values
+        # Create a DataFrame with scaled values
+        scaled_df = pd.DataFrame(X_scaled, columns=available_cols)
+        scaled_df['Participant-ID'] = df_imputed['Participant-ID'].values
         
-        # Save ID mapping for later use
-        student_ids = df_cleaned['Participant-ID'].unique()
+        return df_imputed, scaled_df, available_cols
+        
+    except Exception as e:
+        logger.error(f"Error loading data: {str(e)}")
+        raise
+
+def load_network_data(excel_file):
+    """Load student relationship networks"""
+    logger.info("Loading network data")
+    
+    try:
+        # Check if the Excel file exists
+        xl = pd.ExcelFile(excel_file)
+        sheets = xl.sheet_names
+        
+        has_friendship = 'net_0_Friends' in sheets
+        has_disrespect = 'net_5_Disrespect' in sheets
+        
+        # Load participant data
+        participants_df = pd.read_excel(excel_file, sheet_name='participants')
+        student_ids = participants_df['Participant-ID'].unique()
         id_to_idx = {id_: idx for idx, id_ in enumerate(student_ids)}
         
-        # Create edge lists
+        # Initialize empty edge lists
         friend_edges = []
+        disrespect_edges = []
+        
+        # Load friendship network if available
         if has_friendship:
+            friends_df = pd.read_excel(excel_file, sheet_name='net_0_Friends')
+            logger.info(f"Loaded friendship network: {friends_df.shape[0]} connections")
+            
             for _, row in friends_df.iterrows():
                 source_id = row['Source']
                 target_id = row['Target']
@@ -315,9 +223,14 @@ def load_and_preprocess_data(excel_file):
                     source_idx = id_to_idx[source_id]
                     target_idx = id_to_idx[target_id]
                     friend_edges.append([source_idx, target_idx])
-        
-        disrespect_edges = []
+        else:
+            logger.warning("Friendship network sheet not found")
+            
+        # Load disrespect network if available
         if has_disrespect:
+            disrespect_df = pd.read_excel(excel_file, sheet_name='net_5_Disrespect')
+            logger.info(f"Loaded disrespect network: {disrespect_df.shape[0]} connections")
+            
             for _, row in disrespect_df.iterrows():
                 source_id = row['Source']
                 target_id = row['Target']
@@ -326,99 +239,217 @@ def load_and_preprocess_data(excel_file):
                     source_idx = id_to_idx[source_id]
                     target_idx = id_to_idx[target_id]
                     disrespect_edges.append([source_idx, target_idx])
+        else:
+            logger.warning("Disrespect network sheet not found")
         
-        print("\nProcessed network connections:")
-        print(f"  - {len(friend_edges)} friendship connections")
-        print(f"  - {len(disrespect_edges)} disrespect connections")
+        logger.info(f"Processed {len(friend_edges)} friendship connections and {len(disrespect_edges)} disrespect connections")
         
-        # Scale the features
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-        
-        # Create a DataFrame with scaled values
-        scaled_df = pd.DataFrame(X_scaled, columns=available_cols)
-        scaled_df['Participant-ID'] = df_cleaned['Participant-ID'].values
-        
-        # Add back the scaled features to the original DataFrame
-        for i, col in enumerate(available_cols):
-            df_cleaned[f"{col}_scaled"] = X_scaled[:, i]
-        
-        return df_cleaned, scaled_df, available_cols, friend_edges, disrespect_edges, id_to_idx
+        return friend_edges, disrespect_edges, id_to_idx
         
     except Exception as e:
-        print(f"Error loading data: {str(e)}")
-        raise 
+        logger.error(f"Error loading network data: {str(e)}")
+        logger.info("Using empty network connections for classification")
+        return [], [], {}
 
-def perform_clustering(scaled_df, feature_cols, max_clusters=10):
-    """Apply K-Means clustering to the scaled survey data to generate class labels"""
-    print("\nStep 2: Performing K-Means clustering for classification labels...")
+def apply_pca(scaled_df, feature_cols, n_components=3, output_dir="output"):
+    """Apply PCA to reduce feature dimensions"""
+    logger.info(f"Applying PCA with {n_components} components")
     
-    # Extract scaled features for clustering
+    # Extract scaled features
     X = scaled_df[feature_cols].values
     
-    # Determine optimal k using silhouette score
+    # Apply PCA
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X)
+    
+    # Create a DataFrame with PCA components
+    pca_cols = [f'PC{i+1}' for i in range(n_components)]
+    pca_df = pd.DataFrame(X_pca, columns=pca_cols)
+    pca_df['Participant-ID'] = scaled_df['Participant-ID'].values
+    
+    # Calculate and log variance explained
+    explained_variance = pca.explained_variance_ratio_
+    cumulative_variance = np.cumsum(explained_variance)
+    
+    logger.info(f"Variance explained by {n_components} components: {sum(explained_variance)*100:.2f}%")
+    for i, var in enumerate(explained_variance):
+        logger.info(f"PC{i+1}: {var*100:.2f}%")
+    
+    # Calculate PCA loadings (component contributions)
+    pca_loadings = pd.DataFrame(
+        pca.components_.T, 
+        columns=pca_cols, 
+        index=feature_cols
+    )
+    
+    # Save PCA loadings to CSV
+    pca_loadings.to_csv(f"{output_dir}/pca_loadings.csv")
+    
+    return pca_df, pca, pca_cols, pca_loadings
+
+def find_optimal_k(pca_df, pca_cols, k_range=(3, 7), output_dir="output"):
+    """Find optimal number of clusters using silhouette score"""
+    logger.info(f"Finding optimal k from {k_range[0]} to {k_range[1]}")
+    
+    # Extract PCA components
+    X = pca_df[pca_cols].values
+    
+    # Test different k values
+    k_values = range(k_range[0], k_range[1] + 1)
     silhouette_scores = []
-    for k in range(2, min(max_clusters + 1, len(X))):
+    inertia_values = []
+    
+    # Find best k based on silhouette score
+    best_score = -1
+    best_k = 3
+    
+    # Store results for each k value
+    k_results = []
+    
+    for k in k_values:
         kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
         cluster_labels = kmeans.fit_predict(X)
         
-        # Skip if only one cluster is found
-        if len(np.unique(cluster_labels)) < 2:
-            silhouette_scores.append(-1)
-            continue
-            
+        # Calculate silhouette score
         score = silhouette_score(X, cluster_labels)
         silhouette_scores.append(score)
+        
+        # Calculate inertia (within-cluster sum of squares)
+        inertia_values.append(kmeans.inertia_)
+        
+        logger.info(f"k={k}: Silhouette Score={score:.4f}, Inertia={inertia_values[-1]:.4f}")
+        
+        # Store result
+        k_results.append({
+            "k": k,
+            "silhouette_score": score,
+            "inertia": kmeans.inertia_
+        })
+        
+        # Update best k
+        if score > best_score:
+            best_score = score
+            best_k = k
     
-    # Find optimal k 
-    optimal_k = silhouette_scores.index(max(silhouette_scores)) + 2
-    print(f"Optimal number of clusters (classes): {optimal_k}")
+    logger.info(f"Optimal k based on silhouette score: {best_k}")
     
-    # Apply K-Means with optimal k
+    # Save k evaluation results to JSON
+    with open(f"{output_dir}/k_evaluation_results.json", "w") as f:
+        json.dump(k_results, f, indent=4)
+    
+    return best_k
+
+def perform_clustering(pca_df, pca_cols, optimal_k, output_dir="output"):
+    """Perform clustering with optimal k"""
+    logger.info(f"Performing clustering with k={optimal_k}")
+    
+    # Extract PCA components
+    X = pca_df[pca_cols].values
+    
+    # Apply k-means clustering
     kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
     cluster_labels = kmeans.fit_predict(X)
     
-    # Add cluster labels to the DataFrame
-    scaled_df['cluster_label'] = cluster_labels
+    # Add cluster labels to DataFrame
+    pca_df['cluster_label'] = cluster_labels
     
-    # Create and save cluster profiles
-    cluster_profiles = scaled_df.groupby('cluster_label')[feature_cols].mean()
-    print("\nCluster profiles (class centroids):")
-    print(cluster_profiles)
+    # Calculate cluster centers
+    cluster_centers = kmeans.cluster_centers_
     
-    # Print class distribution
-    class_dist = scaled_df['cluster_label'].value_counts().sort_index()
-    print("\nClass distribution:")
-    for class_idx, count in class_dist.items():
-        print(f"  - Class {class_idx}: {count} samples ({100 * count / len(scaled_df):.1f}%)")
+    # Save cluster centers
+    center_df = pd.DataFrame(cluster_centers, columns=pca_cols)
+    center_df.index.name = 'cluster'
+    center_df.to_csv(f"{output_dir}/cluster_centers.csv")
     
-    return scaled_df, optimal_k, cluster_profiles, kmeans
+    return pca_df, kmeans
 
-def analyze_feature_correlations(df, feature_cols, target_col=None):
-    """Analyze correlations between features and with target if provided"""
-    print("\nStep 3: Analyzing feature correlations...")
+def analyze_clusters(pca_df, original_df, feature_cols, optimal_k, output_dir="output"):
+    """Analyze cluster characteristics and assign meaningful wellbeing labels"""
+    logger.info("Analyzing clusters and assigning wellbeing labels")
     
-    # Create a correlation matrix for all features
-    if target_col is not None and target_col in df.columns:
-        # Include target column if provided
-        corr_cols = feature_cols + [target_col]
-    else:
-        corr_cols = feature_cols
+    # Add cluster labels to original DataFrame
+    original_df = original_df.copy()
+    original_df['cluster_label'] = pca_df['cluster_label'].values
     
-    corr_matrix = df[corr_cols].corr()
+    # Calculate cluster profiles
+    cluster_profiles = original_df.groupby('cluster_label')[feature_cols].mean()
     
-    return corr_matrix
+    # Calculate cluster sizes
+    cluster_sizes = original_df['cluster_label'].value_counts().sort_index()
+    for i, size in cluster_sizes.items():
+        logger.info(f"Cluster {i}: {size} samples ({100 * size / len(original_df):.1f}%)")
+    
+    # Assign meaningful wellbeing labels based on cluster profiles
+    wellbeing_labels = {}
+    wellbeing_scores = {}
+    
+    for idx, row in cluster_profiles.iterrows():
+        # Calculate wellbeing score based on feature values
+        # Higher scores for School_support and GrowthMindset are positive
+        # Higher scores for Manbox and Masculinity_constrained are negative
+        wellbeing_score = row['School_support_engage6'] + row['GrowthMindset'] - row['Manbox5_overall'] - row['Masculinity_contrained']
+        wellbeing_scores[idx] = wellbeing_score
+    
+    # Sort clusters by wellbeing score
+    sorted_clusters = sorted(wellbeing_scores.items(), key=lambda x: x[1], reverse=True)
+    
+    # Assign labels based on ranking
+    for i, (cluster_id, _) in enumerate(sorted_clusters):
+        if i == 0:
+            wellbeing_labels[cluster_id] = 'High Wellbeing'
+        elif i == len(sorted_clusters) - 1:
+            wellbeing_labels[cluster_id] = 'Low Wellbeing'
+        else:
+            wellbeing_labels[cluster_id] = 'Moderate Wellbeing'
+    
+    # Log wellbeing labels
+    for cluster_id, label in wellbeing_labels.items():
+        feature_means = ', '.join([f"{col}: {cluster_profiles.loc[cluster_id, col]:.2f}" for col in feature_cols])
+        logger.info(f"Cluster {cluster_id} ({label}): {feature_means}")
+    
+    # Add wellbeing labels to original DataFrame
+    original_df['wellbeing_label'] = original_df['cluster_label'].map(wellbeing_labels)
+    
+    # Save cluster profiles with wellbeing labels
+    cluster_profiles_with_labels = cluster_profiles.copy()
+    cluster_profiles_with_labels['wellbeing_label'] = cluster_profiles_with_labels.index.map(wellbeing_labels)
+    cluster_profiles_with_labels.to_csv(f"{output_dir}/cluster_profiles.csv")
+    
+    # Save wellbeing labels
+    with open(f"{output_dir}/wellbeing_labels.json", "w") as f:
+        json.dump(wellbeing_labels, f, indent=4)
+    
+    # Save student classifications with wellbeing labels
+    original_df[['Participant-ID', 'cluster_label', 'wellbeing_label']].to_csv(
+        f"{output_dir}/student_wellbeing_classifications.csv", index=False)
+    
+    # MODIFY: Save cluster assignments with wellbeing labels AND all feature columns
+    cluster_assignments_df = pca_df.copy()
+    cluster_assignments_df['wellbeing_label'] = cluster_assignments_df['cluster_label'].map(wellbeing_labels)
+    
+    # Merge with original features
+    features_df = original_df[['Participant-ID'] + feature_cols]
+    cluster_assignments_df = pd.merge(
+        cluster_assignments_df[['Participant-ID', 'cluster_label', 'wellbeing_label']],
+        features_df,
+        on='Participant-ID'
+    )
+    
+    # Save to CSV
+    cluster_assignments_df.to_csv(f"{output_dir}/cluster_assignments.csv", index=False)
+    
+    return original_df, cluster_profiles, wellbeing_labels
 
-def prepare_graph_data_for_classification(scaled_df, friend_edges, disrespect_edges, feature_cols):
-    """Prepare graph data for GNN classification"""
-    print("\nStep 4: Preparing graph data for GNN classification...")
+def prepare_graph_data(pca_df, friend_edges, disrespect_edges, pca_cols):
+    """Prepare data for graph-based classification"""
+    logger.info("Preparing graph data for RGCN classification")
     
     # Create graph data object
     data = HeteroData()
     
     # Get features (X) and cluster labels (y)
-    X = scaled_df[feature_cols].values
-    y = scaled_df['cluster_label'].values
+    X = pca_df[pca_cols].values
+    y = pca_df['cluster_label'].values
     
     # Convert to PyTorch tensors
     x = torch.tensor(X, dtype=torch.float)
@@ -431,32 +462,59 @@ def prepare_graph_data_for_classification(scaled_df, friend_edges, disrespect_ed
     # Process friendship edges
     if friend_edges:
         friend_edges_tensor = torch.tensor(friend_edges, dtype=torch.long).t()
+        logger.info(f"Added {friend_edges_tensor.size(1)} friendship edges to the graph")
     else:
         friend_edges_tensor = torch.zeros((2, 0), dtype=torch.long)
+        logger.info("No friendship edges available")
     
     # Process disrespect edges
     if disrespect_edges:
         disrespect_edges_tensor = torch.tensor(disrespect_edges, dtype=torch.long).t() 
+        logger.info(f"Added {disrespect_edges_tensor.size(1)} disrespect edges to the graph")
     else:
         disrespect_edges_tensor = torch.zeros((2, 0), dtype=torch.long)
+        logger.info("No disrespect edges available")
     
     # Add edge information
     data['student', 'friend', 'student'].edge_index = friend_edges_tensor
     data['student', 'disrespect', 'student'].edge_index = disrespect_edges_tensor
     
-    # Split the data
-    transform = RandomNodeSplit(split='train_rest', num_val=0.1, num_test=0.2)
-    data = transform(data)
+    # Log graph structure
+    logger.info(f"Graph structure: {len(data.node_types)} node types, {len(data.edge_types)} edge types")
+    logger.info(f"Number of students: {data['student'].num_nodes}")
+    for edge_type in data.edge_types:
+        src, rel, dst = edge_type
+        logger.info(f"Edge type '{src} -> {rel} -> {dst}': {data[edge_type].edge_index.size(1)} edges")
+    
+    # Log class distribution
+    class_counts = torch.bincount(y)
+    for i, count in enumerate(class_counts):
+        logger.info(f"Class {i}: {count.item()} samples")
     
     return data
 
-def train_rgcn_classification_model(data, num_classes, epochs=100, lr=0.01, weight_decay=5e-4):
-    """Train RGCN for Classification"""
-    print("\nStep 5: Training RGCN classification model...")
+def train_classification_model(data, num_classes, epochs=100, lr=0.01, weight_decay=5e-4, output_dir="output"):
+    """Train RGCN classification model"""
+    logger.info("Training RGCN classification model")
+    
+    # Set training flag for all nodes
+    data['student'].train_mask = torch.ones(data['student'].num_nodes, dtype=torch.bool)
     
     # Get node and edge types
     node_types = list(data.node_types)
     edge_types = list(data.edge_types)
+    
+    # Log model configuration details
+    logger.info(f"RGCN model configuration:")
+    logger.info(f"  - Node types: {node_types}")
+    logger.info(f"  - Edge types: {edge_types}")
+    logger.info(f"  - Number of classes: {num_classes}")
+    logger.info(f"  - Hidden channels: 128")
+    logger.info(f"  - Number of layers: 2")
+    logger.info(f"  - Dropout rate: 0.3")
+    logger.info(f"  - Learning rate: {lr}")
+    logger.info(f"  - Weight decay: {weight_decay}")
+    logger.info(f"  - Max epochs: {epochs}")
     
     # Create model
     model = HeteroRGCNClassifier(
@@ -468,19 +526,29 @@ def train_rgcn_classification_model(data, num_classes, epochs=100, lr=0.01, weig
         dropout=0.3
     )
     
-    # Set up optimizer
+    # Log model structure
+    logger.info(f"Model structure:")
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"  - Total parameters: {total_params}")
+    logger.info(f"  - Trainable parameters: {trainable_params}")
+    
+    # Setup optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     
-    # Set up learning rate scheduler
+    # Setup learning rate scheduler
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.5, patience=10, verbose=False
     )
     
     # Training loop
-    best_val_loss = float('inf')
+    best_loss = float('inf')
     patience = 20
     counter = 0
     best_model_state = None
+    
+    # Track losses for analysis
+    losses = []
     
     for epoch in range(1, epochs + 1):
         # Training
@@ -491,292 +559,179 @@ def train_rgcn_classification_model(data, num_classes, epochs=100, lr=0.01, weig
         out = model(data.x_dict, data.edge_index_dict)
         
         # Calculate loss (cross entropy for classification)
-        loss = F.cross_entropy(out['student'][data['student'].train_mask], 
-                              data['student'].y[data['student'].train_mask])
+        loss = F.cross_entropy(out['student'], data['student'].y)
+        losses.append(loss.item())
         
         # Backward pass
         loss.backward()
         optimizer.step()
         
-        # Validation
-        model.eval()
-        with torch.no_grad():
-            # Forward pass
-            out = model(data.x_dict, data.edge_index_dict)
-            
-            val_loss = F.cross_entropy(out['student'][data['student'].val_mask], 
-                                     data['student'].y[data['student'].val_mask])
-            
-            # Calculate validation accuracy
-            pred = out['student'][data['student'].val_mask].argmax(dim=1)
-            correct = (pred == data['student'].y[data['student'].val_mask]).sum()
-            val_acc = int(correct) / int(data['student'].val_mask.sum())
-            
-            if epoch % 10 == 0:
-                print(f"Epoch {epoch}: Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}, Val Acc: {val_acc:.4f}")
+        # Log progress
+        if epoch % 10 == 0:
+            logger.info(f"Epoch {epoch}: Loss={loss.item():.4f}")
         
         # Update learning rate scheduler
-        scheduler.step(val_loss)
+        scheduler.step(loss)
         
         # Early stopping check
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
+        if loss < best_loss:
+            best_loss = loss
             best_model_state = model.state_dict().copy()
             counter = 0
         else:
             counter += 1
             if counter >= patience:
-                print(f"Early stopping at epoch {epoch}")
+                logger.info(f"Early stopping at epoch {epoch}")
                 break
     
-    # Load best model for evaluation
+    # Log final training statistics
+    logger.info(f"Training completed:")
+    logger.info(f"  - Best loss: {best_loss:.6f}")
+    logger.info(f"  - Initial loss: {losses[0]:.6f}")
+    logger.info(f"  - Final loss: {losses[-1]:.6f}")
+    logger.info(f"  - Loss improvement: {(1 - losses[-1]/losses[0])*100:.2f}%")
+    
+    # Load best model
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
     
-    # Final evaluation on test set
+    # Evaluate model on all data
     model.eval()
     with torch.no_grad():
         out = model(data.x_dict, data.edge_index_dict)
+        predictions = torch.argmax(out['student'], dim=1)
+        accuracy = (predictions == data['student'].y).float().mean()
+        logger.info(f"Model accuracy on all data: {accuracy.item():.4f}")
         
-        # Get predictions
-        pred = out['student'][data['student'].test_mask].argmax(dim=1)
-        y_true = data['student'].y[data['student'].test_mask]
-        
-        # Calculate accuracy
-        correct = (pred == y_true).sum()
-        test_acc = int(correct) / int(data['student'].test_mask.sum())
-        
-        print(f"\nTest Accuracy: {test_acc:.4f}")
-        
-        # Print classification report
-        y_pred = pred.cpu().numpy()
-        y_true = y_true.cpu().numpy()
-        print("\nClassification Report:")
-        print(classification_report(y_true, y_pred))
+        # Confusion matrix as counts
+        confusion = torch.zeros(num_classes, num_classes, dtype=torch.long)
+        for t, p in zip(data['student'].y, predictions):
+            confusion[t.long(), p.long()] += 1
+            
+        logger.info("Confusion matrix:")
+        confusion_str = []
+        for i in range(num_classes):
+            row = " ".join([f"{confusion[i, j].item():4d}" for j in range(num_classes)])
+            confusion_str.append(f"  Class {i}: [{row}]")
+        logger.info("\n".join(confusion_str))
     
-    print(f"Training completed.")
+    # Save training loss curve to JSON
+    with open(f"{output_dir}/rgcn_training_losses.json", "w") as f:
+        json.dump(losses, f)
     
     return model
 
-def predict_class(model, data, features, friend_connections=None, disrespect_connections=None):
-    """Predict class for a student based on features and connections"""
-    # Create a copy of the data
-    new_data = data.clone()
+def save_results(model, wellbeing_labels, feature_cols, pca_cols, output_dir="output"):
+    """Save model and metadata"""
+    logger.info(f"Saving model and metadata to {output_dir}")
     
-    # Get number of existing students
-    num_students = new_data['student'].x.size(0)
-    new_student_idx = num_students
+    # Save trained model
+    torch.save(model.state_dict(), f"{output_dir}/rgcn_classification_model.pt")
     
-    # Convert features to tensor and reshape
-    features_tensor = torch.tensor([features], dtype=torch.float)
+    # Save metadata
+    metadata = {
+        'wellbeing_labels': wellbeing_labels,
+        'feature_cols': feature_cols,
+        'pca_cols': pca_cols,
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
     
-    # Add new student to the graph
-    new_x = torch.cat([new_data['student'].x, features_tensor], dim=0)
-    new_data['student'].x = new_x
+    # Save as JSON file
+    with open(f"{output_dir}/model_metadata.json", "w") as f:
+        # Convert integer keys to strings for JSON serialization
+        wellbeing_labels_str = {str(k): v for k, v in wellbeing_labels.items()}
+        metadata['wellbeing_labels'] = wellbeing_labels_str
+        json.dump(metadata, f, indent=4)
     
-    # Add dummy target
-    dummy_y = torch.zeros(1, dtype=torch.long)
-    new_y = torch.cat([new_data['student'].y, dummy_y], dim=0)
-    new_data['student'].y = new_y
+    # Save as PyTorch file
+    torch.save(metadata, f"{output_dir}/model_metadata.pt")
     
-    # Update masks
-    train_mask = torch.cat([new_data['student'].train_mask, torch.tensor([False])], dim=0)
-    val_mask = torch.cat([new_data['student'].val_mask, torch.tensor([False])], dim=0)
-    test_mask = torch.cat([new_data['student'].test_mask, torch.tensor([True])], dim=0)
-    new_data['student'].train_mask = train_mask
-    new_data['student'].val_mask = val_mask
-    new_data['student'].test_mask = test_mask
-    
-    # Add friend connections if provided
-    if friend_connections:
-        new_friend_edges = []
-        for friend_idx in friend_connections:
-            # Add bidirectional connection
-            new_friend_edges.append([new_student_idx, friend_idx])
-            new_friend_edges.append([friend_idx, new_student_idx])
-        
-        new_friend_edges = torch.tensor(new_friend_edges, dtype=torch.long).t()
-        
-        # Add to existing edges
-        if new_data['student', 'friend', 'student'].edge_index.size(1) > 0:
-            new_edge_index = torch.cat(
-                [new_data['student', 'friend', 'student'].edge_index, new_friend_edges], 
-                dim=1
-            )
-        else:
-            new_edge_index = new_friend_edges
-            
-        new_data['student', 'friend', 'student'].edge_index = new_edge_index
-    
-    # Add disrespect connections if provided
-    if disrespect_connections:
-        new_disrespect_edges = []
-        for disrespect_idx in disrespect_connections:
-            # Add directed connection (can be one-way)
-            new_disrespect_edges.append([new_student_idx, disrespect_idx])
-        
-        new_disrespect_edges = torch.tensor(new_disrespect_edges, dtype=torch.long).t()
-        
-        # Add to existing edges
-        if new_data['student', 'disrespect', 'student'].edge_index.size(1) > 0:
-            new_edge_index = torch.cat(
-                [new_data['student', 'disrespect', 'student'].edge_index, new_disrespect_edges], 
-                dim=1
-            )
-        else:
-            new_edge_index = new_disrespect_edges
-            
-        new_data['student', 'disrespect', 'student'].edge_index = new_edge_index
-    
-    # Predict class for the new student
-    model.eval()
-    with torch.no_grad():
-        out = model(new_data.x_dict, new_data.edge_index_dict)
-        logits = out['student'][-1]
-        probabilities = F.softmax(logits, dim=0)
-        predicted_class = probabilities.argmax().item()
-    
-    return predicted_class, probabilities.tolist()
+    logger.info(f"Results saved to {output_dir}")
 
-def assign_meaningful_labels(scaled_df, cluster_profiles, feature_cols):
-    """Assign meaningful labels to clusters based on feature values"""
-    print("\nStep 2a: Assigning meaningful labels to clusters...")
+def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='PCA-based Social Wellbeing Classification')
+    parser.add_argument('--data', type=str, default="Student Survey - Jan.xlsx", 
+                        help='Path to Excel file containing survey data')
+    parser.add_argument('--output', type=str, default="output", 
+                        help='Output directory for results and visualizations')
+    parser.add_argument('--components', type=int, default=3, 
+                        help='Number of PCA components to use')
+    parser.add_argument('--min-k', type=int, default=3, 
+                        help='Minimum number of clusters to consider')
+    parser.add_argument('--max-k', type=int, default=7, 
+                        help='Maximum number of clusters to consider')
+    parser.add_argument('--epochs', type=int, default=100, 
+                        help='Number of training epochs')
+    parser.add_argument('--seed', type=int, default=42, 
+                        help='Random seed for reproducibility')
+    args = parser.parse_args()
     
-    # Analyze the cluster profiles to determine which represents higher wellbeing
-    # We'll consider higher school support and growth mindset as indicators of higher wellbeing
-    # Lower manbox scores and masculinity constraints also indicate higher wellbeing
+    # Set random seed for reproducibility
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     
-    wellbeing_indicators = {}
-    
-    for cluster_id in cluster_profiles.index:
-        # Calculate a wellbeing score for each cluster based on feature values
-        # Positive contribution: higher school support and growth mindset
-        # Negative contribution: higher manbox score and masculinity constraints
-        wellbeing_score = (
-            cluster_profiles.loc[cluster_id, 'School_support_engage6'] + 
-            cluster_profiles.loc[cluster_id, 'GrowthMindset'] -
-            cluster_profiles.loc[cluster_id, 'Manbox5_overall'] -
-            cluster_profiles.loc[cluster_id, 'Masculinity_contrained']
-        )
-        wellbeing_indicators[cluster_id] = wellbeing_score
-    
-    # Identify high and low wellbeing clusters
-    high_wellbeing_cluster = max(wellbeing_indicators, key=wellbeing_indicators.get)
-    low_wellbeing_cluster = min(wellbeing_indicators, key=wellbeing_indicators.get)
-    
-    # Create a mapping dictionary
-    cluster_labels = {}
-    for cluster_id in cluster_profiles.index:
-        if cluster_id == high_wellbeing_cluster:
-            cluster_labels[cluster_id] = 'High Wellbeing'
-        else:
-            cluster_labels[cluster_id] = 'Low Wellbeing'
-    
-    # Add meaningful labels to the DataFrame
-    scaled_df['wellbeing_label'] = scaled_df['cluster_label'].map(cluster_labels)
-    
-    # Print the mapping
-    print("\nCluster meaning:")
-    for cluster_id, label in cluster_labels.items():
-        print(f"  - Cluster {cluster_id}: {label}")
-        print(f"    Feature averages: {dict(zip(feature_cols, cluster_profiles.loc[cluster_id].values))}")
-    
-    return scaled_df, cluster_labels
-
-def silent_print(*args, **kwargs):
-    """A function that does nothing - used to suppress prints"""
-    pass
-
-def main(verbose=True):
-    # Store original print function
-    original_print = print
+    # Create output directories
+    os.makedirs(args.output, exist_ok=True)
     
     try:
-        # If not verbose, replace print with silent version
-        if not verbose:
-            globals()['print'] = silent_print
+        logger.info("Starting PCA-based Social Wellbeing Classification")
         
-        # Step 1: Load and preprocess the data
-        excel_file = "Student Survey - Jan.xlsx"
-        filtered_df, scaled_df, feature_cols, friend_edges, disrespect_edges, id_to_idx = load_and_preprocess_data(excel_file)
+        # Step 1: Load and preprocess data
+        original_df, scaled_df, feature_cols = load_and_preprocess_data(args.data)
         
-        # Step 2: Perform clustering to generate class labels
-        scaled_df, num_classes, cluster_profiles, kmeans_model = perform_clustering(scaled_df, feature_cols)
+        # Step 2: Load network data
+        friend_edges, disrespect_edges, id_to_idx = load_network_data(args.data)
         
-        # Step 2a: Assign meaningful labels to clusters
-        scaled_df, cluster_labels = assign_meaningful_labels(scaled_df, cluster_profiles, feature_cols)
+        # Step 3: Apply PCA
+        pca_df, pca, pca_cols, pca_loadings = apply_pca(
+            scaled_df, feature_cols, 
+            n_components=args.components, 
+            output_dir=args.output
+        )
         
-        # Step 3: Analyze correlations between features
-        corr_matrix = analyze_feature_correlations(scaled_df, feature_cols, target_col='cluster_label')
+        # Step 4: Find optimal k
+        optimal_k = find_optimal_k(
+            pca_df, pca_cols, 
+            k_range=(args.min_k, args.max_k), 
+            output_dir=args.output
+        )
         
-        # Step 4: Prepare graph data for GNN classification
-        graph_data = prepare_graph_data_for_classification(scaled_df, friend_edges, disrespect_edges, feature_cols)
+        # Step 5: Perform clustering with optimal k
+        pca_df, kmeans = perform_clustering(
+            pca_df, pca_cols, optimal_k, 
+            output_dir=args.output
+        )
         
-        # Step 5: Train RGCN classification model
-        model = train_rgcn_classification_model(graph_data, num_classes)
+        # Step 6: Analyze clusters and assign wellbeing labels
+        labeled_df, cluster_profiles, wellbeing_labels = analyze_clusters(
+            pca_df, original_df, feature_cols, optimal_k,
+            output_dir=args.output
+        )
         
-        # Restore print function for final output
-        if not verbose:
-            globals()['print'] = original_print
+        # Step 7: Prepare graph data for RGCN classification
+        graph_data = prepare_graph_data(pca_df, friend_edges, disrespect_edges, pca_cols)
         
-        # Save models
-        torch.save(model.state_dict(), 'output/social_wellbeing_rgcn_classifier.pt')
-        print("Classification model saved to output/social_wellbeing_rgcn_classifier.pt")
+        # Step 8: Train RGCN classification model
+        model = train_classification_model(
+            graph_data, num_classes=optimal_k,
+            epochs=args.epochs,
+            output_dir=args.output
+        )
         
-        # Save classifier output
-        output_file = 'output/wellbeing_classification_results.csv'
+        # Step 9: Save model and metadata
+        save_results(
+            model, wellbeing_labels, feature_cols, pca_cols,
+            output_dir=args.output
+        )
         
-        # Add prediction probabilities to the dataframe
-        with torch.no_grad():
-            model.eval()
-            out = model(graph_data.x_dict, graph_data.edge_index_dict)
-            probs = F.softmax(out['student'], dim=1).cpu().numpy()
-            
-            # Add probabilities to dataframe
-            for i in range(num_classes):
-                scaled_df[f'prob_class_{i}'] = probs[:, i]
-        
-        # Save the results to CSV
-        result_df = scaled_df[['Participant-ID', 'cluster_label', 'wellbeing_label'] + 
-                             [f'prob_class_{i}' for i in range(num_classes)] +
-                             feature_cols]
-        result_df.to_csv(output_file, index=False)
-        print(f"Classification results saved to {output_file}")
-        
-        # Save KMeans model for future class mapping
-        try:
-            import joblib
-            joblib.dump(kmeans_model, 'output/kmeans_cluster_model.pkl')
-            joblib.dump(cluster_profiles, 'output/cluster_profiles.pkl')
-            joblib.dump(cluster_labels, 'output/cluster_labels.pkl')
-        except Exception as e:
-            print(f"Warning: Could not save support models: {str(e)}")
-        
-        # Display summary statistics only
-        class_dist = scaled_df['wellbeing_label'].value_counts()
-        print("\nSummary of classification results:")
-        for label, count in class_dist.items():
-            print(f"  - {label}: {count} students ({100 * count / len(scaled_df):.1f}%)")
-        
-        print("\nAverage feature values by wellbeing label:")
-        label_profiles = scaled_df.groupby('wellbeing_label')[feature_cols].mean()
-        print(label_profiles)
-        
-        return model, scaled_df, cluster_labels
+        logger.info(f"PCA-based Social Wellbeing Classification completed successfully")
+        logger.info(f"Optimal number of clusters: {optimal_k}")
+        logger.info(f"Results saved to {args.output}/")
         
     except Exception as e:
-        # Restore print function in case of error
-        if not verbose:
-            globals()['print'] = original_print
-        print(f"An error occurred: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return None, None, None
-
-def run_classification_only():
-    """Run the classification model with minimal output"""
-    print("Running social wellbeing classification...")
-    main(verbose=False)
+        logger.error(f"Error during analysis: {str(e)}", exc_info=True)
+        raise
 
 if __name__ == "__main__":
-    run_classification_only() 
+    main() 

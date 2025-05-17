@@ -12,11 +12,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder
 from collections import defaultdict
 
-# Import database loader
+# Import API client
 try:
-    from app.models.database_loader import DatabaseLoader
+    from app.models.api_client import api_client
+    HAS_API_CLIENT = True
 except Exception as e:
-    print(f"[WARN] Could not import database loader: {e}")
+    HAS_API_CLIENT = False
+    print(f"[WARN] Could not import API client: {e}")
 
 # Try to import config
 try:
@@ -24,15 +26,15 @@ try:
     HAS_CONFIG = True
 except ImportError:
     HAS_CONFIG = False
-    print("[INFO] App config not found, will use direct connection parameters")
+    print("[INFO] App config not found, will use default API settings")
 
 class RuleBasedChatbot:
-    def __init__(self, db_loader=None):
+    def __init__(self, api_client_instance=None):
         # Update file paths to use the provided datasets
-        self.wellbeing_classification_file = "app/ml_models/Clustering/output/wellbeing_classification_results.csv"
+        self.wellbeing_classification_file = "app/ml_models/Clustering/output/cluster_assignments.csv"
         self.community_bully_file = "app/ml_models/ha_outputs/community_bully_assignments.csv"
         self.gpa_predictions_file = "app/ml_models/ha_outputs/gpa_predictions_with_bins.csv"
-        self.social_wellbeing_file = "app/ml_models/Clustering/output/social_wellbeing_predictions.csv"
+        self.social_wellbeing_file = "app/ml_models/Clustering/output/cluster_assignments.csv"
         self.r_gcn_dir = "app/ml_models/R-GCN_files"
         self.config_file = "soft_constraints_config.json"
         self.default_config = {
@@ -173,46 +175,16 @@ class RuleBasedChatbot:
         self.conversation_history = []
         self.data_cache = {}
         
-        # Get database password from config if available
-        self.db_password = Config.DB_PASSWORD if HAS_CONFIG else None
+        # Setup API client
+        self.api_client = api_client_instance if api_client_instance else None
         
-        # Use provided database loader if available
-        if db_loader is not None and db_loader.is_database_available():
-            self.db_loader = db_loader
-            self.use_database = True
-            self.data_cache = db_loader.data_cache
-            print("[INFO] Using provided database loader with existing connection")
-        else:
-            # Try to initialize the database loader
-            try:
-                # Try direct connection first with config password if available
-                self.db_loader = DatabaseLoader(direct_connect=True)
-                self.use_database = self.db_loader.is_database_available()
-                
-                if not self.use_database and HAS_CONFIG:
-                    # Try again with explicit password from config
-                    print("[INFO] Attempting database connection with config password")
-                    self.db_loader.load_data(password=self.db_password)
-                    self.use_database = self.db_loader.is_database_available()
-                
-                if self.use_database:
-                    print("[INFO] Using database as data source")
-                else:
-                    # Fall back to Flask connection
-                    print("[INFO] Direct connection failed, trying Flask database connection")
-                    self.db_loader = DatabaseLoader(direct_connect=False) 
-                    self.use_database = self.db_loader.is_database_available()
-                    
-                    if self.use_database:
-                        print("[INFO] Using Flask database connection")
-                    else:
-                        print("[INFO] Database not available, using file-based data sources")
-            except Exception as e:
-                print(f"[WARN] Error initializing database loader: {e}")
-                self.use_database = False
-            
-        # Comprehensive data loading from all sources
-        print("[INFO] Starting comprehensive data loading from all available sources")
+        if not self.api_client and HAS_API_CLIENT:
+            # Use the imported global api_client
+            self.api_client = api_client
+            print("[INFO] Using imported API client")
+        
+        # Comprehensive data loading from all sources via API
+        print("[INFO] Starting comprehensive data loading via API client")
         self._load_data_comprehensive()
         self._initialize_vectorizer()
         self._initialize_ml_model()
@@ -231,21 +203,21 @@ class RuleBasedChatbot:
     def _load_data_comprehensive(self):
         """
         Load data from all available sources in a systematic way.
-        Prioritizes database if available, falls back to CSV for each data type.
+        Prioritizes API access, falls back to CSV for each data type.
         """
-        # First, try to use database for all data types if available
-        if self.use_database:
-            print("[INFO] Loading all available data from database")
+        # First, try to use API client for all data types
+        if self.api_client:
+            print("[INFO] Loading all available data from API")
             
-            # Load all data from database first
-            db_data = self.db_loader.load_data(password=self.db_password)
-            if db_data and len(db_data) > 0:
-                self.data_cache.update(db_data)
-                print(f"[INFO] Successfully loaded {len(db_data)} datasets from database")
+            # Load all data from API first
+            api_data = self.api_client.load_data_comprehensive()
+            if api_data and len(api_data) > 0:
+                self.data_cache.update(api_data)
+                print(f"[INFO] Successfully loaded {len(api_data)} datasets from API")
                 
                 # Track which data types we've loaded
                 loaded_data_types = set(self.data_cache.keys())
-                print(f"[INFO] Data types loaded from database: {', '.join(loaded_data_types)}")
+                print(f"[INFO] Data types loaded from API: {', '.join(loaded_data_types)}")
                 
                 # Make sure we've loaded the essential data
                 essential_types = {'students', 'wellbeing', 'gpa', 'social', 'bullying'}
@@ -256,13 +228,13 @@ class RuleBasedChatbot:
                     # Try to load missing types from CSV files
                     self._load_missing_csv_data(missing_types)
                 else:
-                    print("[INFO] All essential data types loaded from database")
+                    print("[INFO] All essential data types loaded from API")
             else:
-                print("[WARN] Failed to load data from database, falling back to CSV files")
+                print("[WARN] Failed to load data from API, falling back to CSV files")
                 self._load_csv_data()
         else:
-            # Database not available, load from CSV files
-            print("[INFO] Database not available, loading from CSV files")
+            # API client not available, load from CSV files
+            print("[WARN] API client not available, loading from CSV files")
             self._load_csv_data()
             
         # Generate synthetic teacher comments
@@ -292,8 +264,70 @@ class RuleBasedChatbot:
                 print(f"[INFO] Loaded {len(self.data_cache['gpa'])} GPA predictions from CSV")
             
             elif data_type == 'social' and os.path.exists(self.social_wellbeing_file):
-                self.data_cache['social'] = pd.read_csv(self.social_wellbeing_file)
-                print(f"[INFO] Loaded {len(self.data_cache['social'])} social wellbeing records from CSV")
+                # Load social data from cluster_assignments.csv
+                df = pd.read_csv(self.social_wellbeing_file)
+                
+                # Make sure the dataframe has the required columns
+                if 'Participant-ID' in df.columns:
+                    # Create social_wellbeing column if it doesn't exist
+                    if 'social_wellbeing' not in df.columns:
+                        # Map wellbeing labels to numeric values
+                        wellbeing_map = {
+                            'High Wellbeing': 80,
+                            'Moderate Wellbeing': 50,
+                            'Low Wellbeing': 30
+                        }
+                        # Use wellbeing_label to create social_wellbeing score
+                        if 'wellbeing_label' in df.columns:
+                            df['social_wellbeing'] = df['wellbeing_label'].map(wellbeing_map)
+                        else:
+                            # Default value
+                            df['social_wellbeing'] = 50
+                    
+                    # Make sure there's a cluster column
+                    if 'cluster' not in df.columns and 'cluster_label' in df.columns:
+                        df['cluster'] = df['cluster_label']
+                        
+                    self.data_cache['social'] = df
+                    print(f"[INFO] Loaded {len(df)} social wellbeing records from CSV")
+                else:
+                    print(f"[WARN] Invalid format in social wellbeing file: missing required columns")
+            
+            elif data_type == 'students':
+                # Create synthetic student data if needed
+                students_data = []
+                
+                # Try to get student IDs from other datasets
+                student_ids = set()
+                
+                # Extract from wellbeing data
+                if 'wellbeing' in self.data_cache and 'Participant-ID' in self.data_cache['wellbeing'].columns:
+                    student_ids.update(self.data_cache['wellbeing']['Participant-ID'].unique())
+                
+                # Extract from social data
+                if 'social' in self.data_cache and 'Participant-ID' in self.data_cache['social'].columns:
+                    student_ids.update(self.data_cache['social']['Participant-ID'].unique())
+                
+                # Extract from bullying data
+                if 'bullying' in self.data_cache and 'Student_ID' in self.data_cache['bullying'].columns:
+                    student_ids.update(self.data_cache['bullying']['Student_ID'].unique())
+                
+                # Extract from GPA data
+                if 'gpa' in self.data_cache and 'Student_ID' in self.data_cache['gpa'].columns:
+                    student_ids.update(self.data_cache['gpa']['Student_ID'].unique())
+                
+                # Create student records
+                for student_id in student_ids:
+                    students_data.append({
+                        'id': student_id,
+                        'name': f"Student {student_id}",
+                        'email': f"student{student_id}@example.com",
+                        'class_id': "C1"  # Default class
+                    })
+                
+                if students_data:
+                    self.data_cache['students'] = pd.DataFrame(students_data)
+                    print(f"[INFO] Created {len(students_data)} synthetic student records")
 
     def _load_csv_data(self):
         """Load all required datasets from CSV files"""
@@ -443,39 +477,69 @@ class RuleBasedChatbot:
             # Process wellbeing data
             if 'wellbeing' in self.data_cache:
                 for _, row in self.data_cache['wellbeing'].iterrows():
-                    student_id = row['Participant-ID']
-                    if student_id not in student_data:
-                        student_data[student_id] = {}
-                    student_data[student_id]['wellbeing_label'] = row['wellbeing_label']
-                    student_data[student_id]['School_support'] = row.get('School_support_engage6', 0)
-                    student_data[student_id]['GrowthMindset'] = row.get('GrowthMindset', 0)
+                    if 'Participant-ID' in row:
+                        student_id = row['Participant-ID']
+                        if student_id not in student_data:
+                            student_data[student_id] = {}
+                        
+                        # Assign wellbeing data
+                        if 'wellbeing_label' in row:
+                            student_data[student_id]['wellbeing_label'] = row['wellbeing_label']
+                        
+                        # Get other features if available
+                        for col in ['School_support_engage6', 'GrowthMindset']:
+                            if col in row:
+                                student_data[student_id][col] = row.get(col, 0)
             
             # Process bullying data
             if 'bullying' in self.data_cache:
                 for _, row in self.data_cache['bullying'].iterrows():
-                    student_id = row['Student_ID']
-                    if student_id not in student_data:
-                        student_data[student_id] = {}
-                    student_data[student_id]['is_bully'] = row['Is_Bully'] == 1
-                    student_data[student_id]['community_id'] = row['Community_ID']
+                    if 'Student_ID' in row:
+                        student_id = row['Student_ID']
+                        if student_id not in student_data:
+                            student_data[student_id] = {}
+                        
+                        # Assign bullying data
+                        student_data[student_id]['is_bully'] = row.get('Is_Bully', 0) == 1
+                        student_data[student_id]['community_id'] = row.get('Community_ID', 0)
             
             # Process GPA data
             if 'gpa' in self.data_cache:
                 for _, row in self.data_cache['gpa'].iterrows():
-                    student_id = row['Student_ID']
-                    if student_id not in student_data:
-                        student_data[student_id] = {}
-                    student_data[student_id]['predicted_gpa'] = row['Predicted_GPA']
-                    student_data[student_id]['gpa_bin'] = row['GPA_Bin']
+                    if 'Student_ID' in row:
+                        student_id = row['Student_ID']
+                        if student_id not in student_data:
+                            student_data[student_id] = {}
+                        
+                        # Assign GPA data
+                        student_data[student_id]['predicted_gpa'] = row.get('Predicted_GPA', 0)
+                        student_data[student_id]['gpa_bin'] = row.get('GPA_Bin', 0)
             
             # Process social data
             if 'social' in self.data_cache:
                 for _, row in self.data_cache['social'].iterrows():
-                    student_id = row['Participant-ID']
-                    if student_id not in student_data:
-                        student_data[student_id] = {}
-                    student_data[student_id]['social_wellbeing'] = row['social_wellbeing']
-                    student_data[student_id]['cluster'] = row['cluster']
+                    if 'Participant-ID' in row:
+                        student_id = row['Participant-ID']
+                        if student_id not in student_data:
+                            student_data[student_id] = {}
+                        
+                        # Assign social data
+                        if 'social_wellbeing' in row:
+                            student_data[student_id]['social_wellbeing'] = row['social_wellbeing']
+                        elif 'wellbeing_label' in row:
+                            # Map wellbeing labels to scores
+                            wellbeing_map = {
+                                'High Wellbeing': 80,
+                                'Moderate Wellbeing': 50,
+                                'Low Wellbeing': 30
+                            }
+                            student_data[student_id]['social_wellbeing'] = wellbeing_map.get(row['wellbeing_label'], 50)
+                        
+                        # Get cluster if available
+                        if 'cluster' in row:
+                            student_data[student_id]['cluster'] = row['cluster']
+                        elif 'cluster_label' in row:
+                            student_data[student_id]['cluster'] = row['cluster_label']
             
             # Generate synthetic comments and recommendations
             comments = []
@@ -663,7 +727,15 @@ class RuleBasedChatbot:
                 print("[WARN] Could not generate synthetic teacher comments")
         
         except Exception as e:
-            print(f"[ERROR] Failed to generate synthetic comments: {e}")
+            print(f"[ERROR] Failed to generate synthetic comments: {str(e)}")
+            # Create at least some dummy data
+            comments = ["Default synthetic comment"] * 5
+            recommendations = ["Balance all factors equally"] * 5
+            self.data_cache['teacher_comments'] = pd.DataFrame({
+                'comment': comments,
+                'recommendation': recommendations
+            })
+            print(f"[INFO] Generated 5 fallback synthetic comments after error")
             
     def _prepare_integrated_dataset(self):
         """Prepare an integrated dataset that combines all data sources for enhanced ML modeling"""
@@ -675,16 +747,24 @@ class RuleBasedChatbot:
             
             # Collect all student IDs from different datasets
             if 'wellbeing' in self.data_cache:
-                student_ids.update(self.data_cache['wellbeing']['Participant-ID'].unique())
+                id_col = 'Participant-ID' if 'Participant-ID' in self.data_cache['wellbeing'].columns else None
+                if id_col:
+                    student_ids.update(self.data_cache['wellbeing'][id_col].unique())
             
             if 'bullying' in self.data_cache:
-                student_ids.update(self.data_cache['bullying']['Student_ID'].unique())
+                id_col = 'Student_ID' if 'Student_ID' in self.data_cache['bullying'].columns else None
+                if id_col:
+                    student_ids.update(self.data_cache['bullying'][id_col].unique())
             
             if 'gpa' in self.data_cache:
-                student_ids.update(self.data_cache['gpa']['Student_ID'].unique())
+                id_col = 'Student_ID' if 'Student_ID' in self.data_cache['gpa'].columns else None
+                if id_col:
+                    student_ids.update(self.data_cache['gpa'][id_col].unique())
             
             if 'social' in self.data_cache:
-                student_ids.update(self.data_cache['social']['Participant-ID'].unique())
+                id_col = 'Participant-ID' if 'Participant-ID' in self.data_cache['social'].columns else None
+                if id_col:
+                    student_ids.update(self.data_cache['social'][id_col].unique())
             
             # Create integrated dataset
             integrated_data = []
@@ -694,32 +774,61 @@ class RuleBasedChatbot:
                 
                 # Add wellbeing data
                 if 'wellbeing' in self.data_cache:
-                    wb_row = self.data_cache['wellbeing'][self.data_cache['wellbeing']['Participant-ID'] == student_id]
-                    if not wb_row.empty:
-                        student_record['wellbeing_label'] = wb_row['wellbeing_label'].iloc[0]
-                        student_record['School_support'] = wb_row['School_support_engage6'].iloc[0]
-                        student_record['Growth_mindset'] = wb_row['GrowthMindset'].iloc[0]
+                    wb_df = self.data_cache['wellbeing']
+                    id_col = 'Participant-ID' if 'Participant-ID' in wb_df.columns else None
+                    if id_col:
+                        wb_row = wb_df[wb_df[id_col] == student_id]
+                        if not wb_row.empty:
+                            if 'wellbeing_label' in wb_row.columns:
+                                student_record['wellbeing_label'] = wb_row['wellbeing_label'].iloc[0]
+                            
+                            for feature in ['School_support_engage6', 'GrowthMindset']:
+                                if feature in wb_row.columns:
+                                    student_record[feature.replace('_engage6', '')] = wb_row[feature].iloc[0]
                 
                 # Add bullying data
                 if 'bullying' in self.data_cache:
-                    bully_row = self.data_cache['bullying'][self.data_cache['bullying']['Student_ID'] == student_id]
-                    if not bully_row.empty:
-                        student_record['is_bully'] = bully_row['Is_Bully'].iloc[0]
-                        student_record['community_id'] = bully_row['Community_ID'].iloc[0]
+                    bully_df = self.data_cache['bullying']
+                    id_col = 'Student_ID' if 'Student_ID' in bully_df.columns else None
+                    if id_col:
+                        bully_row = bully_df[bully_df[id_col] == student_id]
+                        if not bully_row.empty:
+                            if 'Is_Bully' in bully_row.columns:
+                                student_record['is_bully'] = bully_row['Is_Bully'].iloc[0]
+                            if 'Community_ID' in bully_row.columns:
+                                student_record['community_id'] = bully_row['Community_ID'].iloc[0]
                 
                 # Add GPA data
                 if 'gpa' in self.data_cache:
-                    gpa_row = self.data_cache['gpa'][self.data_cache['gpa']['Student_ID'] == student_id]
-                    if not gpa_row.empty:
-                        student_record['predicted_gpa'] = gpa_row['Predicted_GPA'].iloc[0]
-                        student_record['gpa_bin'] = gpa_row['GPA_Bin'].iloc[0]
+                    gpa_df = self.data_cache['gpa']
+                    id_col = 'Student_ID' if 'Student_ID' in gpa_df.columns else None
+                    if id_col:
+                        gpa_row = gpa_df[gpa_df[id_col] == student_id]
+                        if not gpa_row.empty:
+                            if 'Predicted_GPA' in gpa_row.columns:
+                                student_record['predicted_gpa'] = gpa_row['Predicted_GPA'].iloc[0]
+                            if 'GPA_Bin' in gpa_row.columns:
+                                student_record['gpa_bin'] = gpa_row['GPA_Bin'].iloc[0]
                 
                 # Add social data
                 if 'social' in self.data_cache:
-                    social_row = self.data_cache['social'][self.data_cache['social']['Participant-ID'] == student_id]
-                    if not social_row.empty:
-                        student_record['social_wellbeing'] = social_row['social_wellbeing'].iloc[0]
-                        student_record['social_cluster'] = social_row['cluster'].iloc[0]
+                    social_df = self.data_cache['social']
+                    id_col = 'Participant-ID' if 'Participant-ID' in social_df.columns else None
+                    if id_col:
+                        social_row = social_df[social_df[id_col] == student_id]
+                        if not social_row.empty:
+                            if 'social_wellbeing' in social_row.columns:
+                                student_record['social_wellbeing'] = social_row['social_wellbeing'].iloc[0]
+                            
+                            # Get cluster
+                            cluster_col = None
+                            for col in ['cluster', 'cluster_label']:
+                                if col in social_row.columns:
+                                    cluster_col = col
+                                    break
+                                    
+                            if cluster_col:
+                                student_record['social_cluster'] = social_row[cluster_col].iloc[0]
                 
                 integrated_data.append(student_record)
             
@@ -727,9 +836,14 @@ class RuleBasedChatbot:
             integrated_df = pd.DataFrame(integrated_data)
             self.data_cache['integrated'] = integrated_df
             print(f"[INFO] Created integrated dataset with {len(integrated_df)} student records")
+            return integrated_df
             
         except Exception as e:
-            print(f"[ERROR] Failed to prepare integrated dataset: {e}")
+            print(f"[ERROR] Failed to prepare integrated dataset: {str(e)}")
+            # Create minimal integrated dataset for fallback
+            minimal_df = pd.DataFrame([{'StudentID': 'default'}])
+            self.data_cache['integrated'] = minimal_df
+            return minimal_df
 
     def _initialize_vectorizer(self):
         if 'teacher_comments' in self.data_cache:
@@ -1366,7 +1480,17 @@ class RuleBasedChatbot:
             return []
 
     def get_current_config(self):
-        """Get current constraints configuration"""
+        """Get current constraints configuration from API"""
+        if self.api_client:
+            try:
+                # Try to get config from API
+                constraints = self.api_client.get_constraints()
+                if constraints:
+                    return constraints
+            except Exception as e:
+                print(f"[ERROR] Error getting config from API: {e}")
+        
+        # Fallback to file
         if os.path.exists(self.config_file):
             try:
                 with open(self.config_file, "r") as f:
@@ -1377,19 +1501,22 @@ class RuleBasedChatbot:
         return self.default_config
     
     def save_config(self, config):
-        """Save updated configuration to database if available, otherwise to file"""
-        try:
-            if self.use_database:
-                # Save to database using the database loader
-                saved = self.db_loader.save_config(config)
-                if saved:
+        """Save updated configuration via API"""
+        if self.api_client:
+            try:
+                # Save via API
+                result = self.api_client.save_constraints(config)
+                if result:
+                    print("[INFO] Successfully saved config via API")
                     return config
-                else:
-                    print("[WARN] Database save failed, falling back to file-based saving")
-            
-            # Save to file (either as primary method or fallback)
+            except Exception as e:
+                print(f"[ERROR] Error saving config to API: {e}")
+        
+        # Fallback to file
+        try:
             with open(self.config_file, "w") as f:
                 json.dump(config, f, indent=2)
+                print("[INFO] Saved config to file (API unavailable)")
             return config
         except Exception as e:
             print(f"[ERROR] Error saving config: {e}")
