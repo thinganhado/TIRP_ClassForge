@@ -92,22 +92,27 @@ with app.app_context():
         std_dev = gpa_by_class.std()
         print(f"📊 {label} GPA Std Dev: {std_dev:.4f}")
         return std_dev
+    
+    def compute_friendship_metrics(df, friends_df, label):
+        # Ensure consistent types
+        df["Participant-ID"] = df["Participant-ID"].astype(str)
+        friends_df["Source"] = friends_df["Source"].astype(str)
+        friends_df["Target"] = friends_df["Target"].astype(str)
 
-    def compute_friendship_metrics(df, friendship_df, label):
         avg_friends_list = []
         std_friends_per_class = []
 
         for class_id in df["class_id"].unique():
             class_ids = df[df["class_id"] == class_id]["Participant-ID"].tolist()
+            class_set = set(class_ids)
             friend_counts = []
 
             for student in class_ids:
-                is_friend = (
-                    (friendship_df["Participant-ID 1"] == student) & (friendship_df["Participant-ID 2"].isin(class_ids))
-                ) | (
-                    (friendship_df["Participant-ID 2"] == student) & (friendship_df["Participant-ID 1"].isin(class_ids))
-                )
-                num_friends = len(friendship_df[is_friend])
+                # Count friendships where both ends are in the same class
+                num_friends = len(friends_df[
+                    ((friends_df["Source"] == student) & (friends_df["Target"].isin(class_set))) |
+                    ((friends_df["Target"] == student) & (friends_df["Source"].isin(class_set)))
+                ])
                 friend_counts.append(num_friends)
 
             avg_friends = sum(friend_counts) / len(friend_counts) if friend_counts else 0
@@ -135,22 +140,32 @@ with app.app_context():
         print(f"❤️‍🩹 {label} Wellbeing Std Dev: {std_dev:.4f}")
         return std_dev
 
-    def count_bully_victim_conflicts(df, bully_dict):
+    def count_disrespect_conflicts(df, disrespect_df):
+        df["Participant-ID"] = df["Participant-ID"].astype(str)
+        disrespect_df["Source"] = disrespect_df["Source"].astype(str)
+        disrespect_df["Target"] = disrespect_df["Target"].astype(str)
+
         conflict_count = 0
+
         for class_id, group in df.groupby("class_id"):
-            class_pids = set(group["Participant-ID"])
-            for bully, victims in bully_dict.items():
-                if bully in class_pids:
-                    overlap = class_pids.intersection(set(victims))
-                    conflict_count += len(overlap)
+            class_ids = set(group["Participant-ID"])
+
+            # Filter disrespect edges where both students are in this class
+            in_class_conflicts = disrespect_df[
+                (disrespect_df["Source"].isin(class_ids)) & 
+                (disrespect_df["Target"].isin(class_ids))
+            ]
+
+            conflict_count += len(in_class_conflicts)
+
         return conflict_count
 
     # --- Run All Metrics ---
     gpa_std_ga = compute_gpa_balance(df_ga, "GA Allocation")
     gpa_std_rand = compute_gpa_balance(df_random, "Random Allocation")
 
-    avg_friends_ga, std_friend_ga = compute_friendship_metrics(df_ga, friendship_df, "GA Allocation")
-    avg_friends_rand, std_friend_rand = compute_friendship_metrics(df_random, friendship_df, "Random Allocation")
+    avg_friends_ga, std_friend_ga = compute_friendship_metrics(df_ga, friends, "GA Allocation")
+    avg_friends_rand, std_friend_rand = compute_friendship_metrics(df_random, friends, "Random Allocation")
 
     influence_std_ga = compute_std_balance(df_ga, student_scores_df, "influential_score", "GA Allocation")
     influence_std_rand = compute_std_balance(df_random, student_scores_df, "influential_score", "Random Allocation")
@@ -161,86 +176,85 @@ with app.app_context():
     std_wellbeing_ga = compute_wellbeing_std(df_ga, "GA Allocation")
     std_wellbeing_rand = compute_wellbeing_std(df_random, "Random Allocation")
 
-    bully_conflicts_ga = count_bully_victim_conflicts(df_ga, bully_to_victims)
-    bully_conflicts_rand = count_bully_victim_conflicts(df_random, bully_to_victims)
+    bully_conflicts_ga = count_disrespect_conflicts(df_ga, Disrespect)
+    bully_conflicts_rand = count_disrespect_conflicts(df_random, Disrespect)
 
-    # --- Prompt 4–6: Observations ---
+    # --- New Observations: 5 Custom Insights ---
 
-    def generate_friendship_observation(df, friendship_df, label):
-        min_avg = float('inf')
-        weakest_class = None
+    def generate_friendship_coverage(df, friends_df):
+        friends_df["Source"] = friends_df["Source"].astype(str)
+        friends_df["Target"] = friends_df["Target"].astype(str)
+        df["Participant-ID"] = df["Participant-ID"].astype(str)
 
-        for class_id, group in df.groupby("class_id"):
-            class_ids = group["Participant-ID"].tolist()
-            friend_counts = []
+        students = df["Participant-ID"].tolist()
+        count_with_friends = 0
+
+        class_groups = df.groupby("class_id")
+
+        for class_id, group in class_groups:
+            class_ids = set(group["Participant-ID"])
             for student in class_ids:
                 is_friend = (
-                    (friendship_df["Participant-ID 1"] == student) & (friendship_df["Participant-ID 2"].isin(class_ids))
-                ) | (
-                    (friendship_df["Participant-ID 2"] == student) & (friendship_df["Participant-ID 1"].isin(class_ids))
+                    ((friends_df["Source"] == student) & (friends_df["Target"].isin(class_ids))) |
+                    ((friends_df["Target"] == student) & (friends_df["Source"].isin(class_ids)))
                 )
-                friend_counts.append(len(friendship_df[is_friend]))
-            avg_friends = sum(friend_counts) / len(friend_counts) if friend_counts else 0
-            if avg_friends < min_avg:
-                min_avg = avg_friends
-                weakest_class = class_id
+                if not friends_df[is_friend].empty:
+                    count_with_friends += 1
 
-        return f"{label}: Class {weakest_class} has the lowest average friendships ({min_avg:.2f}), suggesting weaker social ties."
+        percentage = (count_with_friends / len(df)) * 100 if len(df) > 0 else 0
+        return f"{percentage:.1f}% of students have at least one friend in their class."
 
-    def generate_influence_observation(df, label):
-        influ_per_class = df.groupby("class_id")["influential_score"].mean()
-        highest_class = influ_per_class.idxmax()
-        max_score = influ_per_class.max()
-        return f"{label}: Class {highest_class} has the highest average influence score ({max_score:.2f}), indicating a highly influential group."
+    def generate_friendship_balance(std_dev_friends):
+        return f"Friendship balance across classes shows a standard deviation of {std_dev_friends:.2f} in within-class friend counts."
 
-    def generate_isolation_observation(df, label):
-        isolation_per_class = df.groupby("class_id")["isolated_score"].mean()
-        highest_class = isolation_per_class.idxmax()
-        max_score = isolation_per_class.max()
-        return f"{label}: Class {highest_class} has the highest average isolation score ({max_score:.2f}), indicating possible social detachment."
+    def generate_gpa_fairness(df):
+        gpa_by_class = df.groupby("class_id")["Predicted_GPA"].mean()
+        std_dev = gpa_by_class.std()
+        min_gpa = gpa_by_class.min()
+        max_gpa = gpa_by_class.max()
+        return f"GPA fairness: Std Dev = {std_dev:.2f}, Min Class GPA = {min_gpa:.2f}, Max Class GPA = {max_gpa:.2f}"
 
-    def generate_gpa_observation(df, label):
-        gpa_per_class = df.groupby("class_id")["Predicted_GPA"].mean()
-        lowest_class = gpa_per_class.idxmin()
-        highest_class = gpa_per_class.idxmax()
-        range_diff = gpa_per_class.max() - gpa_per_class.min()
+    def generate_high_risk_summary(df, bully_dict):
+        df["Participant-ID"] = df["Participant-ID"].astype(str)
+        risk_scores = {}
 
-        if range_diff > 0.5:
-            return f"{label}: Class {highest_class} has the highest average GPA ({gpa_per_class[highest_class]:.2f}), while Class {lowest_class} has the lowest ({gpa_per_class[lowest_class]:.2f})."
-        else:
-            return f"{label}: GPA levels are relatively balanced across classes."
-
-    def generate_conflict_observation(df, bully_dict, label):
-        conflict_counts = {}
         for class_id, group in df.groupby("class_id"):
-            class_pids = set(group["Participant-ID"])
-            count = 0
+            pids = set(group["Participant-ID"])
+
+            isolation = group["isolated_score"].mean()
+            influence = group["influential_score"].mean()
+
+            conflict_count = 0
             for bully, victims in bully_dict.items():
-                if bully in class_pids:
-                    count += len(set(victims) & class_pids)
-            conflict_counts[class_id] = count
-        max_class = max(conflict_counts, key=conflict_counts.get, default=None)
-        max_conflicts = conflict_counts.get(max_class, 0)
-        if max_conflicts > 0:
-            return f"{label}: Class {max_class} has the most bully-victim overlaps ({max_conflicts} pairs), which may require intervention."
-        else:
-            return f"{label}: No significant bully-victim overlaps detected."
+                if bully in pids:
+                    conflict_count += len(pids.intersection(set(victims)))
+
+            # Simple scoring: more isolation, more conflicts, less influence
+            risk_score = isolation + conflict_count - influence
+            risk_scores[class_id] = risk_score
+
+        worst_class = max(risk_scores, key=risk_scores.get)
+        return f"Class {worst_class} shows the most high-risk social dynamics (combined isolation, low influence, and bullying overlaps)."
+
+    def generate_wellbeing_imbalance(df):
+        prop_by_class = df.groupby("class_id")["wellbeing_label"].value_counts(normalize=True).unstack().fillna(0)
+        std_dev = prop_by_class.std().mean()
+        return f"Wellbeing label imbalance across classes: Std Dev = {std_dev:.2f}"
 
     # --- Generate Observations ---
-    insight_friendship_ga = generate_friendship_observation(df_ga, friendship_df, "GA Allocation")
-    insight_friendship_rand = generate_friendship_observation(df_random, friendship_df, "Random Allocation")
+    # Generate for GA Allocation
+    obs_friend_cov_ga = generate_friendship_coverage(df_ga, friends)
+    obs_friend_bal_ga = generate_friendship_balance(std_friend_ga)
+    obs_gpa_fairness_ga = generate_gpa_fairness(df_ga)
+    obs_high_risk_ga = generate_high_risk_summary(df_ga, bully_to_victims)
+    obs_wellbeing_ga = generate_wellbeing_imbalance(df_ga)
 
-    insight_influence_ga = generate_influence_observation(df_ga, "GA Allocation")
-    insight_influence_rand = generate_influence_observation(df_random, "Random Allocation")
-
-    insight_isolation_ga = generate_isolation_observation(df_ga, "GA Allocation")
-    insight_isolation_rand = generate_isolation_observation(df_random, "Random Allocation")
-
-    insight_gpa_ga = generate_gpa_observation(df_ga, "GA Allocation")
-    insight_gpa_rand = generate_gpa_observation(df_random, "Random Allocation")
-
-    insight_bully_ga = generate_conflict_observation(df_ga, bully_to_victims, "GA Allocation")
-    insight_bully_rand = generate_conflict_observation(df_random, bully_to_victims, "Random Allocation")
+    # Generate for Random Allocation
+    obs_friend_cov_rand = generate_friendship_coverage(df_random, friends)
+    obs_friend_bal_rand = generate_friendship_balance(std_friend_rand)
+    obs_gpa_fairness_rand = generate_gpa_fairness(df_random)
+    obs_high_risk_rand = generate_high_risk_summary(df_random, bully_to_victims)
+    obs_wellbeing_rand = generate_wellbeing_imbalance(df_random)
 
     # --- Save to Database ---
     db.session.execute(text("DELETE FROM allocation_insights"))
@@ -290,41 +304,44 @@ with app.app_context():
         "wellbeing_std": std_wellbeing_rand
     })
 
+    # Insert GA Allocation Observations
     db.session.execute(text("""
         INSERT INTO allocation_observations (
             allocation_type,
-            friendship_observation,
-            influence_observation,
-            isolation_observation,
-            gpa_observation,
-            conflict_observation
-        ) VALUES (:type, :friend_obs, :influ_obs, :isol_obs, :gpa_obs, :conflict_obs)
+            friendship_coverage,
+            friendship_balance,
+            gpa_fairness,
+            high_risk_dynamics,
+            wellbeing_imbalance
+        ) VALUES (:type, :friend_cov, :friend_bal, :gpa_fair, :risk, :wellbeing)
     """), {
         "type": "GA",
-        "friend_obs": insight_friendship_ga,
-        "influ_obs": insight_influence_ga,
-        "isol_obs": insight_isolation_ga,
-        "gpa_obs": insight_gpa_ga,
-        "conflict_obs": insight_bully_ga
+        "friend_cov": obs_friend_cov_ga,
+        "friend_bal": obs_friend_bal_ga,
+        "gpa_fair": obs_gpa_fairness_ga,
+        "risk": obs_high_risk_ga,
+        "wellbeing": obs_wellbeing_ga
     })
 
+    # Insert Random Allocation Observations
     db.session.execute(text("""
         INSERT INTO allocation_observations (
             allocation_type,
-            friendship_observation,
-            influence_observation,
-            isolation_observation,
-            gpa_observation,
-            conflict_observation
-        ) VALUES (:type, :friend_obs, :influ_obs, :isol_obs, :gpa_obs, :conflict_obs)
+            friendship_coverage,
+            friendship_balance,
+            gpa_fairness,
+            high_risk_dynamics,
+            wellbeing_imbalance
+        ) VALUES (:type, :friend_cov, :friend_bal, :gpa_fair, :risk, :wellbeing)
     """), {
         "type": "Random",
-        "friend_obs": insight_friendship_rand,
-        "influ_obs": insight_influence_rand,
-        "isol_obs": insight_isolation_rand,
-        "gpa_obs": insight_gpa_rand,
-        "conflict_obs": insight_bully_rand
+        "friend_cov": obs_friend_cov_rand,
+        "friend_bal": obs_friend_bal_rand,
+        "gpa_fair": obs_gpa_fairness_rand,
+        "risk": obs_high_risk_rand,
+        "wellbeing": obs_wellbeing_rand
     })
+
 
     db.session.commit()
     print("✅ All insights and observations saved to the database.")

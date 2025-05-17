@@ -2,6 +2,7 @@
 
 import random
 from random import randint
+from random import shuffle
 import copy
 import numpy as np
 import pandas as pd
@@ -20,9 +21,17 @@ if os.path.exists("soft_constraints_config.json"):
     with open("soft_constraints_config.json", "r") as f:
         weights_config = json.load(f)
 else:
-    weights_config = {}  # Use defaults
+    weights_config = {}
 
-weights = weights_config
+# --- Scale all weights except integer thresholds ---
+scaled_weights = {}
+for k, v in weights_config.items():
+    if k == "min_friends_required":  # keep this as integer threshold
+        scaled_weights[k] = int(v)
+    else:
+        scaled_weights[k] = (float(v) / 100) * 2  # maps 0–100 → 0.0–2.0
+
+weights = scaled_weights
 
 # Load student survey responses (features)
 student_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="responses")
@@ -121,13 +130,13 @@ def fitness(individual, weights=None):
     # --- Default weights if none provided ---
     default_weights = {
         "min_friends_required": 1,
-        "friend_inclusion_weight": 1.0,
+        "friend_inclusion_weight": 1.5,
         "friend_balance_weight": 1.0,
-        "influence_std_weight": 1.0,
-        "isolation_std_weight": 1.0,
-        "gpa_penalty_weight": 2.0,
+        "influence_std_weight": 1.5,
+        "isolation_std_weight": 1.5,
+        "gpa_penalty_weight": 1.5,
         "bully_penalty_weight": 2.0,
-        "wellbeing_penalty_weight": 1.0
+        "wellbeing_penalty_weight": 1.5
     }
     if weights is None:
         weights = default_weights
@@ -169,7 +178,6 @@ def fitness(individual, weights=None):
 
     avg_friend_coverage = np.mean(friend_coverage_per_class)
     friend_coverage_imbalance = np.std(friend_coverage_per_class)
-    friendship_balance_penalty = np.std(friendship_counts)
 
     friend_inclusion_score = (
     weights["friend_inclusion_weight"] * avg_friend_coverage
@@ -307,7 +315,7 @@ tournament_size = 3
 
 # --- Optional: define or receive weights ---
 # This can later be overridden by frontend input
-weights = None  # or a dictionary of custom weights
+# weights = None  or a dictionary of custom weights
 
 # --- Initialize Population ---
 def initialize_population(start_individual, population_size):
@@ -380,22 +388,38 @@ with app.app_context():
     db.session.commit()
     print("Final class allocations inserted directly into the database.")
 
-    # --- Generate and Insert Random Allocation ---
-    print("Generating random allocation for comparison...")
-
     random_allocations = []
 
     # Build a list of participant IDs from your GA allocation loop
     participant_ids = [index_to_id[i] for i in range(len(best_individual))]
 
-    for pid in participant_ids:
-        random_class = randint(0, 5)  # 6 classes (0–5)
-        random_allocations.append((pid, random_class))
+    # Shuffle participant IDs to randomize order
+    shuffle(participant_ids)
+
+    num_classes = 6
+    min_students_per_class = 25
+    total_required = num_classes * min_students_per_class
+
+    if len(participant_ids) < total_required:
+        raise ValueError("Not enough students to guarantee at least 25 per class.")
+
+    # Step 1: Assign minimum 25 students per class
+    balanced_allocations = []
+    for class_id in range(num_classes):
+        for _ in range(min_students_per_class):
+            pid = participant_ids.pop()
+            balanced_allocations.append((pid, class_id))
+
+    # Step 2: Assign remaining students randomly but evenly
+    for i, pid in enumerate(participant_ids):
+        class_id = i % num_classes
+        balanced_allocations.append((pid, class_id))
 
     # Optional: Clear old random allocations
     db.session.execute(text("DELETE FROM random_allo"))
 
-    for pid, class_id in random_allocations:
+    # Insert into database
+    for pid, class_id in balanced_allocations:
         db.session.execute(
             text("INSERT INTO random_allo (participant_id, class_id) VALUES (:pid, :cid)"),
             {"pid": str(pid), "cid": int(class_id)}

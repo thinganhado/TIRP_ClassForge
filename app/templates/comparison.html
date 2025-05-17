@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Allocation Comparison{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('main.dashboard') }}">Home</a> /
+    <a href="{{ url_for('main.overall') }}">Visualisation</a> /
+    <span>Allocation Comparison</span>
+</div>
+
+<!-- Page Title -->
+<section class="intro-box">
+    <h2 class="section-title">Why Our Genetic Algorithm Wins</h2>
+    <p>This page showcases a side-by-side visual and analytical comparison between a random classroom allocation and our optimised GA-based allocation.</p>
+</section>
+
+<!-- Graph Comparison Layout -->
+<section class="comparison-section">
+    <div class="graph-comparison-row">
+
+        <!-- Random Allocation GPA Chart -->
+        <div class="graph-column">
+            <h4>Random Allocation - GPA per Class</h4>
+            <img src="data:image/png;base64,{{ gpa_rand_img }}" alt="Random GPA Chart" class="graph-img">
+        </div>
+
+        <!-- Side-by-side Comparison (Overlay or Grouped Bar) -->
+        <div class="graph-column highlight">
+            <h4>GPA Comparison (GA vs Random)</h4>
+            <img src="data:image/png;base64,{{ gpa_comparison_img }}" alt="GPA Comparison Chart" class="graph-img">
+        </div>
+
+        <!-- GA Allocation Wellbeing Chart -->
+        <div class="graph-column">
+            <h4>GA Allocation - Wellbeing Distribution</h4>
+            <img src="data:image/png;base64,{{ wellbeing_ga_img }}" alt="GA Wellbeing Chart" class="graph-img">
+        </div>
+
+    </div>
+</section>
+
+<!-- Insights Section -->
+<section class="insight-section">
+    <h3 class="section-title">Why GA Allocation is Better</h3>
+    <div class="insight-cards-container">
+        <div class="insight-card">
+            <h4>Friendship Coverage</h4>
+            <p>{{ ga_insights.friendship_coverage }}</p>
+        </div>
+        <div class="insight-card">
+            <h4>Friendship Balance</h4>
+            <p>{{ ga_insights.friendship_balance }}</p>
+        </div>
+        <div class="insight-card">
+            <h4>GPA Fairness</h4>
+            <p>{{ ga_insights.gpa_fairness }}</p>
+        </div>
+        <div class="insight-card">
+            <h4>High-Risk Dynamics</h4>
+            <p>{{ ga_insights.high_risk_dynamics }}</p>
+        </div>
+        <div class="insight-card">
+            <h4>Wellbeing Imbalance</h4>
+            <p>{{ ga_insights.wellbeing_imbalance }}</p>
+        </div>
+    </div>
+</section>
+
+<!-- Optional style -->
+<style>
+    .graph-comparison-row {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin: 30px 0;
+    }
+
+    .graph-column {
+        flex: 1;
+        min-width: 250px;
+        text-align: center;
+    }
+
+    .highlight {
+        border: 2px solid #0000a3;
+        border-radius: 10px;
+        background-color: #f7faff;
+        padding: 10px;
+    }
+
+    .graph-img {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .insight-cards-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+
+    .insight-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .insight-card h4 {
+        margin-bottom: 10px;
+        color: #131d35;
+    }
+</style>
+
+{% endblock %}
