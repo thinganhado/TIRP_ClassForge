@@ -1,0 +1,19 @@
+{
+    "wellbeing_labels": {
+        "1": "High Wellbeing",
+        "0": "Moderate Wellbeing",
+        "2": "Low Wellbeing"
+    },
+    "feature_cols": [
+        "School_support_engage6",
+        "Manbox5_overall",
+        "Masculinity_contrained",
+        "GrowthMindset"
+    ],
+    "pca_cols": [
+        "PC1",
+        "PC2",
+        "PC3"
+    ],
+    "timestamp": "2025-05-18 05:12:39"
+}
