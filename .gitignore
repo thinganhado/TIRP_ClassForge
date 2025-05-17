@@ -90,3 +90,5 @@ TIRP/app/ml_models/R-GCN_files/
 TIRP/app/ml_models/Clustering/output/
 TIRP/app/ml_models/ha_outputs/
 soft_constraints_config.json
+app/ml_models/soft_constraints_config.json
+app/models/soft_constraints_config.json
