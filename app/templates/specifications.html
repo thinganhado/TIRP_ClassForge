@@ -419,7 +419,7 @@ document.getElementById('confirm').onclick = async () => {
     });
     const resp = await r.json();
     if (r.ok) {
-      alert("Constraints saved. ID = " + resp.id);
+      window.location.href = "/run_allocation";
       //  redirect or show success UI
     } else {
       alert("Error: " + resp.error);
