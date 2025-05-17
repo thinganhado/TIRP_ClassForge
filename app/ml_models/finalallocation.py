@@ -10,6 +10,8 @@ import os
 import json
 from sqlalchemy import create_engine, text
 import sys
+import os
+from app.database.spec_endpoint import HardConstraint
 
 # Ensure parent dir is in path to allow app import
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -23,6 +25,15 @@ else:
     weights_config = {}  # Use defaults
 
 weights = weights_config
+
+# Load hard constraint config
+def load_hard_constraints():
+    latest = HardConstraint.query.order_by(HardConstraint.id.desc()).first()
+    if not latest:
+        return [], []           # default: no hard constraints
+    return latest.separate_pairs, latest.move_requests
+
+separate_pairs, move_requests = load_hard_constraints()
 
 # Load student survey responses (features)
 student_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="responses")
@@ -403,7 +414,7 @@ with app.app_context():
 
     db.session.commit()
     print("Random allocation inserted into the random_allo table.")
-
+    
 if __name__ == "__main__":
     print("Starting class allocation algorithm...")
     print("Using optimization parameters from soft_constraints_config.json")
