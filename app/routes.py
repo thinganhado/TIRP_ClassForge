@@ -23,7 +23,7 @@ from app.database.class_queries import (
     fetch_conflict_pairs_per_class,
 )
 
-from app.database.friend_queries import build_friendship_graph_json
+from app.database.friends_queries import build_friendship_graph_json
 from app.database.softcons_queries import SoftConstraint
 from app.database.spec_endpoint import HardConstraint
 from app.models.assistant import AssistantModel
