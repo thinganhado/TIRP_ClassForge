@@ -23,7 +23,7 @@ from app.database.class_queries import (
     fetch_conflict_pairs_per_class,
 )
 
-from app.database.friend_queries import build_friendship_graph_json
+from app.database.friends_queries import build_friendship_graph_json
 from app.database.softcons_queries import SoftConstraint
 from app.database.spec_endpoint import HardConstraint
 from app.models.assistant import AssistantModel
@@ -137,6 +137,11 @@ def specification():
 def ai_assistant():
     if "session_id" not in session:
         session["session_id"] = str(uuid.uuid4())
+    
+    # Check for reset parameter and clear chat history if present
+    if request.args.get('reset') == 'true':
+        assistant.clear_chat_history(session_id=session["session_id"])
+    
     chat_history = assistant.get_chat_history(session_id=session["session_id"])
     return render_template("ai_assistant.html",
                            chat_history=chat_history,
@@ -155,7 +160,7 @@ def history():
 @main.route('/submit_customisation', methods=['POST'])
 def submit_customisation():
     """
-    Handles the “Set Priorities” form.
+    Handles the "Set Priorities" form.
     We **no longer** run the GA directly here – we just persist the row
     then redirect to `/run_allocation`, the single GA trigger used by both pages.
     """
@@ -262,7 +267,7 @@ def run_allocation():
             capture_output=True,
             text=True,
             cwd=os.path.dirname(script_path),
-            check=False           # we’ll inspect return-code
+            check=False           # we'll inspect return-code
         )
 
         if result.returncode == 0:
@@ -320,6 +325,15 @@ def analyze_request():
 
     result = assistant.analyze_request(user_input, session_id=session_id)
     return jsonify(result)
+
+@main.route("/api/assistant/reset", methods=["GET"])
+def reset_chat():
+    session_id = request.args.get("session_id") or session.get("session_id")
+    if not session_id:
+        return jsonify({"success": False, "message": "No session ID provided"}), 400
+        
+    assistant.clear_chat_history(session_id=session_id)
+    return jsonify({"success": True, "message": "Chat history reset successfully"})
 
 @main.route("/api/assistant/recommendations")
 def get_recommendations():
