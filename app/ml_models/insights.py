@@ -342,6 +342,73 @@ with app.app_context():
         "wellbeing": obs_wellbeing_rand
     })
 
+        # ─── Clear previous comparison metrics ─────────
+    db.session.execute(text("DELETE FROM comparison_metrics"))
+
+    # ─── GPA: Store class-level GPA averages ───────
+    for alloc_type, df in [("GA", df_ga), ("Random", df_random)]:
+        gpa_per_class = df.groupby("class_id")["Predicted_GPA"].mean()
+        for class_id, gpa in gpa_per_class.items():
+            db.session.execute(text("""
+                INSERT INTO comparison_metrics (
+                    allocation_type, metric_type, class_id, metric_label, metric_value
+                ) VALUES (:type, 'GPA', :class_id, NULL, :value)
+            """), {
+                "type": alloc_type,
+                "class_id": class_id,
+                "value": gpa
+            })
+
+    # ─── Wellbeing: Store proportion per label per class ─────
+    for alloc_type, df in [("GA", df_ga), ("Random", df_random)]:
+        dist = df.groupby(["class_id", "wellbeing_label"]).size().unstack().fillna(0)
+        proportions = dist.div(dist.sum(axis=1), axis=0)
+
+        for class_id in proportions.index:
+            for label in proportions.columns:
+                db.session.execute(text("""
+                    INSERT INTO comparison_metrics (
+                        allocation_type, metric_type, class_id, metric_label, metric_value
+                    ) VALUES (:type, 'Wellbeing', :class_id, :label, :value)
+                """), {
+                    "type": alloc_type,
+                    "class_id": class_id,
+                    "label": label,
+                    "value": proportions.loc[class_id, label]
+                })
+
+    # ─── Conflicts: Count in-class disrespect edges ─────
+    def get_conflicts(df):
+        df["Participant-ID"] = df["Participant-ID"].astype(str)
+        Disrespect["Source"] = Disrespect["Source"].astype(str)
+        Disrespect["Target"] = Disrespect["Target"].astype(str)
+
+        conflict_map = {}
+        for class_id, group in df.groupby("class_id"):
+            class_ids = set(group["Participant-ID"])
+            in_class_edges = Disrespect[
+                (Disrespect["Source"].isin(class_ids)) &
+                (Disrespect["Target"].isin(class_ids))
+            ]
+            conflict_map[class_id] = len(in_class_edges)
+        return conflict_map
+
+    for alloc_type, df in [("GA", df_ga), ("Random", df_random)]:
+        conflicts = get_conflicts(df)
+        for class_id, count in conflicts.items():
+            db.session.execute(text("""
+                INSERT INTO comparison_metrics (
+                    allocation_type, metric_type, class_id, metric_label, metric_value
+                ) VALUES (:type, 'Conflicts', :class_id, NULL, :value)
+            """), {
+                "type": alloc_type,
+                "class_id": class_id,
+                "value": count
+            })
+
+    db.session.commit()
+    print("✅ comparison_metrics table populated successfully.")
+
 
     db.session.commit()
     print("✅ All insights and observations saved to the database.")

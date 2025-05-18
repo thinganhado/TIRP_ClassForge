@@ -11,40 +11,47 @@
     <span>Allocation Comparison</span>
 </div>
 
-<!-- Page Title -->
+<!-- Intro Section -->
 <section class="intro-box">
-    <h2 class="section-title">Why Our Genetic Algorithm Wins</h2>
-    <p>This page showcases a side-by-side visual and analytical comparison between a random classroom allocation and our optimised GA-based allocation.</p>
+    <h2 class="section-title">Comparing Class Allocations</h2>
+    <p>This page compares the Genetic Algorithm (GA) allocation with a Random allocation using GPA, wellbeing, and conflict metrics.</p>
 </section>
 
-<!-- Graph Comparison Layout -->
-<section class="comparison-section">
-    <div class="graph-comparison-row">
-
-        <!-- Random Allocation GPA Chart -->
-        <div class="graph-column">
-            <h4>Random Allocation - GPA per Class</h4>
-            <img src="data:image/png;base64,{{ gpa_rand_img }}" alt="Random GPA Chart" class="graph-img">
+<!-- Graphs Row -->
+<section class="comparison-graph-section">
+    <div class="graph-row">
+        <div class="graph-box">
+            <h4>Wellbeing Distribution (GA)</h4>
+            {% if wellbeing_chart_img %}
+                <img src="data:image/png;base64,{{ wellbeing_chart_img }}" class="graph-img" alt="Wellbeing Chart">
+            {% else %}
+                <p>Wellbeing chart unavailable.</p>
+            {% endif %}
         </div>
 
-        <!-- Side-by-side Comparison (Overlay or Grouped Bar) -->
-        <div class="graph-column highlight">
-            <h4>GPA Comparison (GA vs Random)</h4>
-            <img src="data:image/png;base64,{{ gpa_comparison_img }}" alt="GPA Comparison Chart" class="graph-img">
+        <div class="graph-box">
+            <h4>GPA per Class</h4>
+            {% if gpa_chart_img %}
+                <img src="data:image/png;base64,{{ gpa_chart_img }}" class="graph-img" alt="GPA Chart">
+            {% else %}
+                <p>GPA chart unavailable.</p>
+            {% endif %}
         </div>
 
-        <!-- GA Allocation Wellbeing Chart -->
-        <div class="graph-column">
-            <h4>GA Allocation - Wellbeing Distribution</h4>
-            <img src="data:image/png;base64,{{ wellbeing_ga_img }}" alt="GA Wellbeing Chart" class="graph-img">
+        <div class="graph-box">
+            <h4>Conflict Count</h4>
+            {% if conflict_chart_img %}
+                <img src="data:image/png;base64,{{ conflict_chart_img }}" class="graph-img" alt="Conflict Chart">
+            {% else %}
+                <p>Conflict chart unavailable.</p>
+            {% endif %}
         </div>
-
     </div>
 </section>
 
 <!-- Insights Section -->
 <section class="insight-section">
-    <h3 class="section-title">Why GA Allocation is Better</h3>
+    <h3 class="section-title">Observations from GA Allocation</h3>
     <div class="insight-cards-container">
         <div class="insight-card">
             <h4>Friendship Coverage</h4>
@@ -69,54 +76,42 @@
     </div>
 </section>
 
-<!-- Optional style -->
+<!-- Style -->
 <style>
-    .graph-comparison-row {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin: 30px 0;
-    }
+.graph-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 40px 0;
+}
 
-    .graph-column {
-        flex: 1;
-        min-width: 250px;
-        text-align: center;
-    }
+.graph-box {
+    flex: 1;
+    min-width: 280px;
+    text-align: center;
+}
 
-    .highlight {
-        border: 2px solid #0000a3;
-        border-radius: 10px;
-        background-color: #f7faff;
-        padding: 10px;
-    }
+.graph-img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
 
-    .graph-img {
-        width: 100%;
-        max-width: 400px;
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
+.insight-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
 
-    .insight-cards-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-top: 30px;
-    }
-
-    .insight-card {
-        background-color: #ffffff;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    .insight-card h4 {
-        margin-bottom: 10px;
-        color: #131d35;
-    }
+.insight-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
 </style>
 
 {% endblock %}

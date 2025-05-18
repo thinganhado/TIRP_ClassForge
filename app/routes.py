@@ -104,8 +104,7 @@ def friendship_graph():
 
 @main.route("/visualization/individual")
 def individual():
-    return render_template("studentindividual.html",
-                           recommendations=_safe_recommendations())
+    return render_template("studentindividual.html", recommendations=_safe_recommendations())
 
 # ╭────────  customisation workflow  ───────╮
 @main.route("/customisation")
