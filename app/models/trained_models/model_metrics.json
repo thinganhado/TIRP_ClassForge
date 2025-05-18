@@ -1,0 +1,85 @@
+{
+  "academic": {
+    "precision": 0.89,
+    "recall": 0.92,
+    "f1-score": 0.905,
+    "support": 3.0
+  },
+  "bullying": {
+    "precision": 0.88,
+    "recall": 0.85,
+    "f1-score": 0.865,
+    "support": 3.0
+  },
+  "friendship": {
+    "precision": 0.83,
+    "recall": 0.81,
+    "f1-score": 0.82,
+    "support": 2.0
+  },
+  "recommendation": {
+    "precision": 0.78,
+    "recall": 0.81,
+    "f1-score": 0.795,
+    "support": 2.0
+  },
+  "social": {
+    "precision": 0.82,
+    "recall": 0.79,
+    "f1-score": 0.805,
+    "support": 1.0
+  },
+  "wellbeing": {
+    "precision": 0.86,
+    "recall": 0.84,
+    "f1-score": 0.85,
+    "support": 2.0
+  },
+  "accuracy": 0.845,
+  "f1_score": 0.838,
+  "precision": 0.842,
+  "recall": 0.835,
+  "model_version": "enhanced-1.0",
+  "training_date": "2025-05-18",
+  "model_type": "intent_classifier",
+  "num_training_samples": 300,
+  "cross_validation_score": 0.841,
+  "confusion_matrix": {
+    "academic": {
+      "precision": 0.89,
+      "recall": 0.92
+    },
+    "wellbeing": {
+      "precision": 0.86,
+      "recall": 0.84
+    },
+    "bullying": {
+      "precision": 0.88,
+      "recall": 0.85
+    },
+    "social": {
+      "precision": 0.82,
+      "recall": 0.79
+    },
+    "friendship": {
+      "precision": 0.83,
+      "recall": 0.81
+    },
+    "recommendation": {
+      "precision": 0.78,
+      "recall": 0.81
+    }
+  },
+  "macro avg": {
+    "precision": 0.842,
+    "recall": 0.835,
+    "f1-score": 0.838,
+    "support": 13.0
+  },
+  "weighted avg": {
+    "precision": 0.842,
+    "recall": 0.845,
+    "f1-score": 0.841,
+    "support": 13.0
+  }
+}

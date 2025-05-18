@@ -7,13 +7,13 @@ __pycache__/
 
 # Virtual environments
 venv/
+venv_new/
 .venv/
 env/
 ENV/
 virtualenv/
 
 # Distribution / packaging
-.Python
 build/
 develop-eggs/
 dist/
@@ -62,11 +62,6 @@ instance/
 *.csv
 *.xlsx
 
-# Editor specific files
-*.swp
-*.swo
-.DS_Store
-
 # ML model files
 *.pt
 *.pkl
@@ -94,9 +89,6 @@ app/cache/*
 .ipynb_checkpoints
 
 # Project specific
-TIRP/app/ml_models/R-GCN_files/
-TIRP/app/ml_models/Clustering/output/
-TIRP/app/ml_models/ha_outputs/
-soft_constraints_config.json
-app/ml_models/soft_constraints_config.json
-app/models/soft_constraints_config.json
+app/ml_models/R-GCN_files/
+app/ml_models/Clustering/output/
+app/ml_models/ha_outputs/ 

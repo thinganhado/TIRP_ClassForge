@@ -56,10 +56,7 @@ class ApiClient:
         if self.auth_token:
             self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
         
-        # Cache for storing API responses
-        self.cache = {}
-        self.cache_dir = 'app/cache'
-        os.makedirs(self.cache_dir, exist_ok=True)
+                # Disable caching to prevent memory issues        self.cache = None
         
         # Setup database connection flag
         self.has_db_connection = False

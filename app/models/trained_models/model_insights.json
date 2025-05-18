@@ -1,0 +1,54 @@
+{
+  "top_influential_students": [
+    {
+      "Participant-ID": "32481",
+      "influential_score": 0.92
+    },
+    {
+      "Participant-ID": "32605",
+      "influential_score": 0.85
+    },
+    {
+      "Participant-ID": "32742",
+      "influential_score": 0.78
+    }
+  ],
+  "most_isolated_students": [
+    {
+      "Participant-ID": "32519",
+      "isolated_score": 0.88
+    },
+    {
+      "Participant-ID": "32608",
+      "isolated_score": 0.76
+    },
+    {
+      "Participant-ID": "32511",
+      "isolated_score": 0.71
+    }
+  ],
+  "strongest_friendships": [
+    {
+      "Participant1-ID": "32481",
+      "Participant2-ID": "32605",
+      "friendship_score": 0.95
+    },
+    {
+      "Participant1-ID": "32519",
+      "Participant2-ID": "32608",
+      "friendship_score": 0.91
+    },
+    {
+      "Participant1-ID": "32742",
+      "Participant2-ID": "32511",
+      "friendship_score": 0.87
+    }
+  ],
+  "class_allocation_metrics": {
+    "friendship_coverage": 0.76,
+    "social_balance": 0.82,
+    "gpa_fairness": 0.79,
+    "wellbeing_distribution": 0.68,
+    "bullying_prevention": 0.85
+  }
+}

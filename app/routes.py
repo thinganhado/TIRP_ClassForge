@@ -317,14 +317,26 @@ def analyze_request():
     session_id = data.get("session_id") or session.get("session_id")
 
     if not user_input:
-        return jsonify({"success": False, "message": "No input"}), 400
+        return jsonify({"success": False, "message": "No input provided"}), 400
 
-    # lazy-load models once
-    if hasattr(assistant, "models_loaded") and not assistant.models_loaded:
-        assistant.initialize_model()
-
+    # Process the user's request
     result = assistant.analyze_request(user_input, session_id=session_id)
-    return jsonify(result)
+    
+    # Check if the response was successful
+    if not result.get("success", False):
+        return jsonify({
+            "success": False, 
+            "message": result.get("message", "Sorry, I couldn't process your request. Please try again.")
+        })
+    
+    # Return the successful response
+    return jsonify({
+        "success": True,
+        "message": result.get("message", ""),
+        "intent": result.get("intent", "unknown"),
+        "is_modified": result.get("is_modified", False),
+        "modified_params": result.get("modified_params", [])
+    })
 
 @main.route("/api/assistant/reset", methods=["GET"])
 def reset_chat():

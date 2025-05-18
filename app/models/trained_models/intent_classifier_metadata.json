@@ -1,0 +1,49 @@
+{
+  "model_type": "logistic_regression",
+  "performance": {
+    "academic": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 2.0
+    },
+    "bullying": {
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1-score": 0.3333333333333333,
+      "support": 1.0
+    },
+    "friendship": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 3.0
+    },
+    "social": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "wellbeing": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1-score": 0.5,
+      "support": 4.0
+    },
+    "accuracy": 0.2727272727272727,
+    "macro avg": {
+      "precision": 0.13999999999999999,
+      "recall": 0.3,
+      "f1-score": 0.16666666666666666,
+      "support": 11.0
+    },
+    "weighted avg": {
+      "precision": 0.2,
+      "recall": 0.2727272727272727,
+      "f1-score": 0.21212121212121213,
+      "support": 11.0
+    }
+  },
+  "created_at": "2025-05-18T07:31:55.940877"
+}
