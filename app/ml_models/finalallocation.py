@@ -465,46 +465,6 @@ with app.app_context():
     
     print("Final class allocations inserted directly into the database.")
 
-    random_allocations = []
-
-    # Build a list of participant IDs from your GA allocation loop
-    participant_ids = [index_to_id[i] for i in range(len(best_individual))]
-
-    # Shuffle participant IDs to randomize order
-    shuffle(participant_ids)
-
-    num_classes = 6
-    min_students_per_class = 25
-    total_required = num_classes * min_students_per_class
-
-    if len(participant_ids) < total_required:
-        raise ValueError("Not enough students to guarantee at least 25 per class.")
-
-    # Step 1: Assign minimum 25 students per class
-    balanced_allocations = []
-    for class_id in range(num_classes):
-        for _ in range(min_students_per_class):
-            pid = participant_ids.pop()
-            balanced_allocations.append((pid, class_id))
-
-    # Step 2: Assign remaining students randomly but evenly
-    for i, pid in enumerate(participant_ids):
-        class_id = i % num_classes
-        balanced_allocations.append((pid, class_id))
-
-    # Optional: Clear old random allocations
-    db.session.execute(text("DELETE FROM random_allo"))
-
-    # Insert into database
-    for pid, class_id in balanced_allocations:
-        db.session.execute(
-            text("INSERT INTO random_allo (participant_id, class_id) VALUES (:pid, :cid)"),
-            {"pid": str(pid), "cid": int(class_id)}
-        )
-
-    db.session.commit()
-    print("Random allocation inserted into the random_allo table.")
-
 if __name__ == "__main__":
     print("Starting class allocation algorithm...")
     print("Using optimization parameters from soft_constraints_config.json")
