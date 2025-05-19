@@ -28,7 +28,13 @@ from app.database.softcons_queries import SoftConstraint
 from app.database.spec_endpoint import HardConstraint
 from app.models.assistant import AssistantModel
 from app import db
+from subprocess import run as sh
 
+SPEC_SCRIPT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__),
+                 "ml_models",          # <- wherever you saved the file
+                 "apply_specifications.py")
+)
 # ──────────────────────────────────────────
 
 assistant = AssistantModel()           # NLP / rule-based helper
@@ -233,19 +239,32 @@ def customisation_loading():
 
 @main.route("/api/hard_constraints", methods=["POST"])
 def post_hard_constraints():
+    """
+    • insert JSON record
+    • call SQL-based spec-applier
+    • return JSON {ok:true} / {error:...}
+    """
     data = request.get_json(force=True)
+    if not {"separate_pairs", "forced_moves"} <= data.keys():
+        return jsonify(error="Missing keys"), 400
 
-    required_keys = {"separate_pairs", "forced_moves"}
-    if not required_keys.issubset(data):
-        return jsonify({"error": "Missing keys"}), 400
-
-    record = HardConstraint(
-        separate_pairs = data["separate_pairs"],
-        forced_moves   = data["forced_moves"]      # <─ use column name
-    )
-    db.session.add(record)
+    rec = HardConstraint(separate_pairs=data["separate_pairs"],
+                         forced_moves=data["forced_moves"])
+    db.session.add(rec)
     db.session.commit()
-    return jsonify({"status": "ok", "id": record.id}), 201
+
+    # ---- run the stand-alone fixer --------------------------------------
+    proc = sh([sys.executable, SPEC_SCRIPT],
+              cwd=os.path.dirname(SPEC_SCRIPT),
+              capture_output=True, text=True)
+
+    if proc.returncode == 0:
+        return jsonify(ok=True)           
+    else:
+        # log stderr for debugging
+        print("[apply_specifications]", proc.stderr)
+        return jsonify(error="spec-apply failed",
+                       details=proc.stderr[:500]), 500
 
 # run_allocation unchanged
 @main.route("/run_allocation", methods=["GET", "POST"])      # <<< CHANGED

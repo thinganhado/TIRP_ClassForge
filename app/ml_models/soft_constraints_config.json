@@ -1,5 +1,5 @@
 {
-  "gpa_penalty_weight": 30,
+  "gpa_penalty_weight": 100,
   "wellbeing_penalty_weight": 50,
   "bully_penalty_weight": 60,
   "influence_std_weight": 60,
