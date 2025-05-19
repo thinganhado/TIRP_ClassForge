@@ -33,7 +33,7 @@ from subprocess import run as sh
 
 SPEC_SCRIPT = os.path.abspath(
     os.path.join(os.path.dirname(__file__),
-                 "ml_models",          # <- wherever you saved the file
+                 "ml_models",         
                  "apply_specifications.py")
 )
 # ──────────────────────────────────────────
@@ -314,7 +314,7 @@ def run_allocation():
 
         if result.returncode == 0:
             flash("Allocation completed successfully", "success")
-            return redirect(url_for("main.students"))
+            return redirect(url_for("main.classes"))
         else:
             flash(f"Allocation failed:\n{result.stderr}", "error")
             return redirect(url_for("main.customisation_home"))
@@ -323,7 +323,7 @@ def run_allocation():
         flash(f"Error running allocation: {e}", "error")
         return redirect(url_for("main.customisation_home"))
 
-# ╭────────  JSON APIs  ─────────╮
+# ────────  JSON APIs  ─────────
 @main.route("/api/students")
 def api_students():
     return jsonify(fetch_all_students())

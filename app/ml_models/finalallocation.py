@@ -36,75 +36,54 @@ for k, v in weights_config.items():
 
 weights = scaled_weights
 
-# Load student survey responses (features)
-student_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="responses")
+# ALL DB reads 
+with app.app_context():
+    participant_data     = pd.read_sql("SELECT * FROM participants", db.engine)
+    student_data         = pd.read_sql("SELECT * FROM responses", db.engine)
+    friends              = pd.read_sql("SELECT * FROM net_friends", db.engine)
+    influence            = pd.read_sql("SELECT * FROM net_influential", db.engine)
+    meaningful           = pd.read_sql("SELECT * FROM net_feedback", db.engine)
+    Moretime             = pd.read_sql("SELECT * FROM net_moretime", db.engine)
+    Advice               = pd.read_sql("SELECT * FROM net_advice", db.engine)
+    Disrespect           = pd.read_sql("SELECT * FROM net_disrespect", db.engine)
+    friendship_df        = pd.read_sql("SELECT * FROM friendship_scores", db.engine)
+    student_scores_df    = pd.read_sql("SELECT * FROM student_scores", db.engine)
+    gpa_df               = pd.read_sql("SELECT * FROM gpa_predictions_with_bins", db.engine)
+    bully_df             = pd.read_sql("SELECT * FROM community_bully_assignments", db.engine)
+    wellbeing_df         = pd.read_sql("SELECT * FROM wellbeing_classification_results", db.engine)
+    start_df             = pd.read_sql("SELECT student_index, class_assigned FROM seed_allocations", db.engine)
 
-participant_data = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="participants")
-
-participant_data["Participant-ID"] = (
-        participant_data["Participant-ID"]
+# rename columns AFTER the block
+gpa_df.rename(columns={"Student_ID": "Participant-ID"}, inplace=True)
+bully_df.rename(columns={"Student_ID": "Participant-ID"}, inplace=True)
+participant_data["student_id"] = (
+        participant_data["student_id"]
         .astype(str)           # 32481  →  '32481'
-        .str.strip()           # drop accidental spaces
+        .str.strip()        
 )
-
-# Load student relationships (edges)
-friends = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_0_Friends")
-
-influence = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_1_Influential")
-
-meaningful = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_2_Feedback")
-
-Moretime = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_3_MoreTime")
-
-Advice = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_4_Advice")
-
-Disrespect = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_5_Disrespect")
-
-Activity = pd.read_excel("student_data/Student Survey - Jan.xlsx", sheet_name="net_affiliation_0_SchoolActivit")
-
-student_ids = student_data["Participant-ID"].values
+student_ids = student_data["student_id"].values
 
 # Remove self-loops from the DataFrame
-friends = friends[friends["Source"] != friends["Target"]]
-influence = influence[influence["Source"] != influence["Target"]]
-meaningful = meaningful[meaningful["Source"] != meaningful["Target"]]
-Moretime = Moretime[Moretime["Source"] != Moretime["Target"]]
-Advice = Advice[Advice["Source"] != Advice["Target"]]
-Disrespect = Disrespect[Disrespect["Source"] != Disrespect["Target"]]
-Activity = Activity[Activity["Source"] != Activity["Target"]]
+friends = friends[friends["source_student_id"] != friends["target_student_id"]]
+influence = influence[influence["source_student_id"] != influence["target_student_id"]]
+meaningful = meaningful[meaningful["source_student_id"] != meaningful["target_student_id"]]
+Moretime = Moretime[Moretime["source_student_id"] != Moretime["target_student_id"]]
+Advice = Advice[Advice["source_student_id"] != Advice["target_student_id"]]
+Disrespect = Disrespect[Disrespect["source_student_id"] != Disrespect["target_student_id"]]
 
 # Participant_data cleaning
 participant_data.columns = participant_data.columns.str.strip()  # Fix spaces
-participant_data['Perc_Academic'] = participant_data['Perc_Academic'].fillna(participant_data['Perc_Academic'].mean())
-
+participant_data['Perc_Academic'] = participant_data['perc_academic'].fillna(participant_data['perc_academic'].mean())
 
 # --- Load starting point ---
-hetero_graph = torch.load("R-GCN_files/hetero_graph.pt", weights_only=False)
-friendship_df = pd.read_excel("R-GCN_files/friendship_scores.xlsx")
-student_scores_df = pd.read_excel("R-GCN_files/student_scores.xlsx")
-
-
-# --- Load predicted GPA file (🆕)
-gpa_df = pd.read_csv("ha_outputs/gpa_predictions_with_bins.csv")  # Must include 'Participant-ID' and 'Predicted_GPA'
-gpa_df.rename(columns={"Student_ID": "Participant-ID"}, inplace=True)
+# hetero_graph = torch.load("R-GCN_files/hetero_graph.pt", weights_only=False)
 global_mean_gpa = gpa_df["Predicted_GPA"].mean()       # Global mean GPA
 
 # --- Create ID mappings ---
-id_to_index = {pid: idx for idx, pid in enumerate(participant_data["Participant-ID"])}
+id_to_index = {pid: idx for idx, pid in enumerate(participant_data["student_id"])}
 index_to_id = {v: k for k, v in id_to_index.items()}
 
-# Loading Community Detection Files
-# Re-load the community_bully_assignments file
-bully_df = pd.read_csv("ha_outputs/community_bully_assignments.csv")
-bully_df.rename(columns={"Student_ID": "Participant-ID"}, inplace=True)
-
-# --- Load Wellbeing Classification Results
-wellbeing_df = pd.read_csv("Clustering/output/wellbeing_classification_results.csv")
-
-# Map Participant-ID to student_index
-wellbeing_df["student_index"] = wellbeing_df["Participant-ID"].map(id_to_index)
-
-# Drop any rows where student_index couldn't be matched
+wellbeing_df["student_index"] = wellbeing_df["Participant_ID"].map(id_to_index)
 wellbeing_df = wellbeing_df.dropna(subset=["student_index"])
 wellbeing_df["student_index"] = wellbeing_df["student_index"].astype(int)
 
@@ -122,7 +101,6 @@ friendship_df["Participant1-ID"] = friendship_df["student1"].map(index_to_id)
 friendship_df["Participant2-ID"] = friendship_df["student2"].map(index_to_id)
 
 # --- Build starting individual ---
-start_df = pd.read_excel("student_data/seed_allocations.xlsx")
 start_individual = start_df.sort_values("student_index")["class_assigned"].tolist()
 
 # --- Build friendship lookup ---
@@ -135,15 +113,15 @@ for _, row in friendship_df.iterrows():
 def fitness(individual, weights=None):
     # --- Default weights if none provided ---
     default_weights = {
-        "min_friends_required": 1,
-        "friend_inclusion_weight": 1.5,
-        "friend_balance_weight": 1.0,
-        "influence_std_weight": 1.5,
-        "isolation_std_weight": 1.5,
-        "gpa_penalty_weight": 1.5,
-        "bully_penalty_weight": 2.0,
-        "wellbeing_penalty_weight": 1.5
-    }
+            "min_friends_required": 1,
+            "friend_inclusion_weight": 1.0,
+            "friend_balance_weight": 1.0,
+            "influence_std_weight": 1.0,
+            "isolation_std_weight": 1.0,
+            "gpa_penalty_weight": 2.0,
+            "bully_penalty_weight": 2.0,
+            "wellbeing_penalty_weight": 1.0
+        }
     if weights is None:
         weights = default_weights
     else:
@@ -206,7 +184,9 @@ def fitness(individual, weights=None):
     influence_std = pd.Series(influential_avgs).std()
     isolated_std = pd.Series(isolated_avgs).std()
 
-    gpa_penalty = sum((avg - global_mean_gpa) ** 2 for avg in gpa_avgs) / num_classes if gpa_avgs else 0
+    global_gpa_std = gpa_df["Predicted_GPA"].std()
+
+    gpa_penalty = (sum(((avg - global_mean_gpa) / global_gpa_std) ** 2 for avg in gpa_avgs) / num_classes if gpa_avgs else 0)
 
     # --- Bully-Victim Overlap ---
     total_bully_victim_overlap = 0
@@ -219,12 +199,13 @@ def fitness(individual, weights=None):
             total_bully_victim_overlap += overlap
 
     avg_bully_victim_overlap = total_bully_victim_overlap / num_classes
+    bully_penalty = avg_bully_victim_overlap ** 2
 
     # --- Wellbeing Balance ---
     low_counts, high_counts = [], []
     for class_id, students in class_students.items():
         class_pids = [index_to_id[i] for i in students]
-        class_labels = wellbeing_df[wellbeing_df["Participant-ID"].isin(class_pids)]["wellbeing_label"]
+        class_labels = wellbeing_df[wellbeing_df["Participant_ID"].isin(class_pids)]["wellbeing_label"]
         low_counts.append((class_labels == "low").sum())
         high_counts.append((class_labels == "high").sum())
 
@@ -240,6 +221,7 @@ def fitness(individual, weights=None):
         - weights["gpa_penalty_weight"] * gpa_penalty
         - weights["bully_penalty_weight"] * avg_bully_victim_overlap
         - weights["wellbeing_penalty_weight"] * wellbeing_penalty
+        - weights["bully_penalty_weight"] * bully_penalty
     )
 
     return fitness_score
@@ -373,9 +355,6 @@ for generation in range(max_generations):
 final_fitnesses = [fitness(ind, weights) for ind in population]
 best_individual = population[final_fitnesses.index(max(final_fitnesses))]
 
-# --- Create Final Output DataFrame ---
-app = create_app()
-
 with app.app_context():
     # Clear existing records
     db.session.execute(text("DELETE FROM allocations"))
@@ -385,7 +364,7 @@ with app.app_context():
         predicted_gpa = gpa_df.loc[gpa_df['Participant-ID'] == participant_id, 'Predicted_GPA'].values[0] if participant_id in gpa_df['Participant-ID'].values else None
         influential_score = student_scores_df.loc[i, "influential_score"]
         isolated_score = student_scores_df.loc[i, "isolated_score"]
-        wellbeing_label = wellbeing_df.set_index("Participant-ID").reindex([participant_id])["wellbeing_label"].values[0]
+        wellbeing_label = wellbeing_df.set_index("Participant_ID").reindex([participant_id])["wellbeing_label"].values[0]
 
         db.session.execute(
             text("INSERT INTO allocations (class_id, student_id) VALUES (:class_id, :student_id)"),
