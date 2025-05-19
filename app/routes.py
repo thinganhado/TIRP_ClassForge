@@ -121,25 +121,36 @@ def individual():
 
 @main.route("/visualization/comparison")
 def comparison():
+    from app.visualisation.generate_graphs import generate_graphs
+
     # Get chart images
     charts = generate_graphs()
 
-    # Get GA insights from database
-    query = text("SELECT * FROM allocation_observations WHERE allocation_type = 'GA'")
-    result = db.session.execute(text("SELECT * FROM allocation_observations")).mappings().fetchone()
+    # Fetch numerical insights from allocation_insights1
+    query = text("SELECT * FROM allocation_insights1")
+    result = db.session.execute(query).mappings().all()
 
+    # Organize by allocation_type
+    insights = {row["allocation_type"]: row for row in result}
+    ga = insights["GA"]
+    rand = insights["Random"]
+
+    # Generate insight texts using stats
     ga_insights = {
-        "friendship_coverage": result["friendship_coverage"],
-        "friendship_balance": result["friendship_balance"],
-        "gpa_fairness": result["gpa_fairness"],
-        "high_risk_dynamics": result["high_risk_dynamics"],
-        "wellbeing_imbalance": result["wellbeing_imbalance"],
+        # Cards next to graphs
+        "gpa_fairness": f"The standard deviation of class GPA in the Random allocation is {rand['gpa_std_dev']:.2f}, compared to {ga['gpa_std_dev']:.2f} in the Genetic Algorithm allocation. This indicates that GPA is more evenly distributed under GA, promoting academic balance across classrooms.",
+        "high_risk_dynamics": f"The total number of bullying-related conflicts in the Random allocation was {rand['bully_conflict_count']}, compared to {ga['bully_conflict_count']} under GA. This suggests that GA reduces exposure to high-risk social dynamics.",
+
+        # Bottom cards
+        "friendship_coverage": f"Students in GA had an average of {ga['avg_friends_per_student']:.2f} friends per class, while Random only achieved {rand['avg_friends_per_student']:.2f}. This implies GA placements foster stronger peer connections.",
+        "influence_distribution": f"Random allocation had a higher variation in influential student placement (std dev = {rand['influence_std_dev']:.4f}) than GA (std dev = {ga['influence_std_dev']:.4f}). GA better spreads peer leaders across classes.",
+        "isolation_risk": f"Isolation standard deviation under Random was {rand['isolation_std_dev']:.4f}, higher than GA's {ga['isolation_std_dev']:.4f}, meaning GA prevents clustering of socially isolated students.",
     }
 
     return render_template("comparison.html",
                            gpa_chart_img=charts.get("gpa_chart_img"),
                            conflict_chart_img=charts.get("conflict_chart_img"),
-                           wellbeing_chart_img=None,  # add later when ready
+                           wellbeing_chart_img=None,  # placeholder until available
                            ga_insights=ga_insights)
 
 # ╭────────  customisation workflow  ───────╮
