@@ -299,7 +299,7 @@ def run_allocation():
         flash(f"Error running allocation: {e}", "error")
         return redirect(url_for("main.customisation_home"))
 
-# ╭────────  JSON APIs  ─────────╮
+# ────────  JSON APIs  ─────────
 @main.route("/api/students")
 def api_students():
     return jsonify(fetch_all_students())

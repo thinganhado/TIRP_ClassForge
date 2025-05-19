@@ -113,15 +113,15 @@ for _, row in friendship_df.iterrows():
 def fitness(individual, weights=None):
     # --- Default weights if none provided ---
     default_weights = {
-        "min_friends_required": 1,
-        "friend_inclusion_weight": 1.5,
-        "friend_balance_weight": 1.0,
-        "influence_std_weight": 1.5,
-        "isolation_std_weight": 1.5,
-        "gpa_penalty_weight": 1.5,
-        "bully_penalty_weight": 2.0,
-        "wellbeing_penalty_weight": 1.5
-    }
+            "min_friends_required": 1,
+            "friend_inclusion_weight": 1.0,
+            "friend_balance_weight": 1.0,
+            "influence_std_weight": 1.0,
+            "isolation_std_weight": 1.0,
+            "gpa_penalty_weight": 2.0,
+            "bully_penalty_weight": 2.0,
+            "wellbeing_penalty_weight": 1.0
+        }
     if weights is None:
         weights = default_weights
     else:
@@ -184,7 +184,9 @@ def fitness(individual, weights=None):
     influence_std = pd.Series(influential_avgs).std()
     isolated_std = pd.Series(isolated_avgs).std()
 
-    gpa_penalty = sum((avg - global_mean_gpa) ** 2 for avg in gpa_avgs) / num_classes if gpa_avgs else 0
+    global_gpa_std = gpa_df["Predicted_GPA"].std()
+
+    gpa_penalty = (sum(((avg - global_mean_gpa) / global_gpa_std) ** 2 for avg in gpa_avgs) / num_classes if gpa_avgs else 0)
 
     # --- Bully-Victim Overlap ---
     total_bully_victim_overlap = 0
@@ -197,6 +199,7 @@ def fitness(individual, weights=None):
             total_bully_victim_overlap += overlap
 
     avg_bully_victim_overlap = total_bully_victim_overlap / num_classes
+    bully_penalty = avg_bully_victim_overlap ** 2
 
     # --- Wellbeing Balance ---
     low_counts, high_counts = [], []
@@ -218,6 +221,7 @@ def fitness(individual, weights=None):
         - weights["gpa_penalty_weight"] * gpa_penalty
         - weights["bully_penalty_weight"] * avg_bully_victim_overlap
         - weights["wellbeing_penalty_weight"] * wellbeing_penalty
+        - weights["bully_penalty_weight"] * bully_penalty
     )
 
     return fitness_score
