@@ -16,7 +16,6 @@ import os
 # Ensure parent dir is in path to allow app import
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from app import create_app, db
-from app.database.spec_endpoint import HardConstraint
 
 app = create_app()
 
@@ -93,70 +92,6 @@ global_mean_gpa = gpa_df["Predicted_GPA"].mean()       # Global mean GPA
 # --- Create ID mappings ---
 id_to_index = {pid: idx for idx, pid in enumerate(participant_data["Participant-ID"])}
 index_to_id = {v: k for k, v in id_to_index.items()}
-
-# --- Convert hard_constraints to index ---
-def _idx_sets_from_db():
-    """Fetch latest hard-constraint record and convert the IDs to indices
-       understood by the GA.  Returns (pairs_idx, moves_idx).
-    """
-    with app.app_context():
-        latest = (
-            HardConstraint
-            .query
-            .order_by(HardConstraint.id.desc())
-            .first()
-        )
-
-    if not latest:                       # no constraints stored yet
-        return [], []
-
-    separate_ids = [[str(s) for s in grp] for grp in latest.separate_pairs]
-    move_ids     = [{"sid": str(m["sid"]), "cls": int(m["cls"])}
-                    for m in latest.forced_moves]
-
-    # ---- convert to index space ----
-    pairs_idx = [tuple(id_to_index[sid] for sid in grp) for grp in separate_ids]
-    moves_idx = [(id_to_index[m["sid"]], m["cls"])       for m in move_ids]
-
-    return pairs_idx, moves_idx
-
-SEPARATE_IDX, MOVE_IDX = _idx_sets_from_db()
-
-# ---------------------------------------------------------
-def _enforce_hard(individual, num_classes=6):
-    """
-    Return a *copy* of ``individual`` with
-    1. every move-request applied, and
-    2. every separate-group split across different classes.
-    Capacity is *not* handled here – size balancing is left to the
-    main `repair()` logic.
-    """
-    ind = individual.copy()
-
-    # ----- 1. force moves -----
-    for sid, target_cls in MOVE_IDX:
-        ind[sid] = target_cls
-
-    # build class → [students] dict once
-    bin_by_class = {c: [] for c in range(num_classes)}
-    for sid, cid in enumerate(ind):
-        bin_by_class[cid].append(sid)
-
-    # ----- 2. split separate groups -----
-    for group in SEPARATE_IDX:
-        for cid in range(num_classes):
-            members = [s for s in bin_by_class[cid] if s in group]
-            while len(members) > 1:             # clash found
-                sid = members.pop()             # take one of them
-                # pick the first class that has no other member of the group
-                dest = next(k for k in range(num_classes)
-                            if all(x not in group for x in bin_by_class[k]))
-                ind[sid] = dest
-                bin_by_class[cid].remove(sid)
-                bin_by_class[dest].append(sid)
-
-    return ind
-# ---------------------------------------------------------
 
 # Loading Community Detection Files
 # Re-load the community_bully_assignments file
@@ -311,8 +246,6 @@ def fitness(individual, weights=None):
 
 # --- Repair Function ---
 def repair(individual, num_classes=6, max_size=30, max_diff=5):
-    # --- hard rules first ---
-    individual = _enforce_hard(individual, num_classes)
 
     # Step 1: Count students in each class
     class_to_students = {i: [] for i in range(num_classes)}
@@ -393,13 +326,11 @@ tournament_size = 3
 
 # --- Initialize Population ---
 def initialize_population(start_individual, population_size):
-    seed = _enforce_hard(start_individual)
-    population = [seed]
+    population = [start_individual]  # Start with seed
 
     for _ in range(population_size - 1):
-        child = mutate(seed, num_swaps=num_swaps_per_mutation)
-        child = _enforce_hard(child)          # keep mutation legal
-        population.append(child)
+        new_individual = mutate(start_individual, num_swaps=num_swaps_per_mutation)
+        population.append(new_individual)
 
     return population
 
