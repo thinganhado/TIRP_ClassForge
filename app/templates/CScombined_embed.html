@@ -1,0 +1,272 @@
+<!-- CScombined_embed.html -->
+
+<style>
+  #cy {
+    width: 100%;
+    height: 700px;
+    margin-top: 20px;
+  }
+
+  .filter-controls {
+    margin-bottom: 15px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #152259;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-controls label {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+
+  .class-filter-buttons {
+    margin-top: 10px;
+  }
+
+  .class-filter-buttons button {
+    font-family: 'Inter', sans-serif;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-weight: 500;
+    color: #152259;
+  }
+
+  .class-filter-buttons button.active {
+    background-color: #152259;
+    color: white;
+  }
+</style>
+
+<script src="https://unpkg.com/cytoscape@3.21.1/dist/cytoscape.min.js"></script>
+
+<!--Edge type filters -->
+<div class="filter-controls">
+  <label><input type="checkbox" class="edge-filter" data-type="friends" checked> Friends</label>
+  <label><input type="checkbox" class="edge-filter" data-type="advice" checked> Advice</label>
+  <label><input type="checkbox" class="edge-filter" data-type="feedback" checked> Feedback</label>
+  <label><input type="checkbox" class="edge-filter" data-type="influential" checked> Influential</label>
+  <label><input type="checkbox" class="edge-filter" data-type="moretime" checked> More Time</label>
+  <label><input type="checkbox" class="edge-filter" data-type="disrespect" checked> Disrespect</label>
+
+</div>
+
+<!-- Class filters -->
+<div class="class-filter-buttons">
+  <button id="show-all" class="active">Show All Classes</button>
+  {% for i in range(6) %}
+    <button class="filter-button" data-class="{{ i }}">Class {{ i }}</button>
+  {% endfor %}
+  <button id="reset-selection">Reset Student Selection</button>
+</div>
+
+<div id="cy"></div>
+
+<script id="graph-data" type="application/json">
+{{ graph_data | safe }}
+</script>
+
+<script>
+const graphData = JSON.parse(document.getElementById("graph-data").textContent);
+
+// Remove self-loops
+const filteredElements = graphData.filter(el => {
+  return !(el.data && el.data.source && el.data.target && el.data.source === el.data.target);
+});
+
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: filteredElements,
+  style: [
+    {
+      selector: 'core',
+      style: {
+        'background-color': '#ffffff'
+      }
+    },
+
+    {
+      selector: 'node',
+      style: {
+        'background-color': 'data(color)',
+        'label': '',
+        'width': 30,
+        'height': 30,
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'font-size': '10px',
+        'color': '#333',
+        'font-family': 'Inter, sans-serif'
+      }
+    },
+    {
+      selector: 'node.hover',
+      style: {
+        'label': 'data(label)'
+      }
+    },
+
+    // Edge colors
+    {
+  selector: 'edge[type="friends"]',
+  style: {
+    'line-color': '#bdb2ff',
+    'target-arrow-color': '#bdb2ff',
+    'target-arrow-shape': 'triangle'
+  }
+  },
+  
+  {
+  selector: 'edge[type="advice"]',
+  style: {
+    'line-color': '#9bf6ff',
+    'target-arrow-color': '#9bf6ff',
+    'target-arrow-shape': 'triangle'
+  }
+  },
+
+  {
+  selector: 'edge[type="feedback"]',
+  style: {
+    'line-color': '#b3e093',
+    'target-arrow-color': '#b3e093',
+    'target-arrow-shape': 'triangle'
+  }
+  },
+
+  {
+  selector: 'edge[type="influential"]',
+  style: {
+    'line-color': '#fff702',
+    'target-arrow-color': '#fff702',
+    'target-arrow-shape': 'triangle'
+  }
+  },
+
+  {
+  selector: 'edge[type="moretime"]',
+  style: {
+    'line-color': '#fb89cc',
+    'target-arrow-color': '#fb89cc',
+    'target-arrow-shape': 'triangle'
+  }
+  },
+  
+  {
+  selector: 'edge[type="disrespect"]',
+  style: {
+    'line-color': '#ffadad',
+    'target-arrow-color': '#ffadad',
+    'target-arrow-shape': 'triangle'
+  }
+  }
+  ,
+    {
+      selector: '.edge-hidden',
+      style: { 'display': 'none' }
+    },
+  
+    {
+      selector: '.highlighted',
+      style: {
+        'background-color': '#999999',
+        'line-color': '#999999',
+        'target-arrow-color': '#999999'
+      }
+    },
+  
+    {
+      selector: '.filtered',
+      style: { 'display': 'none' }
+    }
+  ],
+  
+  layout: {
+    name: 'cose',
+    animate: true,
+    fit: true,
+    padding: 100,
+    nodeRepulsion: 5000,
+    idealEdgeLength: 20,
+    nodeDimensionsIncludeLabels: true,
+    randomize: true,
+    nodeOverlap: 500,
+    gravity: 1,
+    numIter: 2500
+  }
+});
+
+// Hover shows label
+cy.on('mouseover', 'node', evt => evt.target.addClass('hover'));
+cy.on('mouseout', 'node', evt => evt.target.removeClass('hover'));
+
+// Click = highlight outbound neighbors + show labels
+cy.on('tap', 'node', function (evt) {
+  const node = evt.target;
+  cy.elements().removeClass('highlighted hover');
+  node.addClass('highlighted hover');
+  const out = node.outgoers('edge, node');
+  out.addClass('highlighted');
+  out.nodes().addClass('hover');
+});
+
+// Edge type filtering
+function updateEdgeVisibility() {
+  const checked = Array.from(document.querySelectorAll('.edge-filter:checked'))
+                       .map(cb => cb.dataset.type);
+  cy.edges().forEach(edge => {
+    edge.toggleClass('edge-hidden', !checked.includes(edge.data('type')));
+  });
+}
+document.querySelectorAll('.edge-filter').forEach(cb =>
+  cb.addEventListener('change', updateEdgeVisibility)
+);
+
+// Class filter
+function filterByClass(classId) {
+  cy.nodes().forEach(node => {
+    if (node.data('class_id') == classId) node.removeClass('filtered');
+    else node.addClass('filtered');
+  });
+
+  cy.edges().forEach(edge => {
+    const src = edge.source(), tgt = edge.target();
+    if (src.hasClass('filtered') || tgt.hasClass('filtered'))
+      edge.addClass('filtered');
+    else
+      edge.removeClass('filtered');
+  });
+}
+
+document.getElementById('show-all').addEventListener('click', () => {
+  cy.elements().removeClass('filtered');
+  document.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+  document.getElementById('show-all').classList.add('active');
+});
+
+document.querySelectorAll('.filter-button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const classId = btn.dataset.class;
+    filterByClass(classId);
+    document.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+    document.getElementById('show-all').classList.remove('active');
+    btn.classList.add('active');
+  });
+});
+
+// Reset highlighting
+document.getElementById('reset-selection').addEventListener('click', () => {
+  cy.elements().removeClass('highlighted hover');
+});
+
+// Fit to view
+cy.ready(() => cy.fit(null, 50));
+
+</script>
+

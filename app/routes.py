@@ -25,6 +25,7 @@ from app.database.class_queries import (
 )
 
 from app.database.friends_queries import build_friendship_graph_json
+from app.database.combined_queries import build_combined_graph_json
 from app.database.softcons_queries import SoftConstraint
 from app.database.spec_endpoint import HardConstraint
 from app.models.assistant import AssistantModel
@@ -103,6 +104,11 @@ def _safe_recommendations():
 @main.route("/visualization/overall")
 def overall():
     return render_template("Overall.html", recommendations=_safe_recommendations())
+
+@main.route("/visualization/combined")
+def combined_graph():
+    graph_data = build_combined_graph_json()
+    return render_template("CScombined_embed.html", graph_data=graph_data)
 
 @main.route("/visualization/friendship")
 def friendship_graph():

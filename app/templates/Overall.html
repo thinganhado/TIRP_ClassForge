@@ -54,12 +54,7 @@
 <!-- ───────  tab strip ─────── -->
 <ul class="tabs" id="vizTabs">
   <li class="active" data-tab="dash">Dashboard</li>
-  <li data-tab="net_friend">Friendship Graph</li>
-  <li data-tab="net_moretime">More Time Graph</li>
-  <li data-tab="net_influence">Influence Graph</li>
-  <li data-tab="net_feedback">Feedback Graph</li>
-  <li data-tab="net_advice">Advice Graph</li>
-  <li data-tab="net_disrespect">Disrespect Graph</li>
+  <li data-tab="net_combined">Student Relationship Networks</li>
 </ul>
 
 <!-- ───────  panes ─────── -->
@@ -74,54 +69,15 @@
 
 {% set retina = "https://ouestware.gitlab.io/retina/beta/#/embed/?allowInvalidContainer=true&url=" %}
 
-<div id="net_friend" class="tab-pane">
+<div id="net_combined" class="tab-pane">
   <div class="embed-wrapper">
-    <iframe src="{{ url_for('main.friendship_graph') }}"
-            title="Friendship graph"
-            width="100%" height="600" frameborder="0">
+    <iframe src="{{ url_for('main.combined_graph') }}"
+            title="Student relationship networks"
+            width="100%" height="800" frameborder="0">
     </iframe>
   </div>
 </div>
 
-<div id="net_moretime" class="tab-pane">
-  <div class="embed-wrapper">
-    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F75d6bacb0645b881c2414535c7afd9fa%2Fraw%2F55aea5f1baa3ab4dbec34f642cb8b4771726b2aa%2Fnetwork-dd489c03-31e.gexf"
-            title="More-time graph">
-    </iframe>
-  </div>
-</div>
-
-<div id="net_influence" class="tab-pane">
-  <div class="embed-wrapper">
-    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F3d67320f53c024c6f1e4336fed5c5ca8%2Fraw%2F67850f2ebb600788a892260150bd9f11b94503e5%2Fnetwork-7cbaefee-881.gexf"
-            title="Influence graph">
-    </iframe>
-  </div>
-</div>
-
-<div id="net_feedback" class="tab-pane">
-  <div class="embed-wrapper">
-    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F7deea0ed85bfdcded19f8d2f57ccbf6a%2Fraw%2F249897668c898a48e1914218ad2142ede457257c%2Fnetwork-17f38e24-718.gexf"
-            title="Feedback graph">
-    </iframe>
-  </div>
-</div>
-
-<div id="net_advice" class="tab-pane">
-  <div class="embed-wrapper">
-    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2Fdf5fdd03714a98d8e1a97fd817011f90%2Fraw%2F1d0bf6cc2425c5b9eef85122d967a32390aa4ded%2Fnetwork-25067d1e-826.gexf"
-            title="Advice graph">
-    </iframe>
-  </div>
-</div>
-
-<div id="net_disrespect" class="tab-pane">
-  <div class="embed-wrapper">
-    <iframe data-src="{{ retina }}https%3A%2F%2Fgist.githubusercontent.com%2Fgdawg95%2F027d529776a1f2b71787eebc20b35899%2Fraw%2Ffdfd891ffe14e836ba0cf3ca3f2c3e492b1789d4%2Fnetwork-01b8f299-35e.gexf"
-            title="Disrespect graph">
-    </iframe>
-  </div>
-</div>
 
 <!-- ───────  tab-switcher / lazy-load ─────── -->
 <script>
