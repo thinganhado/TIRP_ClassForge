@@ -4,6 +4,7 @@ from flask import request, redirect, url_for, flash, session
 import json, uuid, os, sys, subprocess
 from datetime import datetime
 from math import ceil
+from app.visualisation.generate_graphs import generate_graphs  # ensure this import is at the top
 
 import pandas as pd
 from sqlalchemy import text
@@ -111,6 +112,29 @@ def friendship_graph():
 @main.route("/visualization/individual")
 def individual():
     return render_template("studentindividual.html", recommendations=_safe_recommendations())
+
+@main.route("/visualization/comparison")
+def comparison():
+    # Get chart images
+    charts = generate_graphs()
+
+    # Get GA insights from database
+    query = text("SELECT * FROM allocation_observations WHERE allocation_type = 'GA'")
+    result = db.session.execute(text("SELECT * FROM allocation_observations")).mappings().fetchone()
+
+    ga_insights = {
+        "friendship_coverage": result["friendship_coverage"],
+        "friendship_balance": result["friendship_balance"],
+        "gpa_fairness": result["gpa_fairness"],
+        "high_risk_dynamics": result["high_risk_dynamics"],
+        "wellbeing_imbalance": result["wellbeing_imbalance"],
+    }
+
+    return render_template("comparison.html",
+                           gpa_chart_img=charts.get("gpa_chart_img"),
+                           conflict_chart_img=charts.get("conflict_chart_img"),
+                           wellbeing_chart_img=None,  # add later when ready
+                           ga_insights=ga_insights)
 
 # ╭────────  customisation workflow  ───────╮
 @main.route("/customisation")

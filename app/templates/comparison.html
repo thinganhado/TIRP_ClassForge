@@ -6,61 +6,70 @@
 
 <!-- Breadcrumb -->
 <div class="breadcrumb-bar">
-    <a href="{{ url_for('main.dashboard') }}">Home</a> /
-    <a href="{{ url_for('main.overall') }}">Visualisation</a> /
-    <span>Allocation Comparison</span>
+  <a href="{{ url_for('main.dashboard') }}">Home</a>
+  / <a href="{{ url_for('main.overall') }}">Visualisation</a>
+  / <span>Allocation Comparison</span>
 </div>
 
-<!-- Intro Section -->
-<section class="intro-box">
-    <h2 class="section-title">Comparing Class Allocations</h2>
-    <p>This page compares the Genetic Algorithm (GA) allocation with a Random allocation using GPA, wellbeing, and conflict metrics.</p>
+<!-- Intro -->
+<section class="page-intro">
+  <h2>Allocation Comparison</h2>
+  <p>
+    This page compares the Genetic Algorithm (GA) allocation with a Random allocation using GPA,
+    wellbeing, and conflict metrics.
+  </p>
 </section>
 
-<!-- Graphs Row -->
-<section class="comparison-graph-section">
-    <div class="graph-row">
-        <div class="graph-box">
-            <h4>Wellbeing Distribution (GA)</h4>
-            {% if wellbeing_chart_img %}
-                <img src="data:image/png;base64,{{ wellbeing_chart_img }}" class="graph-img" alt="Wellbeing Chart">
-            {% else %}
-                <p>Wellbeing chart unavailable.</p>
-            {% endif %}
-        </div>
-
-        <div class="graph-box">
-            <h4>GPA per Class</h4>
+<!-- GPA Graph + Insight -->
+<section class="comparison-pair-section">
+    <div class="pair-row">
+        <div class="pair-graph">
+            <h4 class="graph-title">GPA per Class</h4>
             {% if gpa_chart_img %}
                 <img src="data:image/png;base64,{{ gpa_chart_img }}" class="graph-img" alt="GPA Chart">
             {% else %}
                 <p>GPA chart unavailable.</p>
             {% endif %}
         </div>
+        <div class="pair-insight">
+            <h4>Insight: GPA Distribution</h4>
+            <p>{{ ga_insights.gpa_fairness }}</p>
+        </div>
+    </div>
+</section>
 
-        <div class="graph-box">
-            <h4>Conflict Count</h4>
+<!-- Conflict Graph + Insight -->
+<section class="comparison-pair-section">
+    <div class="pair-row">
+        <div class="pair-graph">
+            <h4 class="graph-title">Conflict Count</h4>
             {% if conflict_chart_img %}
                 <img src="data:image/png;base64,{{ conflict_chart_img }}" class="graph-img" alt="Conflict Chart">
             {% else %}
                 <p>Conflict chart unavailable.</p>
             {% endif %}
         </div>
+        <div class="pair-insight">
+            <h4>Insight: Conflict Levels</h4>
+            <p>{{ ga_insights.high_risk_dynamics }}</p>
+        </div>
     </div>
 </section>
 
-<!-- Insights Section -->
+<!-- Optional Wellbeing Graph (Full Width) -->
+{% if wellbeing_chart_img %}
+<section class="full-width-graph">
+    <div class="graph-box-wide">
+        <h4>Wellbeing Distribution (GA)</h4>
+        <img src="data:image/png;base64,{{ wellbeing_chart_img }}" class="graph-img-wide" alt="Wellbeing Chart">
+    </div>
+</section>
+{% endif %}
+
+<!-- Observations Section -->
 <section class="insight-section">
-    <h3 class="section-title">Observations from GA Allocation</h3>
+    <h3 class="section-title">General Observations</h3>
     <div class="insight-cards-container">
-        <div class="insight-card">
-            <h4>Friendship Coverage</h4>
-            <p>{{ ga_insights.friendship_coverage }}</p>
-        </div>
-        <div class="insight-card">
-            <h4>Friendship Balance</h4>
-            <p>{{ ga_insights.friendship_balance }}</p>
-        </div>
         <div class="insight-card">
             <h4>GPA Fairness</h4>
             <p>{{ ga_insights.gpa_fairness }}</p>
@@ -76,25 +85,56 @@
     </div>
 </section>
 
-<!-- Style -->
+<!-- Styles -->
 <style>
-.graph-row {
+.pair-row {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 20px;
+    gap: 30px;
     margin: 40px 0;
+    align-items: center;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.graph-box {
+.pair-graph, .pair-insight {
     flex: 1;
     min-width: 280px;
-    text-align: center;
+}
+
+.pair-insight {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .graph-img {
     width: 100%;
-    max-width: 400px;
+    max-width: none;  /* was 600px */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.full-width-graph {
+    margin: 40px 0;
+    text-align: center;
+}
+
+.graph-box {
+    flex: 1;
+    max-width: 100%;
+    text-align: center;
+}
+
+.graph-box-wide {
+    margin: 0 auto;
+    max-width: 900px;
+}
+
+.graph-img-wide {
+    width: 100%;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
@@ -111,6 +151,13 @@
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.graph-title {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
 }
 </style>
 
