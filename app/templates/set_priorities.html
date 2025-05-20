@@ -187,6 +187,51 @@
         align-items: center;
         justify-content: center;
     }
+    
+    .tooltip-container {
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        margin-left: 6px;
+    }
+
+    .tooltip-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        background-color: #888;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 16px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+    .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .tooltip-text {
+        visibility: hidden;
+        opacity: 0;
+        width: 260px;
+        background-color: #333;
+        color: #fff;
+        text-align: left;
+        border-radius: 4px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1;
+        top: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: opacity 0.3s;
+        font-size: 0.85rem;
+    }
+</style>
+
 </style>
 <script src="{{ url_for('static', filename='js/customisation.js') }}"></script>
 <script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
@@ -243,7 +288,14 @@
         <div class="criteria-panel">
             <h4 class="criteria-title">Academic Performance</h4>
             <div class="criteria-option">
-                <label for="gpa_penalty_weight">GPA Balance Weight (1–100):</label>
+                <label for="gpa_penalty_weight">GPA Balance Weight (1–100):
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">i</span>
+                        <span class="tooltip-text">
+                        This setting determines how strongly the algorithm penalizes differences in average GPA across classes. A higher weight keeps GPA levels consistent using R-GAT-predicted academic values.
+                        </span>
+                    </span>
+                </label>
                 <div class="slider-container criteria-value-display-container">
                     <input type="range" id="gpa_penalty_weight" name="gpa_penalty_weight" min="1" max="100" value="30" class="criteria-slider">
                     <span class="slider-value">30</span>
@@ -255,7 +307,14 @@
         <div class="criteria-panel">
             <h4 class="criteria-title">Student Wellbeing</h4>
             <div class="criteria-option">
-                <label for="wellbeing_penalty_weight">Wellbeing Balance Weight (1–100):</label>
+                <label for="wellbeing_penalty_weight">Wellbeing Balance Weight (1–100):
+                      <span class="tooltip-container">
+                        <span class="tooltip-icon">i</span>
+                        <span class="tooltip-text">
+                        Controls how much the algorithm balances student wellbeing across classes using R-GCN labels (low/high). A higher weight avoids clustering of low wellbeing students.
+                        </span>
+                    </span>
+                </label>
                 <div class="slider-container criteria-value-display-container">
                     <input type="range" id="wellbeing_penalty_weight" name="wellbeing_penalty_weight" min="1" max="100" value="50" class="criteria-slider">
                     <span class="slider-value">50%</span>
@@ -267,7 +326,14 @@
         <div class="criteria-panel">
             <h4 class="criteria-title">Bullying Prevention</h4>
             <div class="criteria-option">
-                <label for="bully_penalty_weight">Bully-Victim Separation Weight (1–100):</label>
+                <label for="bully_penalty_weight">Bully-Victim Separation Weight (1–100):
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">i</span>
+                        <span class="tooltip-text">
+                        Penalizes placing a bully and victim in the same class. Relationships are detected via community detection (Leicht-Newman). A higher weight enforces separation.
+                        </span>
+                    </span>
+                </label>
                 <div class="slider-container criteria-value-display-container">
                     <input type="range" id="bully_penalty_weight" name="bully_penalty_weight" min="1" max="100" value="60" class="criteria-slider">
                     <span class="slider-value">60</span>
@@ -279,14 +345,28 @@
         <div class="criteria-panel">
             <h4 class="criteria-title">Social Influence Balance</h4>
             <div class="criteria-option">
-                <label for="influence_std_weight">Influence Balance Weight (1–100):</label>
+                <label for="influence_std_weight">Influence Balance Weight (1–100):
+                      <span class="tooltip-container">
+                            <span class="tooltip-icon">i</span>
+                            <span class="tooltip-text">
+                            Encourages even distribution of influential students, based on R-GCN scores. Higher weights push for social leadership to be spread across all classes.
+                            </span>
+                        </span>
+                </label>
                 <div class="slider-container criteria-value-display-container">
                     <input type="range" id="influence_std_weight" name="influence_std_weight" min="1" max="100" value="60" class="criteria-slider">
                     <span class="slider-value">60</span>
                 </div>
             </div>
             <div class="criteria-option">
-                <label for="isolated_std_weight">Isolation Balance Weight (1–100):</label>
+                <label for="isolated_std_weight">Isolation Balance Weight (1–100):
+                      <span class="tooltip-container">
+                            <span class="tooltip-icon">i</span>
+                            <span class="tooltip-text">
+                            Encourages spreading out socially isolated students. Isolation scores are predicted by R-GCN. Higher weights avoid concentrating isolated students together.
+                            </span>
+                        </span>
+                </label>
                 <div class="slider-container criteria-value-display-container">
                     <input type="range" id="isolated_std_weight" name="isolated_std_weight" min="1" max="100" value="60" class="criteria-slider">
                     <span class="slider-value">60</span>
@@ -299,7 +379,14 @@
         <h4 class="criteria-title">Friendship & Social Connections</h4>
 
     <div class="criteria-option">
-        <label for="min_friends_required">Minimum In-Class Friends per Student:</label>
+        <label for="min_friends_required">Minimum In-Class Friends per Student:
+              <span class="tooltip-container">
+                    <span class="tooltip-icon">i</span>
+                    <span class="tooltip-text">
+                    Defines the minimum number of friends a student should have in class. Students below this threshold reduce the fitness of the allocation.
+                    </span>
+                </span>
+        </label>
         <div class="input-group">
             <input type="number" id="min_friends_required" name="min_friends_required" value="1" min="0" max="5" class="constraint-input">
             <span class="input-unit">friends</span>
@@ -307,7 +394,14 @@
     </div>
 
     <div class="criteria-option">
-        <label for="friend_inclusion_weight">Friend Inclusion Weight (1–100):</label>
+        <label for="friend_inclusion_weight">Friend Inclusion Weight (1–100):
+              <span class="tooltip-container">
+                    <span class="tooltip-icon">i</span>
+                    <span class="tooltip-text">
+                    Prioritizes ensuring students meet the friend threshold. Higher values improve social comfort across the cohort.
+                    </span>
+                </span>
+        </label>
         <div class="slider-container criteria-value-display-container">
             <input type="range" id="friend_inclusion_weight" name="friend_inclusion_weight" min="0" max="100" value="50" class="criteria-slider">
             <span class="slider-value">50</span>
@@ -315,7 +409,14 @@
     </div>
 
     <div class="criteria-option">
-        <label for="friend_balance_weight">Friendship Balance Weight (1–100):</label>
+        <label for="friend_balance_weight">Friendship Balance Weight (1–100):
+              <span class="tooltip-container">
+                    <span class="tooltip-icon">i</span>
+                    <span class="tooltip-text">
+                    Penalizes uneven distribution of friendships between classes. Higher weights keep social networks balanced across the school.
+                    </span>
+                </span>
+        </label>
         <div class="slider-container criteria-value-display-container">
             <input type="range" id="friend_balance_weight" name="friend_balance_weight" min="0" max="100" value="40" class="criteria-slider">
             <span class="slider-value">40</span>
