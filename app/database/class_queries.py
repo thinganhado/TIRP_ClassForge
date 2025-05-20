@@ -57,7 +57,7 @@ def fetch_disrespect_for_class(class_id):
       SELECT
         d.source_student_id AS source,
         d.target_student_id AS target
-      FROM net_disrespect d
+      FROM net_disrespect1 d
       JOIN allocations a1
         ON d.source_student_id = a1.student_id AND a1.class_id = :cid
       JOIN allocations a2
@@ -113,7 +113,7 @@ def get_class_metrics(class_id):
     # 3) Number of disrespect edges (both ends in the class)
     sql_conf = text("""
         SELECT COUNT(*) AS num_conflicts
-        FROM net_disrespect d
+        FROM net_disrespect1 d
         JOIN allocations a1
           ON d.source_student_id = a1.student_id
          AND a1.class_id = :cid
@@ -159,7 +159,7 @@ def fetch_conflict_pairs_per_class() -> List[Dict[str, Any]]:
             SELECT a1.class_id,
                    d.source_student_id AS bully_id,
                    d.target_student_id AS victim_id
-            FROM   net_disrespect d
+            FROM   net_disrespect1 d
             JOIN   allocations a1 ON a1.student_id = d.source_student_id
             JOIN   allocations a2 ON a2.student_id = d.target_student_id
             WHERE  a1.class_id = a2.class_id           -- same class only
