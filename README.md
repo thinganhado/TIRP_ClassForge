@@ -2,6 +2,8 @@
 
 ClassForge (TIRP) is a research-driven application that intelligently allocates students into classrooms to optimize academic performance, social well-being, and inclusivity. It combines **graph machine learning**, **multi-objective optimization**, and **customizable admin controls** to support school administrators in forming balanced and supportive student groups.
 
+Project accessible via http://207.211.144.204/
+
 ---
 
 ## 🏗️ Project Stack
@@ -26,6 +28,7 @@ Allocates students into balanced classes using:
 - **Well-being scores** (via R-GCN regression)
 - **Friendship networks** modeled with NetworkX
 - **Bullying/conflict detection** via Leicht-Newman modularity
+- **`finalallocation.py`**: GA script and logic
 
 ---
 
@@ -41,7 +44,8 @@ Optimizes classroom assignments with respect to:
 
 ### 🤝 3. GNN-Based Social Modeling
 
-- **R-GAT** for GPA prediction using relational social edges
+- **R-GAT** for GPA prediction
+- **Leicht-Newman Community Detection** for Bullying/conflict detection
 - **R-GCN** for:
   - **Regression**: Well-being prediction
   - **Classification**:
