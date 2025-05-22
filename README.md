@@ -2,7 +2,7 @@
 
 ClassForge (TIRP) is a research-driven application that intelligently allocates students into classrooms to optimize academic performance, social well-being, and inclusivity. It combines **graph machine learning**, **multi-objective optimization**, and **customizable admin controls** to support school administrators in forming balanced and supportive student groups.
 
-Project accessible via http://207.211.144.204/
+Project is accessible via http://207.211.144.204/
 
 ---
 
