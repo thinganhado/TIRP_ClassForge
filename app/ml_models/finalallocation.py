@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, text
 import sys
 import os
 
-# Ensure parent dir is in path to allow app import
+# Ensure parent dir is in path to allow app impo
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from app import create_app, db
 
@@ -350,6 +350,8 @@ for generation in range(max_generations):
     # 7. Record Best Fitness
     best_fitness = max(fitnesses)
     best_fitness_over_time.append(best_fitness)
+
+    print(f"Generation {generation+1}/{max_generations} - Best Fitness: {best_fitness:.4f}")
 
 # --- Get Best Individual ---
 final_fitnesses = [fitness(ind, weights) for ind in population]

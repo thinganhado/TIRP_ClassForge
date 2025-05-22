@@ -68,8 +68,8 @@ def build_combined_graph_json():
 
     # Color palette by class
     class_color_map = {
-        0: '#e76f51', 1: '#f4a261', 2: '#e9c46a',
-        3: '#8ab17d', 4: '#2a9d8f', 5: '#6a4c93'
+        0: '#ade8f4', 1: '#48cae4', 2: '#0096c7',
+        3: '#0077b6', 4: '#5390d9', 5: '#3a0ca3'
     }
 
     nodes = []
